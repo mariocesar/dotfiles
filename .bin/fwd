@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+echo http://demo.app.humanzilla.com/
+
+port=$1; shift
+
+set -ex
+
+ssh -o "ServerAliveInterval 30" \
+    -o "ServerAliveCountMax 2" \
+    -C2TnN -R${port}:127.0.0.1:8000 "$@"

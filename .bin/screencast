@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+make --makefile=$HOME/Tools/screencast/Makefile $@
