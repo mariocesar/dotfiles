@@ -1,0 +1,52 @@
+[user]
+    email = mariocesar.c50@gmail.com
+    name = Mario César Señoranis Ayala
+    signingkey = FBF5320F
+
+[core]
+    editor = vim
+    autocrlf = input
+    quotepath = false
+	excludesfile = /home/mariocesar/.gitignore_global
+
+[alias]
+    ci = commit
+    co = checkout
+    st = status
+    serve = !git daemon --reuseaddr --verbose --base-path=. --export-all ./.git --enable=receive-pack
+    branches = branch -a
+
+    ; Refuse to merge and exit with a non-zero status
+    ; unless the current HEAD is already up-to-date
+    ; or the merge can be resolved as a fast-forward.
+    pull = pull --ff-only
+    update = merge --ff-only
+    join = merge --no-ff
+
+    ; Mercurial flavor
+    addremove = !git add --all . && git add -u
+
+    graph = log --oneline --graph
+    diff2 = !git difftool -d
+
+[color]
+    ui = true
+    branch = auto
+    diff = auto
+    status = auto
+    interactive = auto
+
+[merge]
+    summary = true
+	conflictstyle = diff3
+    strategy-option = patience
+	tool = vimdiff
+
+[push]
+    default = current
+
+[credential]
+	helper = store
+
+[mergetool]
+	prompt = false
