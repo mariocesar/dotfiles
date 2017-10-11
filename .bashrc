@@ -55,12 +55,9 @@ if [ -n "$force_color_prompt" ]; then
     fi
 fi
 
-export GITAWAREPROMPT=$HOME/.git-prompt
-source $GITAWAREPROMPT/main.sh
 
 if [ "$color_prompt" = yes ]; then
-    #PS1='${debian_chroot:+($debian_chroot)} u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-    PS1="\[\e[00;33m\]\u@\h\[\e[0m\]\[\e[00;37m\]: \[\e[0m\]\[\e[01;32m\][\[\e[0m\]\[\e[00;32m\]\w\[\e[0m\]\[\e[01;32m\]]\[\e[0m\]\[\e[00;37m\] \[$txtcyn\]\$git_branch\[$txtred\]\$git_dirty\[$txtrst\]\n\[\e[0m\]\[\e[01;37m\]\\$\[\e[0m\]\[\e[00;37m\] \[\e[0m\]"
+    PS1="\[\e[00;33m\]\u@\h\[\e[0m\]\[\e[00;37m\]: \[\e[0m\]\[\e[01;32m\][\[\e[0m\]\[\e[00;32m\]\w\[\e[0m\]\[\e[01;32m\]]\[\e[0m\]\[\e[00;37m\] \n\[\e[0m\]\[\e[01;37m\]\\$\[\e[0m\]\[\e[00;37m\] \[\e[0m\]"
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
