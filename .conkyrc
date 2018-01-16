@@ -45,10 +45,14 @@ conky.config = {
 }
 
 conky.text = [[
-${goto 0}Uptime${alignr}${uptime}
-${goto 0}Processes / Threads${alignr}${running_processes} (${processes}) / ${running_threads} (${threads})
-${goto 0}Load${alignr}1:${loadavg 1} 5:${loadavg 2} 15:${loadavg 3}
 
+
+
+
+
+
+
+Uptime${alignr}${uptime}
 RAM Usage: ${alignr}$mem/$memmax - $memperc%
 ${memgraph}
 ${membar}

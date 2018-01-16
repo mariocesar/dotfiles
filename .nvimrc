@@ -1,8 +1,14 @@
 call plug#begin('~/.vim/plugged')
 
-Plug 'https://github.com/NewProggie/NewProggie-Color-Scheme.git'
-Plug 'https://github.com/ayu-theme/ayu-vim.git'
+Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
 
+Plug 'NewProggie/NewProggie-Color-Scheme'
+Plug 'ayu-theme/ayu-vim'
+Plug 'pangloss/vim-javascript', { 'for': ['javascript']}
+Plug 'flowtype/vim-flow', { 'for': ['javascript']}
+
+Plug 'vim-syntastic/syntastic'
 Plug 'Yggdroot/indentLine'
 Plug 'airblade/vim-gitgutter'
 Plug 'ctrlpvim/ctrlp.vim'
@@ -10,12 +16,9 @@ Plug 'zchee/deoplete-jedi'
 Plug 'mattn/emmet-vim'
 Plug 'tpope/vim-fugitive'
 
-Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
-Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-
 call plug#end()
 
-let mapleader="\<Space>"
+let mapleader=","
 let ayucolor="dark"
 
 colorscheme ayu
@@ -63,6 +66,7 @@ let g:python3_host_prog = '/home/mariocesar/.pyenv/versions/3.6.1/bin/python'
 let g:deoplete#enable_at_startup = 1
 
 " Emmet
+let g:user_emmet_mode='a'
 let g:user_emmet_leader_key='<C-e>'
 
 " Nerdtree
@@ -82,4 +86,7 @@ fun! <SID>StripTrailingWhitespaces()
 endfun
 
 autocmd FileType html,css,sass,es6,jsx,js,python autocmd BufWritePre <buffer> :call <SID>StripTrailingWhitespaces()
+
+let g:javascript_plugin_flow = 1
+let g:syntastic_javascript_checkers = ['eslint']
 

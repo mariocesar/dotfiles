@@ -3,6 +3,10 @@
 alias ls='LC_COLLATE=C ls -F --color=auto --human-readable --group-directories-first '
 alias tree='LC_COLLATE=C tree --dirsfirst -I "__pycache__|*.pyc|*~" '
 
+alias ls1='tree -d -L 1'
+alias ls2='tree -d -L 2'
+alias ls3='tree -d -L 3'
+
 # shortcuts
 alias c='clear'
 alias r='reset'
@@ -20,11 +24,12 @@ alias -- -="cd -"
 
 alias proxy='ssh -C2qTnN -D 8080'
 
+activate() { 
+    test ! -z ${VIRTUAL_ENV} && return ||:;
+    test -f .venv/bin/activate && source .venv/bin/activate  || :;
+}
+
 # Python and Dango related
-
-activate() { source `find . -ipath '*/bin/activate'`; }
-
-runserver() { python manage.py runserver --traceback $@; }
 
 # Unix stuff
 # ----------

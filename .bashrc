@@ -55,12 +55,8 @@ if [ -n "$force_color_prompt" ]; then
     fi
 fi
 
-export GITAWAREPROMPT=$HOME/.git-prompt
-source $GITAWAREPROMPT/main.sh
-
 if [ "$color_prompt" = yes ]; then
-    #PS1='${debian_chroot:+($debian_chroot)} u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-    PS1="\[\e[00;33m\]\u@\h\[\e[0m\]\[\e[00;37m\]: \[\e[0m\]\[\e[01;32m\][\[\e[0m\]\[\e[00;32m\]\w\[\e[0m\]\[\e[01;32m\]]\[\e[0m\]\[\e[00;37m\] \[$txtcyn\]\$git_branch\[$txtred\]\$git_dirty\[$txtrst\]\n\[\e[0m\]\[\e[01;37m\]\\$\[\e[0m\]\[\e[00;37m\] \[\e[0m\]"
+    PS1="\[\e[00;33m\]\u@\h\[\e[0m\]\[\e[00;37m\]: \[\e[0m\]\[\e[01;32m\][\[\e[0m\]\[\e[00;32m\]\w\[\e[0m\]\[\e[01;32m\]]\[\e[0m\]\[\e[00;37m\] \n\[\e[0m\]\[\e[01;37m\]\\$\[\e[0m\]\[\e[00;37m\] \[\e[0m\]"
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
@@ -96,20 +92,21 @@ alias l='ls -CF'
 #   sleep 10; alert
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
+alias makepw="pwgen -y -n 18 1"
+
 # Alias definitions.
 # You may want to put all your additions into a separate file like
 # ~/.bash_aliases, instead of adding them here directly.
 # See /usr/share/doc/bash-doc/examples in the bash-doc package.
 
-
 if [ -f ~/.bash_functions ]; then
     . ~/.bash_functions
 fi
 
-
 if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
 fi
+
 
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
@@ -118,15 +115,13 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
     . /etc/bash_completion
 fi
 
-export GOROOT=/usr/local/go
-export GOPATH=$HOME/go
-export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-export ANSIBLE_NOCOWS=1 # cow-free environment
-
 if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
-        source /etc/profile.d/vte-2.91.sh
+   source /etc/profile.d/vte-2.91.sh
 fi
 
 if [ -f ~/.bashrc.$(hostname) ]; then
     . ~/.bashrc.$(hostname)
 fi
+
+
+export PATH="$HOME/.yarn/bin:$PATH"

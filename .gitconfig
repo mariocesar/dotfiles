@@ -7,7 +7,7 @@
     editor = vim
     autocrlf = input
     quotepath = false
-	excludesfile = /home/mariocesar/.gitignore_global
+	excludesfile = ~/.gitignore
 
 [alias]
     ci = commit
@@ -40,7 +40,7 @@
     summary = true
 	conflictstyle = diff3
     strategy-option = patience
-	tool = vimdiff
+	tool = meld
 
 [push]
     default = current
@@ -50,3 +50,7 @@
 
 [mergetool]
 	prompt = false
+[gui]
+	editor = gvim
+[diff]
+	tool = meld
