@@ -1,3 +1,6 @@
+let g:python3_host_prog = '/home/mariocesar/.pyenv/versions/3.6.4/bin/python'
+let g:python_host_prog = '/home/mariocesar/.pyenv/versions/2.7.14/bin/python'
+
 call plug#begin('~/.vim/plugged')
 
 Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
@@ -12,7 +15,6 @@ Plug 'vim-syntastic/syntastic'
 Plug 'Yggdroot/indentLine'
 Plug 'airblade/vim-gitgutter'
 Plug 'ctrlpvim/ctrlp.vim'
-Plug 'zchee/deoplete-jedi'
 Plug 'mattn/emmet-vim'
 Plug 'tpope/vim-fugitive'
 
@@ -60,11 +62,6 @@ let g:indentLine_showFirstIndentLevel = 1
 let g:indentLine_setColors = 0
 " }}
 
-" Autocomplete
-let g:python_host_prog  = '/home/mariocesar/.pyenv/versions/2.7.13/bin/python'
-let g:python3_host_prog = '/home/mariocesar/.pyenv/versions/3.6.1/bin/python'
-let g:deoplete#enable_at_startup = 1
-
 " Emmet
 let g:user_emmet_mode='a'
 let g:user_emmet_leader_key='<C-e>'
@@ -89,4 +86,6 @@ autocmd FileType html,css,sass,es6,jsx,js,python autocmd BufWritePre <buffer> :c
 
 let g:javascript_plugin_flow = 1
 let g:syntastic_javascript_checkers = ['eslint']
+
+let g:deoplete#enable_at_startup = 1
 
