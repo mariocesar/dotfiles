@@ -1,6 +1,6 @@
 conky.config = {
     background=false,
-    update_interval=0.3,
+    update_interval=0.25,
     cpu_avg_samples=2,
     net_avg_samples=2,
     override_utf8_locale=true,
@@ -34,7 +34,7 @@ conky.config = {
     use_xft = true,
     font = 'Noto Sans:size=8',
     text_buffer_size = 256,
-    override_utf8_locale                 = true,
+    override_utf8_locale = true,
 
     uppercase=false,
     default_color='gray',
@@ -45,15 +45,11 @@ conky.config = {
 }
 
 conky.text = [[
-
-
-
-
-
-
-
-Uptime${alignr}${uptime}
+Hostname: ${alignr}$nodename
+Kernel: ${alignr}$kernel
+Uptime: ${alignr}${uptime}
 RAM Usage: ${alignr}$mem/$memmax - $memperc%
+IP: ${alignr}${addrs enp3s0} 
 ${memgraph}
 ${membar}
 CPU Usage: ${alignr}$cpu%
@@ -63,17 +59,18 @@ cpu0 ${cpubar 7,80 cpu0}${offset 13}cpu2 ${cpubar 7,80 cpu2}
 cpu1 ${cpubar 7,80 cpu1}${offset 13}cpu3 ${cpubar 7,80 cpu3}
 
 ${alignc}File system:
+
+${diskiograph sda 6,230 6FB86F FFFFFF}
 /: ${alignr}${fs_used /}/${fs_size /}
 ${fs_bar 6 /}
+${diskiograph sdb 6,230 6FB86F FFFFFF}
 /media/Datos: ${alignr}${fs_used /media/Datos}/${fs_size /media/Datos}
 ${fs_bar 6 /media/Datos}
 
 ${alignc}Networking:
-
-ip:${addrs enp3s0}  
-${downspeedgraph enp3s0 20,100 gray gray} ${upspeedgraph enp3s0 20,100 gray gray} 
-↓${downspeed enp3s0} k/s ${goto 130}↑${upspeed enp3s0} k/s
-Total: ${totaldown enp3s0} ${goto 130}Total: ${totalup enp3s0}
+${downspeedgraph enp3s0 20,115 6FB86F FFFFFF} ${upspeedgraph enp3s0 20,115 6FB86F FFFFFF} 
+↓${downspeed enp3s0} k/s ${goto 125}↑${upspeed enp3s0} k/s
+Total: ${totaldown enp3s0} ${goto 125}Total: ${totalup enp3s0}
 
 ${alignc}Top Processes:
 
@@ -81,13 +78,23 @@ ${goto 0}TOP CPU${goto 100}PID${goto 145}CPU${goto 190}MEM
 ${goto 0}${top name 1}${goto 100}${top pid 1}${goto 140}${top cpu 1}%${goto 185}${top mem 1}%
 ${goto 0}${top name 2}${goto 100}${top pid 2}${goto 140}${top cpu 2}%${goto 185}${top mem 2}%
 ${goto 0}${top name 3}${goto 100}${top pid 3}${goto 140}${top cpu 3}%${goto 185}${top mem 3}%
-${goto 0}${top name 4}${goto 100}${top pid 4}${goto 140}${top cpu 4}%${goto 185}${top mem 4}%
 
 ${goto 0}TOP RAM${goto 100}PID${goto 145}CPU${goto 190}MEM
 ${goto 0}${top_mem name 1}${goto 100}${top_mem pid 1}${goto 140}${top_mem cpu 1}%${goto 185}${top_mem mem 1}%
 ${goto 0}${top_mem name 2}${goto 100}${top_mem pid 2}${goto 140}${top_mem cpu 2}%${goto 185}${top_mem mem 2}%
 ${goto 0}${top_mem name 3}${goto 100}${top_mem pid 3}${goto 140}${top_mem cpu 3}%${goto 185}${top_mem mem 3}%
-${goto 0}${top_mem name 4}${goto 100}${top_mem pid 4}${goto 140}${top_mem cpu 4}%${goto 185}${top_mem mem 4}%
+
+${alignc} Network connections
+
+Inbound Connection
+${tcp_portmon 1 32767 rhost 0} ${alignr} ${tcp_portmon 1 32767 lservice 0}
+${tcp_portmon 1 32767 rhost 1} ${alignr} ${tcp_portmon 1 32767 lservice 1}
+${tcp_portmon 1 32767 rhost 2} ${alignr} ${tcp_portmon 1 32767 lservice 2}
+
+Outbound Connection
+${tcp_portmon 32768 61000 rhost 0} ${alignr} ${tcp_portmon 32768 61000 rservice 0}
+${tcp_portmon 32768 61000 rhost 1} ${alignr} ${tcp_portmon 32768 61000 rservice 1}
+${tcp_portmon 32768 61000 rhost 2} ${alignr} ${tcp_portmon 32768 61000 rservice 2}
 
 ${alignc} Docker containers
 
