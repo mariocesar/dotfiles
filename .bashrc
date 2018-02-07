@@ -120,5 +120,4 @@ if [ -f ~/.bashrc.$(hostname) ]; then
     . ~/.bashrc.$(hostname)
 fi
 
-
 export PATH="$HOME/.yarn/bin:$PATH"

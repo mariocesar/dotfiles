@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+gcalcli agenda \
+    --tsv --military \
+    --details=length \
+    --nolineart --nostarted  \
+    --nocolor \
+    --calendar "Mario César" \
+    $(date +'%D') \
+    $(date -d"+4 hours" +'%DT%H:%M') \
+    | awk -F $'\t' '{print ""$2 " - " $4"" "\t" $5}'
+

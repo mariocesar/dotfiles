@@ -37,7 +37,7 @@ conky.config = {
     override_utf8_locale = true,
 
     uppercase=false,
-    default_color='gray',
+    default_color='white',
 
     short_units=true,
     pad_percents=2,
@@ -48,27 +48,31 @@ conky.text = [[
 Hostname: ${alignr}$nodename
 Kernel: ${alignr}$kernel
 Uptime: ${alignr}${uptime}
-RAM Usage: ${alignr}$mem/$memmax - $memperc%
-IP: ${alignr}${addrs enp3s0} 
-${memgraph}
+
+Santa Cruz, Bolivia:$alignr${tztime America/La_Paz %a %-d%t%b, %H:%M}
+Austin, Texas:$alignr${tztime America/Chicago %a %-d%t%b, %H:%M}
+Buenos Aires Argentina:$alignr${tztime America/Buenos_Aires %a %-d%t%b, %H:%M}
+
+${execi 60 /home/mariocesar/.bin/agenda} 
+
 ${membar}
-CPU Usage: ${alignr}$cpu%
-${cpugraph}
+RAM Usage: ${alignr}$mem/$memmax - $memperc%
+
 ${cpubar}
-cpu0 ${cpubar 7,80 cpu0}${offset 13}cpu2 ${cpubar 7,80 cpu2}
-cpu1 ${cpubar 7,80 cpu1}${offset 13}cpu3 ${cpubar 7,80 cpu3}
+CPU Usage: ${alignr}$cpu%
+
+cpu0 ${cpubar 6,80 cpu0}${offset 13}cpu2 ${cpubar 6,80 cpu2}
+cpu1 ${cpubar 6,80 cpu1}${offset 13}cpu3 ${cpubar 6,80 cpu3}
 
 ${alignc}File system:
-
-${diskiograph sda 6,230 6FB86F FFFFFF}
 /: ${alignr}${fs_used /}/${fs_size /}
+
 ${fs_bar 6 /}
-${diskiograph sdb 6,230 6FB86F FFFFFF}
 /media/Datos: ${alignr}${fs_used /media/Datos}/${fs_size /media/Datos}
 ${fs_bar 6 /media/Datos}
 
 ${alignc}Networking:
-${downspeedgraph enp3s0 20,115 6FB86F FFFFFF} ${upspeedgraph enp3s0 20,115 6FB86F FFFFFF} 
+${downspeedgraph enp3s0 16,115 gray FFFFFF} ${upspeedgraph enp3s0 16,115 gray FFFFFF} 
 ↓${downspeed enp3s0} k/s ${goto 125}↑${upspeed enp3s0} k/s
 Total: ${totaldown enp3s0} ${goto 125}Total: ${totalup enp3s0}
 
