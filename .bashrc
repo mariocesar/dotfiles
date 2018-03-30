@@ -42,8 +42,6 @@ esac
 # should be on the output of commands, not on the prompt
 force_color_prompt=yes
 
-export TERM=xterm-256color
-
 if [ -n "$force_color_prompt" ]; then
     if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
 	# We have color support; assume it's compliant with Ecma-48

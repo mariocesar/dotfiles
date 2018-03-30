@@ -1,15 +1,20 @@
+let $NVIM_TUI_ENABLE_TRUE_COLOR=1
+
 let g:python3_host_prog = '/home/mariocesar/.pyenv/versions/3.6.4/bin/python'
 let g:python_host_prog = '/home/mariocesar/.pyenv/versions/2.7.14/bin/python'
 
 call plug#begin('~/.vim/plugged')
 
-Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+" Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
-
 Plug 'NewProggie/NewProggie-Color-Scheme'
 Plug 'ayu-theme/ayu-vim'
-Plug 'pangloss/vim-javascript', { 'for': ['javascript']}
-Plug 'flowtype/vim-flow', { 'for': ['javascript']}
+Plug 'morhetz/gruvbox'
+
+" Plug 'pangloss/vim-javascript', { 'for': ['javascript']}
+" Plug 'flowtype/vim-flow', { 'for': ['javascript']}
+
+Plug 'vim-airline/vim-airline'
 
 Plug 'vim-syntastic/syntastic'
 Plug 'Yggdroot/indentLine'
@@ -21,9 +26,13 @@ Plug 'tpope/vim-fugitive'
 call plug#end()
 
 let mapleader=","
-let ayucolor="dark"
 
-colorscheme ayu
+colorscheme gruvbox 
+set background=dark
+
+let g:gruvbox_contrast_dark="hard"
+let g:gruvbox_improved_strings=0
+let g:gruvbox_improved_warnings=1
 
 set number
 set ruler
@@ -84,8 +93,12 @@ endfun
 
 autocmd FileType html,css,sass,es6,jsx,js,python autocmd BufWritePre <buffer> :call <SID>StripTrailingWhitespaces()
 
-let g:javascript_plugin_flow = 1
-let g:syntastic_javascript_checkers = ['eslint']
-
 let g:deoplete#enable_at_startup = 1
 
+autocmd FileType yaml set shiftwidth=2
+autocmd FileType yaml set softtabstop=2
+autocmd FileType yaml set tabstop=2
+
+" Airline
+
+let g:airline#extensions#tabline#enabled = 1

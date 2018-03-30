@@ -3,19 +3,17 @@
 alias ls='LC_COLLATE=C ls -F --color=auto --human-readable --group-directories-first '
 alias tree='LC_COLLATE=C tree --dirsfirst -I "__pycache__|*.pyc|*~" '
 
-alias ls1='tree -d -L 1'
-alias ls2='tree -d -L 2'
-alias ls3='tree -d -L 3'
+alias tree-d='tree -d -L 1'
+alias tree-dd='tree -d -L 2'
+alias tree-ddd='tree -d -L 3'
 
 # shortcuts
 alias c='clear'
 alias r='reset'
 alias q='exit'
 
-
-alias ll='ls -alF'
 alias la='ls -A'
-alias l='ls -C -1'
+alias ll='ls -C -1'
 
 alias cd..="cd .."
 alias ..='cd ..'
@@ -28,11 +26,6 @@ activate() {
     test ! -z ${VIRTUAL_ENV} && return ||:;
     test -f .venv/bin/activate && source .venv/bin/activate  || :;
 }
-
-# Python and Dango related
-
-# Unix stuff
-# ----------
 
 alias explore="ranger"
 alias pp="ps axuf | pager"

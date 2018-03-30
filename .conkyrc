@@ -49,9 +49,9 @@ Hostname: ${alignr}$nodename
 Kernel: ${alignr}$kernel
 Uptime: ${alignr}${uptime}
 
-Santa Cruz, Bolivia:$alignr${tztime America/La_Paz %a %-d%t%b, %H:%M}
-Austin, Texas:$alignr${tztime America/Chicago %a %-d%t%b, %H:%M}
-Buenos Aires Argentina:$alignr${tztime America/Buenos_Aires %a %-d%t%b, %H:%M}
+Santa Cruz, Bolivia:$alignr${tztime America/La_Paz %H:%M}
+Austin, Texas:$alignr${tztime America/Chicago %H:%M}
+Buenos Aires, Argentina:$alignr${tztime America/Buenos_Aires %H:%M}
 
 ${execi 60 /home/mariocesar/.bin/agenda} 
 
@@ -87,18 +87,6 @@ ${goto 0}TOP RAM${goto 100}PID${goto 145}CPU${goto 190}MEM
 ${goto 0}${top_mem name 1}${goto 100}${top_mem pid 1}${goto 140}${top_mem cpu 1}%${goto 185}${top_mem mem 1}%
 ${goto 0}${top_mem name 2}${goto 100}${top_mem pid 2}${goto 140}${top_mem cpu 2}%${goto 185}${top_mem mem 2}%
 ${goto 0}${top_mem name 3}${goto 100}${top_mem pid 3}${goto 140}${top_mem cpu 3}%${goto 185}${top_mem mem 3}%
-
-${alignc} Network connections
-
-Inbound Connection
-${tcp_portmon 1 32767 rhost 0} ${alignr} ${tcp_portmon 1 32767 lservice 0}
-${tcp_portmon 1 32767 rhost 1} ${alignr} ${tcp_portmon 1 32767 lservice 1}
-${tcp_portmon 1 32767 rhost 2} ${alignr} ${tcp_portmon 1 32767 lservice 2}
-
-Outbound Connection
-${tcp_portmon 32768 61000 rhost 0} ${alignr} ${tcp_portmon 32768 61000 rservice 0}
-${tcp_portmon 32768 61000 rhost 1} ${alignr} ${tcp_portmon 32768 61000 rservice 1}
-${tcp_portmon 32768 61000 rhost 2} ${alignr} ${tcp_portmon 32768 61000 rservice 2}
 
 ${alignc} Docker containers
 

@@ -19,7 +19,7 @@
     ; Refuse to merge and exit with a non-zero status
     ; unless the current HEAD is already up-to-date
     ; or the merge can be resolved as a fast-forward.
-    pull = pull --ff-only
+    pull = pull --ff-only --rebase
     update = merge --ff-only
     join = merge --no-ff
 
@@ -28,6 +28,9 @@
 
     graph = log --oneline --graph
     diff2 = !git difftool -d
+
+    serve-start = instaweb --start
+    serve-stop = instaweb --stop
 
 [color]
     ui = true
@@ -50,7 +53,17 @@
 
 [mergetool]
 	prompt = false
+
 [gui]
 	editor = gvim
+
 [diff]
 	tool = meld
+
+[instaweb]
+    httpd=webrick
+    port=1234
+    browser=open 
+
+[oh-my-zsh]
+	hide-dirty = 1
