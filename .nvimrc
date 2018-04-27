@@ -11,17 +11,23 @@ Plug 'NewProggie/NewProggie-Color-Scheme'
 Plug 'ayu-theme/ayu-vim'
 Plug 'morhetz/gruvbox'
 
-" Plug 'pangloss/vim-javascript', { 'for': ['javascript']}
+Plug 'roxma/nvim-completion-manager'
+Plug 'pangloss/vim-javascript', { 'for': ['javascript']}
 " Plug 'flowtype/vim-flow', { 'for': ['javascript']}
 
-Plug 'vim-airline/vim-airline'
+if exists('g:GuiLoaded')
+    " Plug 'dzhou121/gonvim-fuzzy'
+    Plug 'equalsraf/neovim-gui-shim'
+endif
 
-Plug 'vim-syntastic/syntastic'
+Plug 'vim-airline/vim-airline'
+" Plug 'vim-syntastic/syntastic'
+
 Plug 'Yggdroot/indentLine'
 Plug 'airblade/vim-gitgutter'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'mattn/emmet-vim'
-Plug 'tpope/vim-fugitive'
+" Plug 'tpope/vim-fugitive'
 
 call plug#end()
 
@@ -33,6 +39,11 @@ set background=dark
 let g:gruvbox_contrast_dark="hard"
 let g:gruvbox_improved_strings=0
 let g:gruvbox_improved_warnings=1
+
+if exists('g:GuiLoaded')
+    GuiFont :h10
+    GuiLinespace 0
+endif
 
 set number
 set ruler
@@ -49,6 +60,9 @@ set linespace=0
 set autoindent smartindent
 set smarttab
 set laststatus=2
+
+set listchars=tab:▸\ ,trail:•,extends:❯,precedes:❮,nbsp:·
+set fillchars=diff:⣿,vert:│
 
 set wildignore=*.pyc
 set wildignore+=*.o,*~,*.pyc,*/.git/*
@@ -80,6 +94,7 @@ let NERDTreeIgnore = ['\.pyc$', '__pycache__', '\.cache', '\.git', '\.idea']
 
 nmap <leader>o :!xdg-open "%"<cr>
 nmap <F4> :NERDTreeToggle<CR>
+map <S-Insert> <MiddleMouse>
 
 vnoremap <c-S-d> y<ESC>/<c-r>"<CR>   
 nnoremap <ESC><ESC> :let @/ = ""<CR>
@@ -92,9 +107,6 @@ fun! <SID>StripTrailingWhitespaces()
 endfun
 
 autocmd FileType html,css,sass,es6,jsx,js,python autocmd BufWritePre <buffer> :call <SID>StripTrailingWhitespaces()
-
-let g:deoplete#enable_at_startup = 1
-
 autocmd FileType yaml set shiftwidth=2
 autocmd FileType yaml set softtabstop=2
 autocmd FileType yaml set tabstop=2
@@ -102,3 +114,4 @@ autocmd FileType yaml set tabstop=2
 " Airline
 
 let g:airline#extensions#tabline#enabled = 1
+

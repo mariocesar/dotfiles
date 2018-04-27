@@ -67,8 +67,13 @@ export SSH_KEY_PATH="~/.ssh/rsa_id"
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 
 function upgrade() {
-    sudo apt update --yes
-    sudo apt upgrade --yes
+    (
+        set -x
+        sudo apt update --yes
+        sudo apt upgrade --yes
+        sudo apt autoremove --yes
+    )
 }
 
 alias tmux="env TERM=xterm-256color tmux"
+
