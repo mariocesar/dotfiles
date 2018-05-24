@@ -6,8 +6,6 @@ conky.config = {
     override_utf8_locale=true,
     double_buffer=true,
     no_buffers=true,
-
-    text_buffer_size=2048,
     imlib_cache_size = 10,
 
     own_window=true,
@@ -32,8 +30,9 @@ conky.config = {
     draw_borders=false,
     draw_graph_borders=false,
     use_xft = true,
+    xftalpha = 0,
     font = 'Noto Sans:size=8',
-    text_buffer_size = 256,
+    text_buffer_size = 48,
     override_utf8_locale = true,
 
     uppercase=false,
@@ -45,6 +44,9 @@ conky.config = {
 }
 
 conky.text = [[
+${font Open Sans:size=16}${time %I:%M %p}${font}
+${font Open Sans:size=12}${time %A %B %e}${font}
+
 Hostname: ${alignr}$nodename
 Kernel: ${alignr}$kernel
 Uptime: ${alignr}${uptime}
@@ -53,8 +55,7 @@ Santa Cruz, Bolivia:$alignr${tztime America/La_Paz %H:%M}
 Austin, Texas:$alignr${tztime America/Chicago %H:%M}
 Buenos Aires, Argentina:$alignr${tztime America/Buenos_Aires %H:%M}
 
-${execi 60 /home/mariocesar/.bin/agenda} 
-
+# ${execi 60 /home/mariocesar/.bin/agenda} 
 ${membar}
 RAM Usage: ${alignr}$mem/$memmax - $memperc%
 
@@ -73,7 +74,7 @@ ${fs_bar 6 /media/Datos}
 
 ${alignc}Networking:
 ${downspeedgraph enp3s0 16,115 gray FFFFFF} ${upspeedgraph enp3s0 16,115 gray FFFFFF} 
-↓${downspeed enp3s0} k/s ${goto 125}↑${upspeed enp3s0} k/s
+Down: ${downspeed enp3s0} k/s ${goto 125}Up: ${upspeed enp3s0} k/s
 Total: ${totaldown enp3s0} ${goto 125}Total: ${totalup enp3s0}
 
 ${alignc}Top Processes:
@@ -90,5 +91,5 @@ ${goto 0}${top_mem name 3}${goto 100}${top_mem pid 3}${goto 140}${top_mem cpu 3}
 
 ${alignc} Docker containers
 
-${execi 4 docker ps --format "- {{.Names}}\n  {{.Status}}\t{{.Size}}\n"}
+${execi 4 docker ps --format 2>/dev/null "- {{.Names}}\n  {{.Status}}\t{{.Size}}\n"}
 ]]
