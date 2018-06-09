@@ -32,6 +32,8 @@
     serve-start = instaweb --start
     serve-stop = instaweb --stop
 
+    search = "!f() { git grep \"$1\" $(git rev-list --all); } && f"
+
 [color]
     ui = true
     branch = auto

@@ -6,26 +6,25 @@ let g:python_host_prog = '/home/mariocesar/.pyenv/versions/2.7.14/bin/python'
 call plug#begin('~/.vim/plugged')
 
 " Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
+" Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
 Plug 'NewProggie/NewProggie-Color-Scheme'
 Plug 'ayu-theme/ayu-vim'
 Plug 'morhetz/gruvbox'
 
-Plug 'roxma/nvim-completion-manager'
+" Plug 'roxma/nvim-completion-manager'
 Plug 'pangloss/vim-javascript', { 'for': ['javascript']}
 " Plug 'flowtype/vim-flow', { 'for': ['javascript']}
 
-if exists('g:GuiLoaded')
-    " Plug 'dzhou121/gonvim-fuzzy'
-    Plug 'equalsraf/neovim-gui-shim'
-endif
+Plug 'dzhou121/gonvim-fuzzy'
+Plug 'equalsraf/neovim-gui-shim'
 
+Plug 'ctrlpvim/ctrlp.vim'
 Plug 'vim-airline/vim-airline'
+
 " Plug 'vim-syntastic/syntastic'
 
 Plug 'Yggdroot/indentLine'
 Plug 'airblade/vim-gitgutter'
-Plug 'ctrlpvim/ctrlp.vim'
 Plug 'mattn/emmet-vim'
 " Plug 'tpope/vim-fugitive'
 
@@ -41,8 +40,19 @@ let g:gruvbox_improved_strings=0
 let g:gruvbox_improved_warnings=1
 
 if exists('g:GuiLoaded')
-    GuiFont :h10
+    set hidden
+    GuiFont Monospace:h9
     GuiLinespace 0
+    let g:gonvim_draw_statusline = 1
+
+    nnoremap <c-p> :GonvimFuzzyBFiles<CR>
+    nnoremap <c-/> :GonvimFuzzyBFiles<CR>
+else
+    let g:loaded_ctrlp = 0
+    let g:loaded_airline = 0
+    set laststatus=0 
+
+    au VimEnter * AirlineToggle
 endif
 
 set number
