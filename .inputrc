@@ -1,6 +1,11 @@
 # Make sure the system settings for input are used to
 $include /etc/inputrc
 
+set completion-ignore-case on
+set show-all-if-ambiguous on
+
+TAB: menu-complete
+
 # Autocomplete on the first hit of the tab key
 set show-all-if-ambiguous on
 

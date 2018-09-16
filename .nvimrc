@@ -1,50 +1,22 @@
-let $NVIM_TUI_ENABLE_TRUE_COLOR=1
-
 let g:python3_host_prog = '/home/mariocesar/.pyenv/versions/3.6.4/bin/python'
 let g:python_host_prog = '/home/mariocesar/.pyenv/versions/2.7.14/bin/python'
 
 call plug#begin('~/.vim/plugged')
 
-" Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
 Plug 'NewProggie/NewProggie-Color-Scheme'
 Plug 'ayu-theme/ayu-vim'
-Plug 'morhetz/gruvbox'
-
 Plug 'roxma/nvim-completion-manager'
-Plug 'pangloss/vim-javascript', { 'for': ['javascript']}
-" Plug 'flowtype/vim-flow', { 'for': ['javascript']}
-
-if exists('g:GuiLoaded')
-    " Plug 'dzhou121/gonvim-fuzzy'
-    Plug 'equalsraf/neovim-gui-shim'
-endif
-
-Plug 'vim-airline/vim-airline'
-" Plug 'vim-syntastic/syntastic'
-
 Plug 'Yggdroot/indentLine'
 Plug 'airblade/vim-gitgutter'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'mattn/emmet-vim'
-" Plug 'tpope/vim-fugitive'
+Plug 'gabrielelana/vim-markdown'
 
 call plug#end()
 
+" Defaults
+
 let mapleader=","
-
-colorscheme gruvbox 
-set background=dark
-
-let g:gruvbox_contrast_dark="hard"
-let g:gruvbox_improved_strings=0
-let g:gruvbox_improved_warnings=1
-
-if exists('g:GuiLoaded')
-    GuiFont :h10
-    GuiLinespace 0
-endif
-
 set number
 set ruler
 set encoding=utf-8
@@ -61,9 +33,14 @@ set autoindent smartindent
 set smarttab
 set laststatus=2
 
+set wrapmargin=2
+set formatoptions-=t
+set formatoptions+=a
+
 set listchars=tab:▸\ ,trail:•,extends:❯,precedes:❮,nbsp:·
 set fillchars=diff:⣿,vert:│
 
+set wildmenu
 set wildignore=*.pyc
 set wildignore+=*.o,*~,*.pyc,*/.git/*
 set wildignore+=*/tmp/*,*.so,*.swp,*.zip,*.tar.gz,*.min.*
@@ -75,7 +52,26 @@ set wildignore+=*/var/*
 set wildignore+=*/public/*
 set wildignore+=*/node_modules/*
 
-let g:ctrlp_custom_ignore = '\v[\/]\.(node_modules|.cache|git|hg|svn)$'
+" Key maps {{
+nnoremap 1 $
+" }}
+
+" Theming {{
+set termguicolors
+colorscheme ayu 
+
+if has('gui_vimr') 
+    let ayucolor='light'
+    colorscheme ayu 
+    autocmd ColorScheme * hi! Normal guibg=white ctermbg=white
+endif
+" }}
+
+" Plasticboy Markdown 
+set conceallevel=2
+let g:markdown_enable_conceal = 1
+let g:vim_markdown_folding_disabled = 0
+let g:markdown_enable_spell_checking = 0
 
 " IndentLine {{
 let g:indentLine_enabled = 1
@@ -85,20 +81,19 @@ let g:indentLine_showFirstIndentLevel = 1
 let g:indentLine_setColors = 0
 " }}
 
+" Ctrl+P {{
+let g:ctrlp_map = '<c-p>'
+let g:ctrlp_cmd = 'CtrlP'
+" }}
+
 " Emmet
 let g:user_emmet_mode='a'
-let g:user_emmet_leader_key='<C-e>'
 
-" Nerdtree
-let NERDTreeIgnore = ['\.pyc$', '__pycache__', '\.cache', '\.git', '\.idea']
-
-nmap <leader>o :!xdg-open "%"<cr>
-nmap <F4> :NERDTreeToggle<CR>
-map <S-Insert> <MiddleMouse>
-
+" Cleanup search highlight
 vnoremap <c-S-d> y<ESC>/<c-r>"<CR>   
 nnoremap <ESC><ESC> :let @/ = ""<CR>
 
+" Strip trailing whitespaces on save {{
 fun! <SID>StripTrailingWhitespaces()
     let l = line(".")
     let c = col(".")
@@ -106,12 +101,13 @@ fun! <SID>StripTrailingWhitespaces()
     call cursor(l, c)
 endfun
 
-autocmd FileType html,css,sass,es6,jsx,js,python autocmd BufWritePre <buffer> :call <SID>StripTrailingWhitespaces()
+autocmd FileType html,css,sass,es6,jsx,js,python,markdown autocmd BufWritePre <buffer> :call <SID>StripTrailingWhitespaces()
+" }}
+
+" FileType Setup {{
 autocmd FileType yaml set shiftwidth=2
 autocmd FileType yaml set softtabstop=2
 autocmd FileType yaml set tabstop=2
-
-" Airline
-
-let g:airline#extensions#tabline#enabled = 1
+autocmd FileType yaml set textwidth=80
+" }}
 
