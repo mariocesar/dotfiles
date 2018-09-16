@@ -136,3 +136,8 @@ autocmd FileType yaml set tabstop=2
 autocmd FileType yaml set textwidth=80
 " }}
 
+" Special files {{
+
+autocmd bufwritepost init.vim source %
+
+" }}
