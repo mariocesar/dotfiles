@@ -73,7 +73,7 @@ ${fs_bar 6 /}
 ${fs_bar 6 /media/Datos}
 
 ${alignc}Networking:
-${downspeedgraph enp3s0 16,115 gray FFFFFF} ${upspeedgraph enp3s0 16,115 gray FFFFFF} 
+${downspeedgraph enp3s0 18,115 gray FFFFFF} ${upspeedgraph enp3s0 18,115 gray FFFFFF} 
 Down: ${downspeed enp3s0} k/s ${goto 125}Up: ${upspeed enp3s0} k/s
 Total: ${totaldown enp3s0} ${goto 125}Total: ${totalup enp3s0}
 

@@ -5,16 +5,41 @@ call plug#begin('~/.vim/plugged')
 
 Plug 'NewProggie/NewProggie-Color-Scheme'
 Plug 'ayu-theme/ayu-vim'
+Plug 'morhetz/gruvbox'
+
 Plug 'roxma/nvim-completion-manager'
+Plug 'pangloss/vim-javascript', { 'for': ['javascript']}
+
+Plug 'ctrlpvim/ctrlp.vim'
+
 Plug 'Yggdroot/indentLine'
 Plug 'airblade/vim-gitgutter'
-Plug 'ctrlpvim/ctrlp.vim'
 Plug 'mattn/emmet-vim'
 Plug 'gabrielelana/vim-markdown'
 
 call plug#end()
 
 " Defaults
+let mapleader=","
+
+colorscheme gruvbox 
+set background=dark
+
+let g:gruvbox_contrast_dark="hard"
+let g:gruvbox_improved_strings=0
+let g:gruvbox_improved_warnings=1
+
+if exists('g:GuiLoaded')
+    GuiFont :h10
+    GuiLinespace 0
+endif
+
+colorscheme gruvbox 
+set background=dark
+
+let g:gruvbox_contrast_dark="hard"
+let g:gruvbox_improved_strings=0
+let g:gruvbox_improved_warnings=1
 
 let mapleader=","
 set number

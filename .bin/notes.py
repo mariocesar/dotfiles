@@ -103,7 +103,7 @@ class NoteWindow(Gtk.Window):
         language = lmanager.get_language('markdown')
 
         stylemanager = GtkSource.StyleSchemeManager.get_default()
-        style_scheme = stylemanager.get_scheme('oblivion')
+        style_scheme = stylemanager.get_scheme('solarized-light')
 
         self.textbuffer = self.textview.get_buffer()
         self.textbuffer.connect("changed", self.on_text_buffer_change)

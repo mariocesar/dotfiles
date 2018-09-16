@@ -39,7 +39,7 @@ DISABLE_AUTO_UPDATE="true"
 # ENABLE_CORRECTION="true"
 
 # Uncomment the following line to display red dots whilst waiting for completion.
-# COMPLETION_WAITING_DOTS="true"
+COMPLETION_WAITING_DOTS="true"
 
 # Uncomment the following line if you want to disable marking untracked files
 # under VCS as dirty. This makes repository status check for large repositories
@@ -65,6 +65,7 @@ source $ZSH/oh-my-zsh.sh
 export EDITOR='vim'
 export SSH_KEY_PATH="~/.ssh/rsa_id"
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
+export LC_COLLATE=C
 
 function upgrade() {
     (
@@ -76,4 +77,22 @@ function upgrade() {
 }
 
 alias tmux="env TERM=xterm-256color tmux"
+
+export PATH="/home/mariocesar/.pyenv/bin:/home/mariocesar/Local/flutter/bin:$PATH"
+export NPM_CONFIG_PREFIX=${HOME}/.local
+
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+
+function reload-theme() {
+	gsettings set org.gnome.desktop.interface gtk-theme ""
+	gsettings set org.gnome.desktop.interface gtk-theme "${*}"
+}
+
+alias vim=nvim
+
+alias ls='ls --color=auto --group-directories-first --human-readable'
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
 
