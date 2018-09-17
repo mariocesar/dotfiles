@@ -1,13 +1,9 @@
-let g:python3_host_prog = '/home/mariocesar/.pyenv/versions/3.6.4/bin/python'
-let g:python_host_prog = '/home/mariocesar/.pyenv/versions/2.7.14/bin/python'
-
 call plug#begin('~/.vim/plugged')
 
 Plug 'NewProggie/NewProggie-Color-Scheme'
 Plug 'ayu-theme/ayu-vim'
 Plug 'morhetz/gruvbox'
 
-Plug 'roxma/nvim-completion-manager'
 Plug 'pangloss/vim-javascript', { 'for': ['javascript']}
 
 Plug 'ctrlpvim/ctrlp.vim'
@@ -17,31 +13,21 @@ Plug 'airblade/vim-gitgutter'
 Plug 'mattn/emmet-vim'
 Plug 'gabrielelana/vim-markdown'
 
+Plug 'vim-python/python-syntax'
+
 call plug#end()
+
+filetype plugin on
+syntax on
 
 " Defaults
 let mapleader=","
-
-colorscheme gruvbox 
-set background=dark
-
-let g:gruvbox_contrast_dark="hard"
-let g:gruvbox_improved_strings=0
-let g:gruvbox_improved_warnings=1
 
 if exists('g:GuiLoaded')
     GuiFont :h10
     GuiLinespace 0
 endif
 
-colorscheme gruvbox 
-set background=dark
-
-let g:gruvbox_contrast_dark="hard"
-let g:gruvbox_improved_strings=0
-let g:gruvbox_improved_warnings=1
-
-let mapleader=","
 set number
 set ruler
 set encoding=utf-8
@@ -58,9 +44,10 @@ set autoindent smartindent
 set smarttab
 set laststatus=2
 
-set wrapmargin=2
-set formatoptions-=t
-set formatoptions+=a
+set clipboard+=unnamedplus
+
+set nobackup
+set noswapfile
 
 set listchars=tab:▸\ ,trail:•,extends:❯,precedes:❮,nbsp:·
 set fillchars=diff:⣿,vert:│
@@ -77,11 +64,21 @@ set wildignore+=*/var/*
 set wildignore+=*/public/*
 set wildignore+=*/node_modules/*
 
-" Key maps {{
-nnoremap 1 $
-" }}
+"" Bindings {{
 
-" Theming {{
+" 0 sends you the first char in the line, 1 send you the last
+nnoremap 1 $
+
+set pastetoggle=<F2>
+
+vnoremap <Leader>s :sort<CR>
+
+" Mantain the selected blocks when indenting
+    vnoremap < <gv
+    vnoremap > >gv
+"" }}
+
+"" Theming {{
 set termguicolors
 colorscheme ayu 
 
@@ -92,11 +89,7 @@ if has('gui_vimr')
 endif
 " }}
 
-" Plasticboy Markdown 
-set conceallevel=2
-let g:markdown_enable_conceal = 1
-let g:vim_markdown_folding_disabled = 0
-let g:markdown_enable_spell_checking = 0
+let g:python_highlight_all = 1
 
 " IndentLine {{
 let g:indentLine_enabled = 1
@@ -107,7 +100,7 @@ let g:indentLine_setColors = 0
 " }}
 
 " Ctrl+P {{
-let g:ctrlp_map = '<c-p>'
+let g:ctrlp_map = '<Leader>p'
 let g:ctrlp_cmd = 'CtrlP'
 " }}
 
@@ -136,8 +129,3 @@ autocmd FileType yaml set tabstop=2
 autocmd FileType yaml set textwidth=80
 " }}
 
-" Special files {{
-
-autocmd bufwritepost init.vim source %
-
-" }}
