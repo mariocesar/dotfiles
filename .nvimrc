@@ -3,11 +3,8 @@ call plug#begin('~/.vim/plugged')
 Plug 'NewProggie/NewProggie-Color-Scheme'
 Plug 'ayu-theme/ayu-vim'
 Plug 'morhetz/gruvbox'
-
 Plug 'pangloss/vim-javascript', { 'for': ['javascript']}
-
 Plug 'ctrlpvim/ctrlp.vim'
-
 Plug 'Yggdroot/indentLine'
 Plug 'airblade/vim-gitgutter'
 Plug 'mattn/emmet-vim'
@@ -45,6 +42,7 @@ set smarttab
 set laststatus=2
 
 set clipboard+=unnamedplus
+set inccommand=nosplit
 
 set nobackup
 set noswapfile
