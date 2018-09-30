@@ -59,6 +59,8 @@ set wildignore+=*/__pycache__/*
 set wildignore+=*/.idea/*
 set wildignore+=*/.cache/*
 set wildignore+=*/var/*
+set wildignore+=*/venv/*
+set wildignore+=*/.venv/*
 set wildignore+=*/public/*
 set wildignore+=*/node_modules/*
 
@@ -70,6 +72,8 @@ nnoremap 1 $
 set pastetoggle=<F2>
 
 vnoremap <Leader>s :sort<CR>
+
+
 
 " Mantain the selected blocks when indenting
     vnoremap < <gv
@@ -127,3 +131,12 @@ autocmd FileType yaml set tabstop=2
 autocmd FileType yaml set textwidth=80
 " }}
 
+
+" Automatic toggling between line number modes
+set number relativenumber
+
+augroup numbertoggle
+  autocmd!
+  autocmd BufEnter,FocusGained,InsertLeave * set relativenumber
+  autocmd BufLeave,FocusLost,InsertEnter   * set norelativenumber
+augroup END
