@@ -11,6 +11,7 @@ Plug 'mattn/emmet-vim'
 Plug 'gabrielelana/vim-markdown'
 
 Plug 'vim-python/python-syntax'
+Plug 'tpope/vim-surround'
 
 call plug#end()
 
