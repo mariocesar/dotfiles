@@ -1,19 +1,22 @@
 # Make sure the system settings for input are used to
 $include /etc/inputrc
 
-set completion-ignore-case on
+set colored-stats on
+set visible-stats on
+
+set completion-ignore-case off
+set completion-prefix-display-length 3
+
+set show-all-if-unmodified on
 set show-all-if-ambiguous on
+
+set completion-prefix-display-length 3
+set menu-complete-display-prefix on
+
+set bell-style none
 
 TAB: menu-complete
 
-# Autocomplete on the first hit of the tab key
-set show-all-if-ambiguous on
-
-# Do not alert when autocomplete
-set bell-style none
-
-# Readline will display completions with matches sorted horizontally in alphabetical order
-set print-completions-horizontally on
-
 "\e[A": history-search-backward
 "\e[B": history-search-forward
+
