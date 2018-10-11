@@ -69,19 +69,9 @@ xterm*|rxvt*)
     ;;
 esac
 
-# enable color support of ls and also add handy aliases
-alias ls='gls --color=always --group-directories-first'
-alias grep='grep --color=auto'
-alias fgrep='fgrep --color=auto'
-alias egrep='egrep --color=auto'
-alias vim=nvim
-
-# some more ls aliases
-alias ll='ls -alF'
-alias la='ls -A'
-alias l='ls -CF'
-alias tree='tree -I "*.pyc|__pycache__|.git|venv|*.egg-info"'
-alias makepw="pwgen -y -n 18 1"
+if [ -f ~/.bashrc.$(hostname) ]; then
+    . ~/.bashrc.$(hostname)
+fi
 
 # Alias definitions.
 # You may want to put all your additions into a separate file like
@@ -105,9 +95,5 @@ fi
 
 if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
    source /etc/profile.d/vte-2.91.sh
-fi
-
-if [ -f ~/.bashrc.$(hostname) ]; then
-    . ~/.bashrc.$(hostname)
 fi
 

@@ -2,21 +2,28 @@
 $include /etc/inputrc
 
 set colored-stats on
+
+# Show extra file information when completing, like `ls -F` does
 set visible-stats on
 
+# If there are more than 100 possible completions for a word, ask to show them all
+set completion-query-items 100
+
+# Do not autocomplete hidden files unless the pattern explicitly begins with a dot
+set match-hidden-files off
+
+# Show all autocomplete results at once
+set page-completions off
+
 set completion-ignore-case off
-set completion-prefix-display-length 3
+set skip-completed-text on
 
 set show-all-if-unmodified on
 set show-all-if-ambiguous on
 
-set completion-prefix-display-length 3
 set menu-complete-display-prefix on
 
 set bell-style none
-
-TAB: menu-complete
-
 "\e[A": history-search-backward
 "\e[B": history-search-forward
 

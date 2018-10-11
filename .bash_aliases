@@ -1,8 +1,13 @@
-
 # defaults
-alias ls='LC_COLLATE=C ls -F --color=auto --human-readable --group-directories-first '
-alias tree='LC_COLLATE=C tree --dirsfirst -I "__pycache__|*.pyc|*~" '
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
 
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+
+alias tree='LC_COLLATE=C tree --dirsfirst -I "__pycache__|*.pyc|*~|.git|venv"'
 alias tree-d='tree -d -L 1'
 alias tree-dd='tree -d -L 2'
 alias tree-ddd='tree -d -L 3'
@@ -20,44 +25,13 @@ alias ..='cd ..'
 alias ...='cd ../..'
 alias -- -="cd -"
 
+alias makepw="pwgen -y -n 18 1"
 alias proxy='ssh -C2qTnN -D 8080'
-
-activate() { 
-    test ! -z ${VIRTUAL_ENV} && return ||:;
-    test -f .venv/bin/activate && source .venv/bin/activate  || :;
-}
-
-alias explore="ranger"
 alias pp="ps axuf | pager"
 
 lt() { ls -ltrsa "$@" | tail; }
+
 psgrep() { ps axuf | grep -v grep | grep "$@" -i --color=auto; }
-
-# Tools
-# -----
-
-streaming() {
-   # streaming streamkeyhere
-
-    INRES="1920x1080"; # input resolution
-    OUTRES="1920x1080"; # output resolution
-  	FPS="15"; # target FPS
-    GOP="30"; # i-frame interval, should be double of FPS,
-    GOPMIN="15"; # min i-frame interval, should be equal to fps,
-    THREADS="2"; # max 6
-    CBR="1000k"; # constant bitrate (should be between 1000k - 3000k)
-    QUALITY="ultrafast";  # one of the many FFMPEG preset
-    AUDIO_RATE="44100"
-    STREAM_KEY="$1"; # use the terminal command Streaming streamkeyhere to stream your video to twitch or justin
-    SERVER="live-fra"; # twitch server in frankfurt, see http://bashtech.net/twitch/ingest.php for list
-
-    ffmpeg -f x11grab -s "$INRES" -r "$FPS" -i :0.0 -f alsa -i pulse -f flv \
-    	-ac 2 -ar $AUDIO_RATE -vcodec libx264 -g $GOP -keyint_min $GOPMIN \
-    	-b:v $CBR -minrate $CBR -maxrate $CBR -pix_fmt yuv420p -s $OUTRES \
-    	-preset $QUALITY -tune film -acodec libmp3lame -threads $THREADS -strict normal \
-        -bufsize $CBR "rtmp://$SERVER.twitch.tv/app/$STREAM_KEY";
-
-}
 
 truecolor() {
     awk 'BEGIN{
