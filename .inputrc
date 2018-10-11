@@ -24,6 +24,12 @@ set show-all-if-ambiguous on
 set menu-complete-display-prefix on
 
 set bell-style none
+
+# Tab to menucomplete, Shift + Tab to do it backward
+Tab: menu-complete
+"\e[Z": menu-complete-backward
+
+# History search
 "\e[A": history-search-backward
 "\e[B": history-search-forward
 
