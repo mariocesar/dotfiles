@@ -7,7 +7,7 @@ set colored-stats on
 set visible-stats on
 
 # If there are more than 100 possible completions for a word, ask to show them all
-set completion-query-items 100
+set completion-query-items 100 
 
 # Do not autocomplete hidden files unless the pattern explicitly begins with a dot
 set match-hidden-files off
@@ -15,9 +15,13 @@ set match-hidden-files off
 # Show all autocomplete results at once
 set page-completions off
 
+# Do not expand ~
+set expand-tilde off
+
 set completion-ignore-case off
 set skip-completed-text on
 
+# Show all options
 set show-all-if-unmodified on
 set show-all-if-ambiguous on
 
@@ -25,11 +29,19 @@ set menu-complete-display-prefix on
 
 set bell-style none
 
+# Allow UTF-8 input and output
+set input-meta on
+set output-meta on
+set convert-meta off
+
 # Tab to menucomplete, Shift + Tab to do it backward
-Tab: menu-complete
-"\e[Z": menu-complete-backward
+"\e[Z": menu-complete
 
 # History search
 "\e[A": history-search-backward
 "\e[B": history-search-forward
+
+# Home/End
+"\e[1~": beginning-of-line
+"\e[4~": end-of-line
 

@@ -1,6 +1,5 @@
 call plug#begin('~/.vim/plugged')
 
-Plug 'NewProggie/NewProggie-Color-Scheme'
 Plug 'ayu-theme/ayu-vim'
 Plug 'morhetz/gruvbox'
 Plug 'pangloss/vim-javascript', { 'for': ['javascript']}
@@ -9,11 +8,10 @@ Plug 'Yggdroot/indentLine'
 Plug 'airblade/vim-gitgutter'
 Plug 'mattn/emmet-vim'
 Plug 'gabrielelana/vim-markdown'
-
-Plug 'SirVer/ultisnips'
-
 Plug 'vim-python/python-syntax'
 Plug 'tpope/vim-surround'
+Plug 'digitaltoad/vim-pug'
+Plug 'alvan/vim-closetag'
 
 call plug#end()
 
@@ -58,7 +56,7 @@ set wildignore=*.pyc
 set wildignore+=*.o,*~,*.pyc,*/.git/*
 set wildignore+=*/tmp/*,*.so,*.swp,*.zip,*.tar.gz,*.min.*
 set wildignore+=*.png,*.jpg,*.jpeg,*.svg,*.gif
-set wildignore+=*/__pycache__/*
+set wildignore+=__pycache__/
 set wildignore+=*/.idea/*
 set wildignore+=*/.cache/*
 set wildignore+=*/var/*
@@ -66,6 +64,7 @@ set wildignore+=*/venv/*
 set wildignore+=*/.venv/*
 set wildignore+=*/public/*
 set wildignore+=*/node_modules/*
+set wildignore+=*DS_Store*
 
 "" Bindings {{
 
@@ -76,7 +75,15 @@ set pastetoggle=<F2>
 
 vnoremap <Leader>s :sort<CR>
 
+noremap <Leader>q :q<CR>
+noremap <Leader>w :w<CR>
 
+noremap <leader>c :tabnew<CR>
+noremap <leader>q :tabclose<CR>
+noremap <leader>j :tabprevious<CR>
+noremap <leader>k :tabNext<CR>
+noremap <leader>% :vsplit<CR>
+noremap <leader>" :split<CR>
 
 " Mantain the selected blocks when indenting
     vnoremap < <gv
@@ -88,9 +95,8 @@ set termguicolors
 colorscheme ayu 
 
 if has('gui_vimr') 
-    let ayucolor='light'
+    let ayucolor="mirage"
     colorscheme ayu 
-    autocmd ColorScheme * hi! Normal guibg=white ctermbg=white
 endif
 " }}
 
@@ -134,7 +140,6 @@ autocmd FileType yaml set tabstop=2
 autocmd FileType yaml set textwidth=80
 " }}
 
-
 " Automatic toggling between line number modes
 set number relativenumber
 
@@ -143,3 +148,24 @@ augroup numbertoggle
   autocmd BufEnter,FocusGained,InsertLeave * set relativenumber
   autocmd BufLeave,FocusLost,InsertEnter   * set norelativenumber
 augroup END
+
+" JSON syntax types {{
+autocmd BufNewFile,BufRead,BufReadPost .babelrc set syntax=json
+autocmd BufNewFile,BufRead,BufReadPost .eslintrc set syntax=json
+autocmd BufNewFile,BufRead,BufReadPost .terserrc set syntax=json
+
+" Show the quotes in JSON
+autocmd Filetype json set conceallevel=0
+" }}
+
+" Django setup
+augroup django
+    autocmd!
+
+    autocmd BufNewFile,BufRead *.html setlocal filetype=htmldjango
+    autocmd FileType html,jinja,htmldjango setlocal foldmethod=manual
+
+    autocmd FileType jinja,htmldjango nmap <buffer> <Leader>dt {%<space><space>%}<left><left><left>
+    autocmd FileType jinja,htmldjango nmap <buffer> <Leader>df {{<space><space>}}<left><left><left>
+augroup END
+

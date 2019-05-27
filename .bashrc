@@ -56,7 +56,7 @@ if [ -n "$force_color_prompt" ]; then
 fi
 
 if [ "$color_prompt" = yes ]; then
-    PS1="\[\e[00;33m\]\u@\h\[\e[0m\]\[\e[00;37m\]: \[\e[0m\]\[\e[01;32m\][\[\e[0m\]\[\e[00;32m\]\w\[\e[0m\]\[\e[01;32m\]]\[\e[0m\]\[\e[00;37m\] \n\[\e[0m\]\[\e[01;37m\]\\$\[\e[0m\]\[\e[00;37m\] \[\e[0m\]"
+    PS1="\[\e[00;33m\]\u@\h\[\e[0m\]\[\e[00;37m\]: \[\e[0m\]\[\e[01;32m\][\[\e[0m\]\[\e[00;32m\]\w\[\e[0m\]\[\e[01;32m\]]\[\e[0m\]\[\e[00;37m\] \n\[\e[0m\]"
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
@@ -83,3 +83,7 @@ if [ -f ~/.bash_completion ]; then
     . ~/.bash_completion
 fi
 
+
+# test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
+
+export PATH="/usr/local/opt/node@10/bin:$PATH"
