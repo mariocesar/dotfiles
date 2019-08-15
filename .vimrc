@@ -1,10 +1,22 @@
-"call plug#begin('~/.vim/plugged')
+call plug#begin('~/.vim/plugged')
 
-"Plug 'pangloss/vim-javascript', { 'for': ['javascript']}
-"Plug 'ctrlpvim/ctrlp.vim'
-"Plug 'airblade/vim-gitgutter'
+Plug 'ctrlpvim/ctrlp.vim'
+Plug 'mattn/emmet-vim'
+Plug 'editorconfig/editorconfig-vim'
+Plug 'vim-python/python-syntax'
 
-"call plug#end()
+" Javascript
+Plug 'pangloss/vim-javascript'
+Plug 'maxmellon/vim-jsx-pretty'
+
+" Colors
+Plug 'altercation/vim-colors-solarized'
+Plug 'Rigellute/rigel'
+Plug 'sainnhe/edge'
+Plug 'kyoto-shift/film-noir'
+Plug 'yasukotelin/shirotelin'
+
+call plug#end()
 
 filetype plugin on
 syntax on
@@ -20,7 +32,6 @@ endif
 set number
 set ruler
 set encoding=utf-8
-set termguicolors
 set expandtab
 set shiftwidth=4
 set softtabstop=4
@@ -30,12 +41,13 @@ set splitright
 set mouse=a
 set linespace=0
 set autoindent smartindent
+set complete-=i
 set smarttab
 set laststatus=2
 set conceallevel=0
+set cursorline
 
 set clipboard+=unnamedplus
-set inccommand=nosplit
 
 set nobackup
 set noswapfile
@@ -44,19 +56,26 @@ set listchars=tab:▸\ ,trail:•,extends:❯,precedes:❮,nbsp:·
 set fillchars=diff:⣿,vert:│
 
 set wildmenu
-set wildignore=*.pyc
-set wildignore+=*.o,*~,*.pyc,*/.git/*
-set wildignore+=*/tmp/*,*.so,*.swp,*.zip,*.tar.gz,*.min.*
+
+set wildignore=*.o,*~,*.pyc
+set wildignore+=*/.git/**
+set wildignore+=*/tmp/**,*.so,*.swp,*.zip,*.tar.gz,*.min.*
 set wildignore+=*.png,*.jpg,*.jpeg,*.svg,*.gif
-set wildignore+=__pycache__/
-set wildignore+=*/.idea/*
-set wildignore+=*/.cache/*
-set wildignore+=*/var/*
-set wildignore+=*/venv/*
-set wildignore+=*/.venv/*
-set wildignore+=*/public/*
-set wildignore+=*/node_modules/*
+set wildignore+=*/__pycache__/
+set wildignore+=*/.idea/**
+set wildignore+=*/.cache/**
+set wildignore+=*/var/**
+set wildignore+=*/venv/**
+set wildignore+=*/.venv/**
+set wildignore+=*/public/media/**
+set wildignore+=*/public/static/**
+set wildignore+=*/node_modules/**
 set wildignore+=*DS_Store*
+
+let g:ctrlp_custom_ignore = {
+  \'dir':  '\v[\/](\.(git|hg|svn)|node_modules|\_site|public\/(media|static)|dist)',
+  \'file': '\v\.(exe|so|dll|class|png|jpg|jpeg|log|tmp|swp|retry|gz|backup|dump)$',
+\}
 
 "" Bindings {{
 
@@ -78,21 +97,22 @@ noremap <leader>% :vsplit<CR>
 noremap <leader>" :split<CR>
 
 " Mantain the selected blocks when indenting
-    vnoremap < <gv
-    vnoremap > >gv
+vnoremap < <gv
+vnoremap > >gv
 "" }}
 
 "" Theming {{
-set termguicolors
-" colorscheme ayu 
+let g:solarized_termcolors=256
+let g:solarized_contrast="high"
+let g:solarized_hitrail=1 
+let g:solarized_visibility="high"
 
-if has('gui_vimr') 
-    let ayucolor="mirage"
-    colorscheme ayu 
-endif
-" }}
+set termguicolors
+set background=dark
+colorscheme solarized
 
 let g:python_highlight_all = 1
+"" }}
 
 " IndentLine {{
 let g:indentLine_enabled = 1
@@ -108,11 +128,14 @@ let g:ctrlp_cmd = 'CtrlP'
 " }}
 
 " Emmet
-let g:user_emmet_mode='a'
+let g:user_emmet_leader_key=','
 
-" Cleanup search highlight
+" A Cleanup search highlight
 vnoremap <c-S-d> y<ESC>/<c-r>"<CR>   
 nnoremap <ESC><ESC> :let @/ = ""<CR>
+
+" Shortcuts command 
+cmap Cd cd %:p:h
 
 " Strip trailing whitespaces on save {{
 fun! <SID>StripTrailingWhitespaces()
@@ -162,4 +185,14 @@ augroup django
     autocmd FileType jinja,htmldjango nmap <buffer> <Leader>dt {%<space><space>%}<left><left><left>
     autocmd FileType jinja,htmldjango nmap <buffer> <Leader>df {{<space><space>}}<left><left><left>
 augroup END
+
+
+" Python
+augroup python
+    autocmd!
+    autocmd FileType python
+                \  syn keyword pythonSelf self
+                \ | highlight def link pythonSelf Special
+    
+augroup end
 
