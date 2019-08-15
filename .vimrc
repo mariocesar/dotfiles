@@ -193,6 +193,4 @@ augroup python
     autocmd FileType python
                 \  syn keyword pythonSelf self
                 \ | highlight def link pythonSelf Special
-    
 augroup end
-
