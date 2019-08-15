@@ -70,6 +70,7 @@
 
 [oh-my-zsh]
 	hide-dirty = 1
+	hide-status = 1
 
 [filter "lfs"]
 	clean = git-lfs clean -- %f
