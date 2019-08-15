@@ -1,179 +1,165 @@
-filetype plugin indent on
+"call plug#begin('~/.vim/plugged')
+
+"Plug 'pangloss/vim-javascript', { 'for': ['javascript']}
+"Plug 'ctrlpvim/ctrlp.vim'
+"Plug 'airblade/vim-gitgutter'
+
+"call plug#end()
+
+filetype plugin on
 syntax on
 
-set nocompatible
-set history=1000
-set autoindent
-set autoread                                                 " reload files when changed on disk, i.e. via `git checkout`
-set backspace=indent,eol,start
-set backupcopy=yes                                           " see :help crontab
-set clipboard=unnamed                                        " yank and paste with the system clipboard
-set directory-=.                                             " don't store swapfiles in the current directory
-set encoding=utf-8
-set expandtab                                                " expand tabs to spaces
-set ignorecase                                               " case-insensitive search
-set incsearch                                                " search as you type
-set laststatus=2                                             " always show statusline
-set list                                                     " show trailing whitespace
-set listchars=tab:▸\ ,trail:·,extends:❯,precedes:❮
-set fillchars=diff:░,vert:│
-set number                                                   " show line numbers
-set numberwidth=1
-set ruler                                                    " show where you are
-set scrolloff=3                                              " show context above/below cursorline
-set shiftwidth=4                                             " normal mode indentation commands use 2 spaces
-set showcmd
-set smartcase                                                " case-sensitive search if any caps
-set softtabstop=4                                            " insert mode tab and backspace use 2 spaces
-set tabstop=8                                                " actual tabs occupy 8 characters
-set wildignore=*.pyc,*~
-set wildmenu                                                 " show a navigable menu for tab completion
-set wildmode=longest,list,full
-set splitbelow
-set splitright
-set noswapfile
-set nofoldenable
+" Defaults
+let mapleader=","
 
-" Session related
-set ssop-=options    " do not store global and local values in a session
-set ssop-=folds      " do not store folds
-
-" Resize splits when the window is resized
-au VimResized * :wincmd =
-
-" GVim options
-if has("gui_running")
-  set t_Co=256
-
-  color codeschool
-
-  set guioptions=aegit  " Hide menu bar and toolbar
-  set guifont=Monospace\ 9
-  set lines=50 columns=120
-  set cursorline
+if exists('g:GuiLoaded')
+    GuiFont :h10
+    GuiLinespace 0
 endif
 
-" search settings
-set hlsearch
-set ignorecase
-set smartcase
+set number
+set ruler
+set encoding=utf-8
+set termguicolors
+set expandtab
+set shiftwidth=4
+set softtabstop=4
+set tabstop=4
+set splitbelow
+set splitright
+set mouse=a
+set linespace=0
+set autoindent smartindent
+set smarttab
+set laststatus=2
+set conceallevel=0
 
-nnoremap / /\v
-vnoremap / /\v
+set clipboard+=unnamedplus
+set inccommand=nosplit
 
-" Time out on key codes but not mappings.
-" Basically this makes terminal Vim work sanely.
-set notimeout
-set ttimeout
-set ttimeoutlen=10
+set nobackup
+set noswapfile
 
-" key mappings
-noremap  <F1> <nop>
-inoremap <F1> <nop>
-noremap <silent> <c-right> :tabnext<cr>
-noremap <silent> <c-left> :tabprevious<cr>
+set listchars=tab:▸\ ,trail:•,extends:❯,precedes:❮,nbsp:·
+set fillchars=diff:⣿,vert:│
 
-" Nerdtree
-noremap  <F3> :NERDTreeToggle<cr>
-inoremap <F3> <esc>:NERDTreeToggle<cr>
+set wildmenu
+set wildignore=*.pyc
+set wildignore+=*.o,*~,*.pyc,*/.git/*
+set wildignore+=*/tmp/*,*.so,*.swp,*.zip,*.tar.gz,*.min.*
+set wildignore+=*.png,*.jpg,*.jpeg,*.svg,*.gif
+set wildignore+=__pycache__/
+set wildignore+=*/.idea/*
+set wildignore+=*/.cache/*
+set wildignore+=*/var/*
+set wildignore+=*/venv/*
+set wildignore+=*/.venv/*
+set wildignore+=*/public/*
+set wildignore+=*/node_modules/*
+set wildignore+=*DS_Store*
 
-set autochdir
-let NERDTreeChDirMode=2
+"" Bindings {{
 
-augroup ps_nerdtree
-    au!
+" 0 sends you the first char in the line, 1 send you the last
+nnoremap 1 $
 
-    au Filetype nerdtree setlocal nolist
-    au Filetype nerdtree nnoremap <buffer> H :vertical resize -10<cr>
-    au Filetype nerdtree nnoremap <buffer> L :vertical resize +10<cr>
-augroup END
+set pastetoggle=<F2>
 
-let NERDTreeHighlightCursorline = 1
-let NERDTreeIgnore = ['.vim$', '\~$', '.*\.pyc$', 'pip-log\.txt$', 'whoosh_index',
-                    \ 'xapian_index', '.*.pid', '.*-fixtures-.*.json',
-                    \ '.*\.o$', 'db.db', 'tags.bak', '.*\.pdf$', '.*\.mid$',
-                    \ '.idea', '.settings',
-                    \ '.*\.midi$', '\.egg-info$']
+vnoremap <Leader>s :sort<CR>
 
-let NERDTreeMinimalUI = 1
-let NERDTreeDirArrows = 1
-let NERDChristmasTree = 1
-let NERDTreeChDirMode = 2
-let NERDTreeMapJumpFirstChild = 'gK'
+noremap <Leader>q :q<CR>
+noremap <Leader>w :w<CR>
+
+noremap <leader>c :tabnew<CR>
+noremap <leader>q :tabclose<CR>
+noremap <leader>j :tabprevious<CR>
+noremap <leader>k :tabNext<CR>
+noremap <leader>% :vsplit<CR>
+noremap <leader>" :split<CR>
+
+" Mantain the selected blocks when indenting
+    vnoremap < <gv
+    vnoremap > >gv
+"" }}
+
+"" Theming {{
+set termguicolors
+" colorscheme ayu 
+
+if has('gui_vimr') 
+    let ayucolor="mirage"
+    colorscheme ayu 
+endif
+" }}
+
+let g:python_highlight_all = 1
+
+" IndentLine {{
+let g:indentLine_enabled = 1
+let g:indentLine_char = '┆'
+let g:indentLine_first_char = '┆'
+let g:indentLine_showFirstIndentLevel = 1
+let g:indentLine_setColors = 0
+" }}
+
+" Ctrl+P {{
+let g:ctrlp_map = '<Leader>p'
+let g:ctrlp_cmd = 'CtrlP'
+" }}
 
 " Emmet
-let g:user_emmet_leader_key = '<c-space>'
+let g:user_emmet_mode='a'
 
-let g:user_emmet_settings = {
-            \  'html' : {
-            \    'indentation' : '  ',
-            \    'snippets': {
-            \        'block'   : "{% block ${cursor} %}\n${cursor}${child}\n{% endblock %}",
-            \        'url'     : "{% url '${cursor}' %}",
-            \        'static'  : "{% static '${cursor}' %}",
-            \        'load'    : "{% load ${cursor} %}",
-            \        'extends' : "{% extends '${cursor}' %}",
-            \        'csrf'    : "{% csrf_token %}",
-            \        'for'     : "{% for ${cursor} in ${cursor} %}\n${cursor}${child}\n{% endfor %}",
-            \        'trans'   : "{% trans '${cursor}' %}",
-            \        'blocktrans' : "{% blocktrans %}${cursor}{% endblocktrans %}",
-            \    },
-            \  },
-            \}
+" Cleanup search highlight
+vnoremap <c-S-d> y<ESC>/<c-r>"<CR>   
+nnoremap <ESC><ESC> :let @/ = ""<CR>
 
+" Strip trailing whitespaces on save {{
+fun! <SID>StripTrailingWhitespaces()
+    let l = line(".")
+    let c = col(".")
+    %s/\s\+$//e
+    call cursor(l, c)
+endfun
 
-" Python mode
+autocmd FileType html,css,sass,es6,jsx,js,python,markdown autocmd BufWritePre <buffer> :call <SID>StripTrailingWhitespaces()
+" }}
 
-let g:pymode_rope_goto_definition_bind = "<C-]>"
-let g:pymode_run_bind = "<C-S-e>"
-let g:pymode_doc_bind = "<C-S-d>"
-
-"" From: http://bling.github.io/blog/2013/07/21/smart-tab-expansions-in-vim-with-expression-mappings/
-function! s:zen_html_tab()
-  return "\<c-space>,"
-endfunction
-
-autocmd FileType html imap <buffer><expr><c-tab> <sid>zen_html_tab()
-
-" Python
-augroup ft_python
-    au!
-
-    " Turn on omnicompletion
-    set ofu=syntaxcomplete#Complete
-    set completeopt=longest,menuone
-
-    " Continue omnicompletion for python modules
-    "imap <silent> <buffer> . .<C-X><C-O>
-
-    " Pylint relates
-    let g:pymode_lint = 1
-    let g:pymode_lint_onfly = 1
-    let g:pymode_lint_write = 1
-    let g:pymode_lint_cwindow = 0
-    let g:pymode_python = 'python3'
-    let g:pymode_virtualenv = 1
-
+" Yaml 
+augroup yaml
+    autocmd!
+    autocmd FileType yaml set shiftwidth=2
+    autocmd FileType yaml set softtabstop=2
+    autocmd FileType yaml set tabstop=2
+    autocmd FileType yaml set textwidth=80
 augroup END
 
-" Django
-augroup ft_django
-    au!
+" Automatic toggling between line number modes
+set number relativenumber
 
-    au BufNewFile,BufRead urls.py           setlocal nowrap
-    au BufNewFile,BufRead urls.py           normal! zR
-    au BufNewFile,BufRead dashboard.py      normal! zR
-    au BufNewFile,BufRead local_settings.py normal! zR
-
-    au BufNewFile,BufRead admin.py     setlocal filetype=python.django
-    au BufNewFile,BufRead urls.py      setlocal filetype=python.django
-    au BufNewFile,BufRead models.py    setlocal filetype=python.django
-    au BufNewFile,BufRead views.py     setlocal filetype=python.django
-    au BufNewFile,BufRead forms.py     setlocal filetype=python.django
+augroup numbertoggle
+  autocmd!
+  autocmd BufEnter,FocusGained,InsertLeave * set relativenumber
+  autocmd BufLeave,FocusLost,InsertEnter   * set norelativenumber
 augroup END
 
-" Session related
-set ssop-=options    " do not store global and local values in a session
-set ssop-=folds      " do not store folds
+" JSON syntax types
+augroup json
+    autocmd!
+    autocmd BufEnter * set conceallevel=0
+    autocmd BufNewFile,BufRead,BufReadPost .babelrc set syntax=json
+    autocmd BufNewFile,BufRead,BufReadPost .eslintrc set syntax=json
+    autocmd BufNewFile,BufRead,BufReadPost .terserrc set syntax=json
+augroup END
 
-let g:session_autosave = 'no'
+" Django setup
+augroup django
+    autocmd!
+
+    autocmd BufNewFile,BufRead *.html setlocal filetype=htmldjango
+    autocmd FileType html,jinja,htmldjango setlocal foldmethod=manual
+
+    autocmd FileType jinja,htmldjango nmap <buffer> <Leader>dt {%<space><space>%}<left><left><left>
+    autocmd FileType jinja,htmldjango nmap <buffer> <Leader>df {{<space><space>}}<left><left><left>
+augroup END
+
