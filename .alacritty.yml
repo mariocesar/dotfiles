@@ -1,0 +1,14 @@
+fonts:
+  size: 12
+
+colors:
+  primary:
+    background: '0x000000'
+    foreground: '0xffffff'
+
+live_config_reload: true
+
+mouse:
+  hide_when_typing: true
+
+
