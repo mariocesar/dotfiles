@@ -1,3 +1,12 @@
+tabspace: 4
+custom_cursor_colors: true
+live_config_reload: true
+hide_cursor_when_typing: true
+
+opacity: 0.1
+env:
+  TERM: xterm-256color
+
 fonts:
   size: 12
 
@@ -5,10 +14,11 @@ colors:
   primary:
     background: '0x000000'
     foreground: '0xffffff'
+  cursor:
+    text:   '0xf1c1c1'
+    cursor: '0xff2600'
 
-live_config_reload: true
-
-mouse:
-  hide_when_typing: true
-
-
+shell:
+  program: /usr/local/bin/zsh
+  args:
+    - --login
