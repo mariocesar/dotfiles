@@ -17,6 +17,7 @@ syntax on
 
 let mapleader=","
 
+set hidden
 set ruler
 set encoding=utf-8
 set expandtab
@@ -38,6 +39,11 @@ set noswapfile
 
 set listchars=tab:▸\ ,trail:•,extends:❯,precedes:❮,nbsp:·
 set fillchars=diff:⣿,vert:│
+
+set updatetime=300
+set shortmess+=c
+set signcolumn=yes
+set cmdheight=2
 
 " Ignore files
 set wildmenu

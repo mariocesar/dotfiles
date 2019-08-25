@@ -29,6 +29,7 @@ if exists('g:GuiLoaded')
     GuiLinespace 0
 endif
 
+set hidden
 set number
 set ruler
 set encoding=utf-8
@@ -51,6 +52,11 @@ set clipboard+=unnamedplus
 
 set nobackup
 set noswapfile
+
+set updatetime=300
+set shortmess+=c
+set signcolumn=yes
+set cmdheight=2
 
 set listchars=tab:▸\ ,trail:•,extends:❯,precedes:❮,nbsp:·
 set fillchars=diff:⣿,vert:│

@@ -20,13 +20,13 @@ all_files = set(chain(
 all_files = sorted(list(all_files))
 
 exclude_patterns = [
-    re.compile('^\.git/').match,
-    re.compile('^\.dotfiles/').match,
-    re.compile('^\.gitignore$').match,
-    re.compile('^.*~$').match,
-    re.compile('\.pyc$').match,
-    re.compile('README\.md').match,
-    re.compile('install\.py').match,
+    re.compile(r'^\.git/').match,
+    re.compile(r'^\.dotfiles/').match,
+    re.compile(r'^\.gitignore$').match,
+    re.compile(r'^.*~$').match,
+    re.compile(r'\.pyc$').match,
+    re.compile(r'README\.md').match,
+    re.compile(r'install\.py').match,
 ]
 
 match_any = lambda path: any(map(lambda match: match(path), exclude_patterns))
