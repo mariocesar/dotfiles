@@ -39,23 +39,28 @@ set nocursorline
 set nocursorcolumn
 set scrolljump=5
 
+set autoread  " Detect when a file is changed
 set nocompatible
 set nobackup
 set noswapfile
 
-set listchars=tab:▸\ ,trail:•,extends:❯,precedes:❮,nbsp:·
+set listchars=tab:→\ ,eol:¬,trail:•,extends:❯,precedes:❮,nbsp:·
+set showbreak=↪
 set fillchars=diff:⣿,vert:│
 
 set updatetime=300
 set shortmess+=c
 set signcolumn=yes
 set cmdheight=1
+set lazyredraw " Do not update the screen while a command/macro is running
+set title
 
 " Emmet
 
 
 " Ignore files
 set wildmenu
+set wildmode=longest,full
 
 set wildignore=*.o,*~,*.pyc
 set wildignore+=*/.git/**
@@ -85,6 +90,8 @@ let g:python3_host_skip_check=1
 let g:python3_host_prog = '/usr/local/bin/python3'
 
 " Ctrl+P options
+
+
 let g:ctrlp_custom_ignore = {
   \'dir':  '\v[\/](\.(git|hg|svn)|node_modules|\_site|public\/(media|static)|dist)',
   \'file': '\v\.(exe|so|dll|class|png|jpg|jpeg|log|tmp|swp|retry|gz|backup|dump)$',
@@ -108,6 +115,11 @@ noremap <leader>" :split<CR>
 
 " Set the working directory to the directory of the current file
 noremap <leader>. :lcd %:p:h<CR>
+
+" allow Tab and Shift+Tab to
+" tab  selection in visual mode
+vmap <Tab> >gv
+vmap <S-Tab> <gv
 
 " Neoclide/coc setup
 let g:coc_global_extensions = [
