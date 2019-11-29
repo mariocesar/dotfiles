@@ -1,40 +1,25 @@
-call plug#begin('~/.vim/plugged')
+call plug#begin('~/.local/share/nvim/plugged')
 
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'mattn/emmet-vim'
 Plug 'editorconfig/editorconfig-vim'
-Plug 'vim-python/python-syntax'
-
-" Javascript
-Plug 'pangloss/vim-javascript'
-Plug 'maxmellon/vim-jsx-pretty'
-
-" Colors
-Plug 'altercation/vim-colors-solarized'
-Plug 'Rigellute/rigel'
-Plug 'sainnhe/edge'
-Plug 'kyoto-shift/film-noir'
-Plug 'yasukotelin/shirotelin'
+"Plug 'vim-syntastic/syntastic'
+Plug 'morhetz/gruvbox'
 
 call plug#end()
 
 filetype plugin on
 syntax on
 
-" Defaults
+colorscheme gruvbox
+
 let mapleader=","
 
-if exists('g:GuiLoaded')
-    GuiFont :h10
-    GuiLinespace 0
-endif
-
-set nocompatible
 set hidden
-set number
 set ruler
 set encoding=utf-8
 set expandtab
+set smarttab
 set shiftwidth=4
 set softtabstop=4
 set tabstop=4
@@ -43,28 +28,27 @@ set splitright
 set mouse=a
 set linespace=0
 set autoindent smartindent
-set complete-=i
-set completeopt=menu,longest,preview
-set smarttab
 set laststatus=2
 set conceallevel=0
-set cursorline
-set hlsearch
 set clipboard+=unnamedplus
-set showmatch
+
+set nocursorline
+set nocursorcolumn
+set scrolljump=5
+
+set nocompatible
 set nobackup
 set noswapfile
-set nostartofline
-set lazyredraw
-
-set updatetime=300
-set shortmess+=c
-set signcolumn=yes
-set cmdheight=2
 
 set listchars=tab:▸\ ,trail:•,extends:❯,precedes:❮,nbsp:·
 set fillchars=diff:⣿,vert:│
 
+set updatetime=300
+set shortmess+=c
+set signcolumn=yes
+set cmdheight=1
+
+" Ignore files
 set wildmenu
 
 set wildignore=*.o,*~,*.pyc
@@ -82,18 +66,22 @@ set wildignore+=*/public/static/**
 set wildignore+=*/node_modules/**
 set wildignore+=*DS_Store*
 
+" Python Speedups
+let g:python_host_skip_check=1
+let g:python_host_prog = '/usr/local/bin/python2'
+let g:python3_host_skip_check=1
+let g:python3_host_prog = '/usr/local/bin/python3'
+
+" Ctrl+P options
 let g:ctrlp_custom_ignore = {
   \'dir':  '\v[\/](\.(git|hg|svn)|node_modules|\_site|public\/(media|static)|dist)',
   \'file': '\v\.(exe|so|dll|class|png|jpg|jpeg|log|tmp|swp|retry|gz|backup|dump)$',
 \}
 
-"" Bindings {{
+let g:ctrlp_map = '<Leader>p'
+let g:ctrlp_cmd = 'CtrlP'
 
-" 0 sends you the first char in the line, 1 send you the last
-nnoremap 1 $
-
-set pastetoggle=<F2>
-
+" Shortcuts
 vnoremap <Leader>s :sort<CR>
 
 noremap <Leader>q :q<CR>
@@ -106,59 +94,15 @@ noremap <leader>k :tabNext<CR>
 noremap <leader>% :vsplit<CR>
 noremap <leader>" :split<CR>
 
+" Cleanup search highlight
+vnoremap <c-S-d> y<ESC>/<c-r>"<CR>
+nnoremap <ESC><ESC> :let @/ = ""<CR>
+
 " Mantain the selected blocks when indenting
 vnoremap < <gv
 vnoremap > >gv
-"" }}
 
-"" Theming {{
-let g:solarized_termcolors=256
-let g:solarized_contrast="high"
-let g:solarized_hitrail=1 
-let g:solarized_visibility="high"
-
-set termguicolors
-set background=dark
-colorscheme solarized
-
-let g:python_highlight_all = 1
-"" }}
-
-" IndentLine {{
-let g:indentLine_enabled = 1
-let g:indentLine_char = '┆'
-let g:indentLine_first_char = '┆'
-let g:indentLine_showFirstIndentLevel = 1
-let g:indentLine_setColors = 0
-" }}
-
-" Ctrl+P {{
-let g:ctrlp_map = '<Leader>p'
-let g:ctrlp_cmd = 'CtrlP'
-" }}
-
-" Emmet
-let g:user_emmet_leader_key=','
-
-" A Cleanup search highlight
-vnoremap <c-S-d> y<ESC>/<c-r>"<CR>   
-nnoremap <ESC><ESC> :let @/ = ""<CR>
-
-" Shortcuts command 
-cmap Cd cd %:p:h
-
-" Strip trailing whitespaces on save {{
-fun! <SID>StripTrailingWhitespaces()
-    let l = line(".")
-    let c = col(".")
-    %s/\s\+$//e
-    call cursor(l, c)
-endfun
-
-autocmd FileType html,css,sass,es6,jsx,js,python,markdown autocmd BufWritePre <buffer> :call <SID>StripTrailingWhitespaces()
-" }}
-
-" Yaml 
+" Yaml
 augroup yaml
     autocmd!
     autocmd FileType yaml set shiftwidth=2
@@ -196,11 +140,3 @@ augroup django
     autocmd FileType jinja,htmldjango nmap <buffer> <Leader>df {{<space><space>}}<left><left><left>
 augroup END
 
-
-" Python
-augroup python
-    autocmd!
-    autocmd FileType python
-                \  syn keyword pythonSelf self
-                \ | highlight def link pythonSelf Special
-augroup end
