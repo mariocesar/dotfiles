@@ -3,14 +3,17 @@ call plug#begin('~/.local/share/nvim/plugged')
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'mattn/emmet-vim'
 Plug 'editorconfig/editorconfig-vim'
-"Plug 'vim-syntastic/syntastic'
+Plug 'mattn/emmet-vim'
 Plug 'morhetz/gruvbox'
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
 call plug#end()
 
 filetype plugin on
 syntax on
 
+set termguicolors
+set t_Co=256
 colorscheme gruvbox
 
 let mapleader=","
@@ -48,6 +51,9 @@ set shortmess+=c
 set signcolumn=yes
 set cmdheight=1
 
+" Emmet
+
+
 " Ignore files
 set wildmenu
 
@@ -65,6 +71,12 @@ set wildignore+=*/public/media/**
 set wildignore+=*/public/static/**
 set wildignore+=*/node_modules/**
 set wildignore+=*DS_Store*
+
+" Emmet
+let g:user_emmet_install_global = 0
+autocmd FileType html,htmldjango,css,jsx,js,vue EmmetInstall
+"let g:user_emmet_leader_key = '<leader>e'
+let g:user_emmet_leader_key = '<leader>,<CR>'
 
 " Python Speedups
 let g:python_host_skip_check=1
@@ -93,6 +105,19 @@ noremap <leader>j :tabprevious<CR>
 noremap <leader>k :tabNext<CR>
 noremap <leader>% :vsplit<CR>
 noremap <leader>" :split<CR>
+
+" Set the working directory to the directory of the current file
+noremap <leader>. :lcd %:p:h<CR>
+
+" Neoclide/coc setup
+let g:coc_global_extensions = [
+  \ 'coc-snippets',
+  \ 'coc-pairs',
+  \ 'coc-tsserver',
+  \ 'coc-eslint',
+  \ 'coc-prettier',
+  \ 'coc-json',
+  \ ]
 
 " Cleanup search highlight
 vnoremap <c-S-d> y<ESC>/<c-r>"<CR>

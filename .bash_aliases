@@ -25,9 +25,11 @@ alias ..='cd ..'
 alias ...='cd ../..'
 alias -- -="cd -"
 
-alias makepw="pwgen -y -n 18 1"
+alias makepassword="pwgen -y -n 18 1"
 alias proxy='ssh -C2qTnN -D 8080'
 alias pp="ps axuf | pager"
+
+alias vimrc="vim ~/.config/nvim/init.vim"
 
 lt() { ls -ltrsa "$@" | tail; }
 
@@ -48,3 +50,4 @@ truecolor() {
             printf "\n";
         }'
 }
+
