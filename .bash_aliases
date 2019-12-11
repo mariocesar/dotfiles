@@ -3,22 +3,24 @@ alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 
-alias ll='ls -alF'
-alias la='ls -A'
-alias l='ls -CF'
+alias ls='exa --group-directories-first'
+alias l='ls -1'
+alias ll='ls -l'
+alias la='ls -al'
+alias ls1='ls --tree --depth=2'
+alias ls2='ls --tree --depth=3'
+alias ls3='ls --tree --depth=4'
+alias ls4='ls --tree --depth=5'
 
 alias tree='LC_COLLATE=C tree --dirsfirst -I "__pycache__|*.pyc|*~|.git|venv"'
-alias tree-d='tree -d -L 1'
-alias tree-dd='tree -d -L 2'
-alias tree-ddd='tree -d -L 3'
+alias tree1='tree -d -L 1'
+alias tree2='tree -d -L 2'
+alias tree3='tree -d -L 3'
 
 # shortcuts
 alias c='clear'
 alias r='reset'
 alias q='exit'
-
-alias la='ls -A'
-alias ll='ls -C -1'
 
 alias cd..="cd .."
 alias ..='cd ..'
@@ -30,6 +32,16 @@ alias proxy='ssh -C2qTnN -D 8080'
 alias pp="ps axuf | pager"
 
 alias vimrc="vim ~/.config/nvim/init.vim"
+
+function p() {
+    # https://github.com/junegunn/fzf/wiki/examples#changing-directory
+    # Example: vim $(p)
+    fzf --preview '
+        [[ $(file --mime {}) =~ binary ]] && 
+         echo {} is a binary file ||
+         (highlight -O ansi -l {} || cat {}) 2> /dev/null | head -500
+    '
+}
 
 lt() { ls -ltrsa "$@" | tail; }
 
