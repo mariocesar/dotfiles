@@ -6,6 +6,12 @@ Plug 'editorconfig/editorconfig-vim'
 Plug 'mattn/emmet-vim'
 Plug 'morhetz/gruvbox'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'tomtom/tcomment_vim'
+Plug 'tpope/vim-surround'
+Plug 'airblade/vim-gitgutter'
+Plug 'yggdroot/indentline'
+Plug 'othree/javascript-libraries-syntax.vim'
+Plug 'posva/vim-vue'
 
 call plug#end()
 
@@ -55,8 +61,11 @@ set cmdheight=1
 set lazyredraw " Do not update the screen while a command/macro is running
 set title
 
-" Emmet
+" vim-vue
+let g:vue_pre_processors = 'detect_on_enter'
 
+" Javascript Libraries Syntax
+let g:used_javascript_libs = 'jquery,underscore,react,vue'
 
 " Ignore files
 set wildmenu
@@ -176,4 +185,46 @@ augroup django
     autocmd FileType jinja,htmldjango nmap <buffer> <Leader>dt {%<space><space>%}<left><left><left>
     autocmd FileType jinja,htmldjango nmap <buffer> <Leader>df {{<space><space>}}<left><left><left>
 augroup END
+
+
+python3 << endpython
+import time
+import black
+import vim
+
+def Black():
+  start = time.time()
+  mode = black.FileMode(
+    is_pyi=vim.current.buffer.name.endswith('.pyi'),
+  )
+  buffer_str = '\n'.join(vim.current.buffer) + '\n'
+
+  try:
+    new_buffer_str = black.format_file_contents(buffer_str, fast=True, mode=mode)
+  except black.NothingChanged:
+    print(f'Already well formatted, good job. (took {time.time() - start:.4f}s)')
+  except Exception as exc:
+    print(exc)
+  else:
+    current_buffer = vim.current.window.buffer
+    cursors = []
+    for i, tabpage in enumerate(vim.tabpages):
+      if tabpage.valid:
+        for j, window in enumerate(tabpage.windows):
+          if window.valid and window.buffer == current_buffer:
+            cursors.append((i, j, window.cursor))
+    
+    vim.current.buffer[:] = new_buffer_str.split('\n')[:-1]
+
+    for i, j, cursor in cursors:
+      window = vim.tabpages[i].windows[j]
+      try:
+        window.cursor = cursor
+      except vim.error:
+        window.cursor = (len(window.buffer), 0)
+    print(f'Reformatted in {time.time() - start:.4f}s.')
+
+endpython
+
+command! Black :py3 Black()
 
