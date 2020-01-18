@@ -3,6 +3,7 @@ import argparse
 import glob
 import re
 import os
+import sys
 from pathlib import Path
 from itertools import chain
 
@@ -26,6 +27,15 @@ skip = lambda path: any(
 )
 
 
+def step(message, interactive=False):
+    if interactive:
+        said_yes = (input(message) or "n").lower().strip()[0] == "y"
+        if said_yes:
+            return True
+
+    return False
+
+
 def walk(path: Path):
     for item in path.glob("*"):
         if skip(item):
@@ -47,7 +57,9 @@ def main(options):
         print(f"~/{dest.relative_to(HOME_DIR)} ", end="", flush=True)
 
         if options.force and dest.is_file():
-            dest.unlink()
+            if step(f"Delete {dest!s} before install it? (Y/n): ", options.interactive):
+                dest.unlink()
+
             print(f"[Force]", end=" ", flush=True)
 
         if dest.parent != ROOT_DIR:
@@ -57,12 +69,20 @@ def main(options):
         if dest.exists():
             print(f"[Ok]")
         else:
-            dest.symlink_to(source)
-            print(f"[Installed]")
+            if step(f"Create the symlink to {dest!s}? (Y/n): ", options.interactive):
+                dest.symlink_to(source)
+
+            print(f"[Done]")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Install dotfiles")
+    parser.add_argument(
+        "--interactive",
+        action="store_true",
+        default=False,
+        help="Ask to confirm every action",
+    )
     parser.add_argument(
         "--force",
         action="store_true",
@@ -71,5 +91,8 @@ if __name__ == "__main__":
     )
 
     options = parser.parse_args()
-
-    main(options)
+    try:
+        main(options)
+    except KeyboardInterrupt:
+        print("-- Stop --")
+        sys.exit(1)
