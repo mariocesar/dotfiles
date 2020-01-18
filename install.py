@@ -44,16 +44,16 @@ def walk(path: Path):
         if item.is_dir():
             yield from walk(item)
         else:
-            yield item
+            source = ROOT_DIR / item.relative_to(ROOT_DIR)
+            dest = HOME_DIR / item.relative_to(ROOT_DIR)
+
+            yield source, dest
 
 
 def main(options):
     dotfiles = walk(ROOT_DIR)
 
-    for path in dotfiles:
-        source = ROOT_DIR / path.relative_to(ROOT_DIR)
-        dest = HOME_DIR / path.relative_to(ROOT_DIR)
-
+    for source, dest in dotfiles:
         print(f"~/{dest.relative_to(HOME_DIR)} ", end="", flush=True)
 
         if options.force and dest.is_file():
