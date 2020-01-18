@@ -94,5 +94,5 @@ if __name__ == "__main__":
     try:
         main(options)
     except KeyboardInterrupt:
-        print("-- Stop --")
+        print("\n\n-- Stop --")
         sys.exit(1)
