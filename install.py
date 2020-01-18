@@ -9,8 +9,6 @@ from itertools import chain
 ROOT_DIR = Path(__file__).parent.resolve()
 HOME_DIR = Path.home()
 
-print(ROOT_DIR, HOME_DIR)
-
 os.chdir(ROOT_DIR.parent)
 
 exclude_patterns = [
@@ -39,15 +37,14 @@ def walk(path: Path):
             yield item
 
 
-dotfiles = walk(ROOT_DIR)
-
-
 def main(options):
-    for path in dotfiles:
-        path = (ROOT_DIR / (path.relative_to(ROOT_DIR))).resolve()
-        dest = (HOME_DIR / (path.relative_to(ROOT_DIR))).resolve()
+    dotfiles = walk(ROOT_DIR)
 
-        print(f"{dest.relative_to(HOME_DIR)} ", end="", flush=True)
+    for path in dotfiles:
+        source = ROOT_DIR / path.relative_to(ROOT_DIR)
+        dest = HOME_DIR / path.relative_to(ROOT_DIR)
+
+        print(f"~/{dest.relative_to(HOME_DIR)} ", end="", flush=True)
 
         if options.force and dest.is_file():
             dest.unlink()
@@ -60,7 +57,7 @@ def main(options):
         if dest.exists():
             print(f"[Ok]")
         else:
-            dest.symlink_to(path)
+            dest.symlink_to(source)
             print(f"[Installed]")
 
 
