@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-/home/mariocesar/.pyenv/versions/2.7.13/bin/python \
-    /home/mariocesar/.pyenv/versions/2.7.13/lib/python2.7/site-packages/pgadmin4/pgAdmin4.py

@@ -32,8 +32,10 @@ def step(message, interactive=False):
         said_yes = (input(message) or "n").lower().strip()[0] == "y"
         if said_yes:
             return True
+        else:
+            return False
 
-    return False
+    return True
 
 
 def walk(path: Path):

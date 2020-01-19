@@ -1,13 +1,13 @@
 [user]
-	email = mariocesar.c50@gmail.com
-	name = Mario César
+    email = mariocesar.c50@gmail.com
+    name = Mario César
     signingkey = FBF5320F
 
 [core]
     editor = vim
     autocrlf = input
     quotepath = false
-	excludesfile = /Users/mariocesar/.gitignore
+    excludesfile = /Users/mariocesar/.gitignore
 
 [alias]
     ci = commit
@@ -16,14 +16,14 @@
     serve = !git daemon --reuseaddr --verbose --base-path=. --export-all ./.git --enable=receive-pack
     branches = branch -a
 
-    ; Refuse to merge and exit with a non-zero status
-    ; unless the current HEAD is already up-to-date
-    ; or the merge can be resolved as a fast-forward.
+    # Refuse to merge and exit with a non-zero status
+    # unless the current HEAD is already up-to-date
+    # or the merge can be resolved as a fast-forward.
     pull = pull --ff-only --rebase
     update = merge --ff-only
     join = merge --no-ff
 
-    ; Mercurial flavor
+    # Mercurial flavor
     addremove = !git add --all . && git add -u
 
     graph = log --oneline --graph
@@ -43,45 +43,37 @@
 
 [merge]
     summary = true
-	conflictstyle = diff3
+    conflictstyle = diff3
     strategy-option = patience
-	tool = meld
+    tool = meld
 
 [push]
     default = current
 
 [credential]
-	helper = store
+    helper = store
 
 [mergetool]
-	prompt = false
-
-[gui]
-	editor = gvim
+    prompt = false
 
 [diff]
-	tool = meld
+    tool = meld
     renameLimit = 4020
 
 [instaweb]
     httpd=webrick
     port=1234
-    browser=open 
+    browser=open
 
 [oh-my-zsh]
-	hide-dirty = 1
-	hide-status = 1
+    hide-dirty = 1
+    hide-status = 1
 
 [filter "lfs"]
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
-	required = true
+    clean = git-lfs clean -- %f
+    smudge = git-lfs smudge -- %f
+    process = git-lfs filter-process
+    required = true
+
 [difftool "sourcetree"]
-	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
-	path = 
-[mergetool "sourcetree"]
-	cmd = /Applications/Sourcetree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
-	trustExitCode = true
-[commit]
-	template = /Users/mariocesar/.stCommitMsg
+    cmd = opendiff \"$LOCAL\" \"$REMOTE\"

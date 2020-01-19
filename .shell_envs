@@ -1,0 +1,29 @@
+export LC_COLLATE=C
+export EDITOR='vim'
+export SSH_KEY_PATH="~/.ssh/rsa_id"
+
+# PATH is an environment variable on Unix-like operating systems.
+# Specifying a set of directories where executable programs are located
+
+mkdir -p "${HOME}/.bin"
+
+PATH="${HOME}/.bin:${PATH}"
+
+if [ -d "${HOME}/.cargo/bin" ]; then
+    PATH="${HOME}/.cargo/bin:${PATH}"
+fi
+
+if [ -d "${HOME}/.yarn/bin" ]; then
+    PATH="${HOME}/.yarn/bin:${PATH}"
+    PATH="${HOME}/.config/yarn/global/node_modules/.bin:${PATH}"
+fi
+
+if [ -d "${HOME}/.cargo/bin" ]; then
+    PATH="${HOME}/.cargo/bin:${PATH}"
+fi
+
+export PATH
+
+# Node setup
+
+export NPM_CONFIG_PREFIX=${HOME}/.local

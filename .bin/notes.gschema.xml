@@ -1,6 +1,0 @@
-<schemalist>
-    <schema id="org.gnome.notes" path="/org/gnome/notes/" gettext-domain="notes">
-        <key name="window-position" type="ai"><default>[]</default></key>
-        <key name="window-size" type="ai"><default>[]</default></key>
-    </schema>
-</schemalist>

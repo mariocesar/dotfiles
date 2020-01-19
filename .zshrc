@@ -1,13 +1,10 @@
-# If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:/usr/local/bin:$PATH
-
 # Path to your oh-my-zsh installation.
-export ZSH=/home/mariocesar/.oh-my-zsh
+export ZSH=$HOME/.oh-my-zsh
 
 # Set name of the theme to load. Optionally, if you set this to "random"
 # it'll load a random theme each time that oh-my-zsh is loaded.
 # See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
-ZSH_THEME="agnoster"
+ZSH_THEME="robbyrussell"
 
 # Set list of themes to load
 # Setting this variable when ZSH_THEME=random
@@ -46,53 +43,12 @@ COMPLETION_WAITING_DOTS="true"
 # much, much faster.
 DISABLE_UNTRACKED_FILES_DIRTY="true"
 
-# Uncomment the following line if you want to change the command execution time
-# stamp shown in the history command output.
-# The optional three formats: "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
-# HIST_STAMPS="mm/dd/yyyy"
-
-# Would you like to use another custom folder than $ZSH/custom?
-# ZSH_CUSTOM=/path/to/new-custom-folder
-
-# Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
-# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-plugins=( git )
-
+plugins=(git)
 source $ZSH/oh-my-zsh.sh
 
-export EDITOR='vim'
-export SSH_KEY_PATH="~/.ssh/rsa_id"
-export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
-export LC_COLLATE=C
+if [ -f ~/.zshrc.$(hostname) ]; then
+    . ~/.zshrc.$(hostname)
+fi
 
-function upgrade() {
-    (
-        set -x
-        sudo apt update --yes
-        sudo apt upgrade --yes
-        sudo apt autoremove --yes
-    )
-}
-
-alias tmux="env TERM=xterm-256color tmux"
-
-export PATH="/home/mariocesar/.pyenv/bin:/home/mariocesar/Local/flutter/bin:$PATH"
-export NPM_CONFIG_PREFIX=${HOME}/.local
-
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
-
-function reload-theme() {
-	gsettings set org.gnome.desktop.interface gtk-theme ""
-	gsettings set org.gnome.desktop.interface gtk-theme "${*}"
-}
-
-alias vim=nvim
-
-alias ls='ls --color=auto --group-directories-first --human-readable'
-alias grep='grep --color=auto'
-alias fgrep='fgrep --color=auto'
-alias egrep='egrep --color=auto'
-
+. ~/.shell_envs
+. ~/.shell_aliases
