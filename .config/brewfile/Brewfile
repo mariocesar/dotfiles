@@ -71,6 +71,7 @@ cask sublime-text
 cask alacritty
 cask libreoffice
 cask obs
+cask easy-move-plus-resize
 
 tap dteoh/sqa
 cask slowquitapps
