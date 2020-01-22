@@ -42,6 +42,7 @@ brew wget
 brew watch
 brew xz
 brew zsh
+brew antigen
 
 # Select files
 brew fd
