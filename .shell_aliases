@@ -27,6 +27,20 @@ alias proxy='ssh -C2qTnN -D 8080'
 alias pp="ps axuf | pager"
 
 alias vimrc="vim ~/.config/nvim/init.vim"
+alias vim=nvim
+
+function copy {
+    # Copies the contents of a given file to the system or X Windows clipboard
+    emulate -L zsh
+
+    if [ -z "$1" ]; then
+        # If no argument is given, copy the path of the current dir
+        print -n $PWD | clipcopy
+    A
+    else
+        clipcopy $1
+    fi
+}
 
 function p() {
     # https://github.com/junegunn/fzf/wiki/examples#changing-directory
