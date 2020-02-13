@@ -1,4 +1,8 @@
+export LC_ALL="en_US.UTF-8"
 export LC_COLLATE=C
+export LANG="en_US.UTF-8"
+export LANGUAGE="en_US:en"
+
 export EDITOR='vim'
 export SSH_KEY_PATH="~/.ssh/rsa_id"
 
@@ -32,12 +36,13 @@ export NPM_CONFIG_PREFIX=${HOME}/.local
 if [ -d "${HOME}/.pyenv/bin" ]; then
     export CFLAGS='-O2'
     export PATH="${HOME}/.pyenv/bin:$PATH"
-    eval "$(pyenv init -)"
+    eval "$(pyenv init - zsh --no-rehash)"
     eval "$(pyenv virtualenv-init -)"
-
+    
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # Fix installation in MacOS
-        OPENSSL_PREFIX=$(brew --prefix openssl)
+        # OPENSSL_PREFIX=$(brew --prefix openssl)
+        OPENSSL_PREFIX=/usr/local/opt/openssl@1.1
         export LDFLAGS="-L${OPENSSL_PREFIX}/lib"
         export CPPFLAGS="-I${OPENSSL_PREFIX}/include"
         export PKG_CONFIG_PATH="${OPENSSL_PREFIX}/lib/pkgconfig"
