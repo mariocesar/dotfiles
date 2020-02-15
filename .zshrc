@@ -60,16 +60,18 @@ SPACESHIP_PROMPT_ORDER=(
 )
 
 if [ -f ~/.zshrc.$(hostname) ]; then
-    . ~/.zshrc.$(hostname)
+    source ~/.zshrc.$(hostname)
 fi
 
-. ~/.shell_envs
-. ~/.shell_aliases
-
-source /usr/local/share/antigen/antigen.zsh 
+source ~/.local/share/antigen/antigen.zsh
 
 antigen use oh-my-zsh
 antigen bundle osx
 antigen theme denysdovhan/spaceship-prompt
 antigen apply
+
+source ~/.shell_envs
+source ~/.shell_aliases
+source ~/.shell_provision
+
 

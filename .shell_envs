@@ -26,6 +26,8 @@ if [ -d "${HOME}/.cargo/bin" ]; then
     PATH="${HOME}/.cargo/bin:${PATH}"
 fi
 
+PATH="${HOME}/.local/bin:${PATH}"
+
 export PATH
 
 # Node setup
@@ -36,7 +38,7 @@ export NPM_CONFIG_PREFIX=${HOME}/.local
 if [ -d "${HOME}/.pyenv/bin" ]; then
     export CFLAGS='-O2'
     export PATH="${HOME}/.pyenv/bin:$PATH"
-    eval "$(pyenv init - zsh --no-rehash)"
+    eval "$(pyenv init - zsh)"
     eval "$(pyenv virtualenv-init -)"
     
     if [[ "$OSTYPE" == "darwin"* ]]; then

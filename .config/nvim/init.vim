@@ -5,7 +5,6 @@ Plug 'mattn/emmet-vim'
 Plug 'editorconfig/editorconfig-vim'
 Plug 'mattn/emmet-vim'
 Plug 'morhetz/gruvbox'
-Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'tomtom/tcomment_vim'
 Plug 'tpope/vim-surround'
 Plug 'airblade/vim-gitgutter'
@@ -94,12 +93,9 @@ let g:user_emmet_leader_key = '<leader>,<CR>'
 
 " Python Speedups
 let g:python_host_skip_check=1
-let g:python_host_prog = '/usr/local/bin/python2'
 let g:python3_host_skip_check=1
-let g:python3_host_prog = '/usr/local/bin/python3'
 
 " Ctrl+P options
-
 
 let g:ctrlp_custom_ignore = {
   \'dir':  '\v[\/](\.(git|hg|svn)|node_modules|\_site|public\/(media|static)|dist)',
