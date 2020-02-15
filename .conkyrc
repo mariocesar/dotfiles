@@ -53,10 +53,11 @@ Buenos Aires, Argentina:$alignr${tztime America/Buenos_Aires %H:%M}
 
 CPU Usage: ${alignr}${freq_g} GHz $cpu%
 ${cpubar}
-${voffset -7}${cpubar 6,57 cpu0} ${cpubar 6,57 cpu1} ${cpubar 6,57 cpu2} ${cpubar 6,57 cpu3}
-${voffset -7}${cpubar 6,57 cpu4} ${cpubar 6,57 cpu5} ${cpubar 6,57 cpu6} ${cpubar 6,57 cpu7}
-${voffset -7}${cpubar 6,57 cpu8} ${cpubar 6,57 cpu9} ${cpubar 6,57 cpu10} ${cpubar 6,57 cpu11}
-${voffset -7}${cpubar 6,57 cpu12} ${cpubar 6,57 cpu13} ${cpubar 6,57 cpu14} ${cpubar 6,57 cpu15}
+${voffset -7}${cpubar cpu0 6,57} ${cpubar cpu1 6,57} ${cpubar cpu2 6,57} ${cpubar cpu3 6,57}
+${voffset -7}${cpubar cpu4 6,57} ${cpubar cpu5 6,57} ${cpubar cpu6 6,57} ${cpubar cpu7 6,57}
+${voffset -7}${cpubar cpu8 6,57} ${cpubar cpu9 6,57} ${cpubar cpu10 6,57} ${cpubar cpu11 6,57}
+${voffset -7}${cpubar cpu12 6,57} ${cpubar cpu13 6,57} ${cpubar cpu14 6,57} ${cpubar cpu15 6,57}
+
 RAM Usage: ${alignr}$mem/$memmax - $memperc%
 ${membar}
 File System: / ${alignr}${fs_used /}/${fs_size /}
