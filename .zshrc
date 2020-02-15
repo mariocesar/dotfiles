@@ -1,4 +1,5 @@
-# Path to your oh-my-zsh installation.
+source ~/.shell_provision
+
 export ZSH=$HOME/.oh-my-zsh
 
 # Set name of the theme to load. Optionally, if you set this to "random"
@@ -59,19 +60,23 @@ SPACESHIP_PROMPT_ORDER=(
     char          # Prompt character
 )
 
-if [ -f ~/.zshrc.$(hostname) ]; then
-    source ~/.zshrc.$(hostname)
-fi
+[ -z "$SSH_CONNECTION" ] && ZSH_TMUX_AUTOSTART="true"
+
+ZSH_AUTOSUGGEST_USE_ASYNC="true"
+ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste accept-line)
 
 source ~/.local/share/antigen/antigen.zsh
 
 antigen use oh-my-zsh
 antigen bundle osx
+antigen bundle zsh-users/zsh-syntax-highlighting
 antigen theme denysdovhan/spaceship-prompt
 antigen apply
 
 source ~/.shell_envs
 source ~/.shell_aliases
-source ~/.shell_provision
 
+if [ -f ~/.zshrc.$(hostname) ]; then
+    source ~/.zshrc.$(hostname)
+fi
 
