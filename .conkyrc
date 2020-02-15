@@ -20,8 +20,8 @@ conky.config = {
     border_inner_margin=0,
     border_outer_margin=0,
 
-    maximum_width=230,
-    minimum_width=230,
+    maximum_width=238,
+    minimum_width=238,
 
     alignment='top_right',
 
@@ -32,7 +32,6 @@ conky.config = {
     use_xft = true,
     xftalpha = 0,
     font = 'Noto Sans:size=8',
-    text_buffer_size = 48,
     override_utf8_locale = true,
 
     uppercase=false,
@@ -44,52 +43,42 @@ conky.config = {
 }
 
 conky.text = [[
-${font Open Sans:size=16}${time %I:%M %p}${font}
-${font Open Sans:size=12}${time %A %B %e}${font}
-
 Hostname: ${alignr}$nodename
 Kernel: ${alignr}$kernel
 Uptime: ${alignr}${uptime}
 
 Santa Cruz, Bolivia:$alignr${tztime America/La_Paz %H:%M}
-Austin, Texas:$alignr${tztime America/Chicago %H:%M}
+America/Chicago:$alignr${tztime America/Chicago %H:%M}
 Buenos Aires, Argentina:$alignr${tztime America/Buenos_Aires %H:%M}
 
-# ${execi 60 /home/mariocesar/.bin/agenda} 
-${membar}
-RAM Usage: ${alignr}$mem/$memmax - $memperc%
-
+CPU Usage: ${alignr}${freq_g} GHz $cpu%
 ${cpubar}
-CPU Usage: ${alignr}$cpu%
-
-cpu0 ${cpubar 6,80 cpu0}${offset 13}cpu2 ${cpubar 6,80 cpu2}
-cpu1 ${cpubar 6,80 cpu1}${offset 13}cpu3 ${cpubar 6,80 cpu3}
-
-${alignc}File system:
-/: ${alignr}${fs_used /}/${fs_size /}
-
+${voffset -7}${cpubar 6,57 cpu0} ${cpubar 6,57 cpu1} ${cpubar 6,57 cpu2} ${cpubar 6,57 cpu3}
+${voffset -7}${cpubar 6,57 cpu4} ${cpubar 6,57 cpu5} ${cpubar 6,57 cpu6} ${cpubar 6,57 cpu7}
+${voffset -7}${cpubar 6,57 cpu8} ${cpubar 6,57 cpu9} ${cpubar 6,57 cpu10} ${cpubar 6,57 cpu11}
+${voffset -7}${cpubar 6,57 cpu12} ${cpubar 6,57 cpu13} ${cpubar 6,57 cpu14} ${cpubar 6,57 cpu15}
+RAM Usage: ${alignr}$mem/$memmax - $memperc%
+${membar}
+File System: / ${alignr}${fs_used /}/${fs_size /}
 ${fs_bar 6 /}
-/media/Datos: ${alignr}${fs_used /media/Datos}/${fs_size /media/Datos}
-${fs_bar 6 /media/Datos}
-
-${alignc}Networking:
-${downspeedgraph enp3s0 18,115 gray FFFFFF} ${upspeedgraph enp3s0 18,115 gray FFFFFF} 
-Down: ${downspeed enp3s0} k/s ${goto 125}Up: ${upspeed enp3s0} k/s
-Total: ${totaldown enp3s0} ${goto 125}Total: ${totalup enp3s0}
-
-${alignc}Top Processes:
+${downspeedgraph enp4s0 18,115 gray FFFFFF} ${upspeedgraph enp4s0 18,115 gray FFFFFF} 
+Down: ${downspeed enp4s0} k/s ${goto 125}Up: ${upspeed enp4s0} k/s
+Total: ${totaldown enp4s0} ${goto 125}Total: ${totalup enp4s0}
 
 ${goto 0}TOP CPU${goto 100}PID${goto 145}CPU${goto 190}MEM
 ${goto 0}${top name 1}${goto 100}${top pid 1}${goto 140}${top cpu 1}%${goto 185}${top mem 1}%
 ${goto 0}${top name 2}${goto 100}${top pid 2}${goto 140}${top cpu 2}%${goto 185}${top mem 2}%
 ${goto 0}${top name 3}${goto 100}${top pid 3}${goto 140}${top cpu 3}%${goto 185}${top mem 3}%
+${goto 0}${top name 4}${goto 100}${top pid 4}${goto 140}${top cpu 4}%${goto 185}${top mem 4}%
 
 ${goto 0}TOP RAM${goto 100}PID${goto 145}CPU${goto 190}MEM
 ${goto 0}${top_mem name 1}${goto 100}${top_mem pid 1}${goto 140}${top_mem cpu 1}%${goto 185}${top_mem mem 1}%
 ${goto 0}${top_mem name 2}${goto 100}${top_mem pid 2}${goto 140}${top_mem cpu 2}%${goto 185}${top_mem mem 2}%
 ${goto 0}${top_mem name 3}${goto 100}${top_mem pid 3}${goto 140}${top_mem cpu 3}%${goto 185}${top_mem mem 3}%
+${goto 0}${top_mem name 4}${goto 100}${top_mem pid 3}${goto 140}${top_mem cpu 3}%${goto 185}${top_mem mem 3}%
 
 ${alignc} Docker containers
-
 ${execi 4 docker ps --format 2>/dev/null "- {{.Names}}\n  {{.Status}}\t{{.Size}}\n"}
+
+# ${execi 2 tail -n3 /var/log/syslog | fold -w44}
 ]]
