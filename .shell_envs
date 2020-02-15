@@ -36,6 +36,7 @@ export NPM_CONFIG_PREFIX=${HOME}/.local
 
 # Pyenv setup
 if [ -d "${HOME}/.pyenv/bin" ]; then
+    export PYENV_VIRTUALENV_DISABLE_PROMPT=1
     export CFLAGS='-O2'
     export PATH="${HOME}/.pyenv/bin:$PATH"
     eval "$(pyenv init - zsh)"

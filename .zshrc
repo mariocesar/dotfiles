@@ -49,16 +49,17 @@ plugins=(
 )
 
 SPACESHIP_PROMPT_ORDER=(
-    time          # Time stampts section
     user          # Username section
     dir           # Current directory section
     host          # Hostname section
     git           # Git section (git_branch + git_status)
-    exec_time     # Execution time
+    pyenv
     line_sep      # Line break
     exit_code     # Exit code section
     char          # Prompt character
 )
+
+SPACESHIP_PROMPT_ADD_NEWLINE=false
 
 [ -z "$SSH_CONNECTION" ] && ZSH_TMUX_AUTOSTART="true"
 
@@ -70,6 +71,8 @@ source ~/.local/share/antigen/antigen.zsh
 antigen use oh-my-zsh
 antigen bundle osx
 antigen bundle zsh-users/zsh-syntax-highlighting
+antigen bundle zsh-users/zsh-autosuggestions
+antigen bundle zsh-users/zsh-completions
 antigen theme denysdovhan/spaceship-prompt
 antigen apply
 
