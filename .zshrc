@@ -83,3 +83,7 @@ if [ -f ~/.zshrc.$(hostname) ]; then
     source ~/.zshrc.$(hostname)
 fi
 
+if [ -f ~/.tnsrc ]; then
+    source ~/.tnsrc
+fi
+
