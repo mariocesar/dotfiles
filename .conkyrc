@@ -44,15 +44,14 @@ conky.config = {
 }
 
 conky.text = [[
-Hostname: ${alignr}$nodename
-Kernel: ${alignr}$kernel
-Uptime: ${alignr}${uptime}
+${exec neofetch --stdout --disable uptime shell resolution de wm term memory packages --underline off}
+Uptime: ${uptime}
 
 Santa Cruz, Bolivia:$alignr${tztime America/La_Paz %H:%M}
 America/Chicago:$alignr${tztime America/Chicago %H:%M}
 Buenos Aires, Argentina:$alignr${tztime America/Buenos_Aires %H:%M}
-CPU: ${hwmon 0 temp 1}°C ${goto 100}GPU: ${execi 10 nvidia-settings -query GPUCoreTemp -t | head -n 1}°C
-CPU Usage: ${alignr}${freq_g} GHz $cpu%
+
+CPU: ${freq_g} GHz / ${hwmon 0 temp 1}°C ${alignr}GPU: ${execi 20 nvidia-settings -query GPUCoreTemp -t | head -n 1}°C
 ${cpubar}
 ${voffset -7}${cpubar cpu0 6,57} ${cpubar cpu1 6,57} ${cpubar cpu2 6,57} ${cpubar cpu3 6,57}
 ${voffset -7}${cpubar cpu4 6,57} ${cpubar cpu5 6,57} ${cpubar cpu6 6,57} ${cpubar cpu7 6,57}
