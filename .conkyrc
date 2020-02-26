@@ -1,89 +1,91 @@
 conky.config = {
+    alignment='top_right',
     background=false,
-    update_interval=0.5,
-    cpu_avg_samples=2,
-    net_avg_samples=2,
-  	no_buffers= true,
-	text_buffer_size = 2048,
-    double_buffer=true,
-    no_buffers=true,
-    imlib_cache_size = 10,
-
-    own_window=true,
-    own_window_type='desktop',
-    own_window_transparent=true,
-    own_window_hints = 'undecorated,below,sticky,skip_taskbar,skip_pager', -- own_window_hints undecorate,sticky,skip_taskbar,skip_pager,below
-    own_window_hints='above',
-    own_window_title='equalizer=widget',
-    own_window_argb_visual=true,
-
-    border_width=0,
     border_inner_margin=0,
     border_outer_margin=0,
-
-    maximum_width=238,
-    minimum_width=238,
-
-    alignment='top_right',
-
-    draw_shades=false,
+    border_width=0,
+    cpu_avg_samples=5,
+    default_color='222221',
+    double_buffer=true,
+    draw_borders=true,
+    draw_graph_borders=true,
     draw_outline=false,
-    draw_borders=false,
-    draw_graph_borders=false,
-    use_xft=true,
-    xftalpha=.1,
+    draw_shades=false,
+    font='Noto Mono:size=8',
+    imlib_cache_size = 10,
+    maximum_width=240,
+    minimum_width=240,
+    net_avg_samples=2,
+    no_buffers=true,
     override_utf8_locale=true,
-	font='Open Sans:size=8',
-
-    uppercase=false,
-    default_color='white',
-
-    short_units=true,
+    own_window=true,
+    own_window_argb_visual=true,
+    own_window_hints ='undecorated,below,sticky,skip_taskbar,skip_pager',
+    own_window_title='equalizer=widget',
+    own_window_transparent=true,
+    own_window_type='desktop',
     pad_percents=2,
+    short_units=true,
+    text_buffer_size = 2048,
     top_name_width=15,
+    update_interval=0.5,
+    uppercase=true,
+    use_xft=true,
 }
 
 conky.text = [[
-${exec neofetch --stdout --disable uptime shell resolution de wm term memory packages gpu --underline off}
+OS: ${execi 10000 lsb_release -sd}
+Kernel: ${kernel}
+CPU: ${execi 10000 cat /proc/cpuinfo | grep 'model name' | sed -e 's/model name.*: //'| uniq | cut -c 1-26}
 GPU: ${nvidia modelname}
 Uptime: ${uptime}
 
-Santa Cruz, Bolivia:$alignr${tztime America/La_Paz %H:%M}
-America/Chicago:$alignr${tztime America/Chicago %H:%M}
-Buenos Aires, Argentina:$alignr${tztime America/Buenos_Aires %H:%M}
+Santa Cruz, Bolivia:${alignr}${tztime America/La_Paz %H:%M}
+America/Chicago:${alignr}${tztime America/Chicago %H:%M}
+Buenos Aires, Argentina:${alignr}${tztime America/Buenos_Aires %H:%M}
 
 GPU: ${nvidia gpuutil}% ${nvidia memused}M/${nvidia memfree}M ${alignr}${nvidia gputemp}°C
 CPU: ${freq_g} GHz ${alignr}${hwmon 0 temp 1}°C
-${cpubar}
-${voffset -7}${cpubar cpu0 6,57} ${cpubar cpu1 6,57} ${cpubar cpu2 6,57} ${cpubar cpu3 6,57}
-${voffset -7}${cpubar cpu4 6,57} ${cpubar cpu5 6,57} ${cpubar cpu6 6,57} ${cpubar cpu7 6,57}
-${voffset -7}${cpubar cpu8 6,57} ${cpubar cpu9 6,57} ${cpubar cpu10 6,57} ${cpubar cpu11 6,57}
-${voffset -7}${cpubar cpu12 6,57} ${cpubar cpu13 6,57} ${cpubar cpu14 6,57} ${cpubar cpu15 6,57}
+${cpubar 7,}
+${voffset -6}${cpubar cpu0 7,59}${cpubar cpu1 7,60}${cpubar cpu2 7,60}${cpubar cpu3 7,60}
+${voffset -6}${cpubar cpu4 7,59}${cpubar cpu5 7,60}${cpubar cpu6 7,60}${cpubar cpu7 7,60}
+${voffset -6}${cpubar cpu8 7,59}${cpubar cpu9 7,60}${cpubar cpu10 7,60}${cpubar cpu11 7,60}
+${voffset -6}${cpubar cpu12 7,59}${cpubar cpu13 7,60}${cpubar cpu14 7,60}${cpubar cpu15 7,60}
 
-RAM Usage: ${alignr}$mem/$memmax - $memperc%
+RAM Usage: ${memperc}%${alignr}${mem}/${memmax}
 ${membar}
-File System: / ${alignr}${fs_used /}/${fs_size /}
-${fs_bar 6 /}
-${diskiograph_read /dev/nvme0n1 12,115 -l} ${diskiograph_write /dev/nvme0n1 12,115 -l} 
-${diskio_read} ${goto 125}${diskio_write}
+File System: ${fs_free_perc}%${alignr}${fs_used /}/${fs_size /}
+${fs_bar  /}
+${diskiograph_read /dev/nvme0n1 15,117 -l} ${diskiograph_write /dev/nvme0n1 15,115 -l}
+R/${diskio_read} ${goto 125}W/${diskio_write}
+
+TOP CPU${goto 110}PID${goto 150}CPU${goto 200}MEM
+${top name 1}${goto 100}${top pid 1}${goto 140}${top cpu 1}%${goto 185}${top mem 1}%
+${top name 2}${goto 100}${top pid 2}${goto 140}${top cpu 2}%${goto 185}${top mem 2}%
+${top name 3}${goto 100}${top pid 3}${goto 140}${top cpu 3}%${goto 185}${top mem 3}%
+
+TOP RAM${goto 110}PID${goto 150}CPU${goto 200}MEM
+${top_mem name 1}${goto 100}${top_mem pid 1}${goto 140}${top_mem cpu 1}%${goto 185}${top_mem mem 1}%
+${top_mem name 2}${goto 100}${top_mem pid 2}${goto 140}${top_mem cpu 2}%${goto 185}${top_mem mem 2}%
+${top_mem name 3}${goto 100}${top_mem pid 3}${goto 140}${top_mem cpu 3}%${goto 185}${top_mem mem 3}%
 
 Network: ${alignr}
-${downspeedgraph enp4s0 18,115 gray FFFFFF} ${upspeedgraph enp4s0 18,115 gray FFFFFF} 
+${downspeedgraph enp4s0 15,117} ${upspeedgraph enp4s0 15,115}
 Download: ${downspeed enp4s0}k/s${goto 125}Upload: ${upspeed enp4s0}k/s
 Total: ${totaldown enp4s0} ${goto 125}Total: ${totalup enp4s0}
 
-${goto 0}TOP CPU${goto 100}PID${goto 145}CPU${goto 190}MEM
-${goto 0}${top name 1}${goto 100}${top pid 1}${goto 140}${top cpu 1}%${goto 185}${top mem 1}%
-${goto 0}${top name 2}${goto 100}${top pid 2}${goto 140}${top cpu 2}%${goto 185}${top mem 2}%
-${goto 0}${top name 3}${goto 100}${top pid 3}${goto 140}${top cpu 3}%${goto 185}${top mem 3}%
+Inbound Connect: ${tcp_portmon 1 32767 count}${alignr}Service/Port
+${tcp_portmon 1 32767 rhost 0} ${alignr} ${tcp_portmon 1 32767 lservice 0}
+${tcp_portmon 1 32767 rhost 1} ${alignr} ${tcp_portmon 1 32767 lservice 1}
+${tcp_portmon 1 32767 rhost 2} ${alignr} ${tcp_portmon 1 32767 lservice 2}
 
-${goto 0}TOP RAM${goto 100}PID${goto 145}CPU${goto 190}MEM
-${goto 0}${top_mem name 1}${goto 100}${top_mem pid 1}${goto 140}${top_mem cpu 1}%${goto 185}${top_mem mem 1}%
-${goto 0}${top_mem name 2}${goto 100}${top_mem pid 2}${goto 140}${top_mem cpu 2}%${goto 185}${top_mem mem 2}%
-${goto 0}${top_mem name 3}${goto 100}${top_mem pid 3}${goto 140}${top_mem cpu 3}%${goto 185}${top_mem mem 3}%
+Outbound Connect: ${tcp_portmon 32768 61000 count}${alignr}Service/Port
+${tcp_portmon 32768 61000 rhost 0} ${alignr} ${tcp_portmon 32768 61000 rservice 0}
+${tcp_portmon 32768 61000 rhost 1} ${alignr} ${tcp_portmon 32768 61000 rservice 1}
+${tcp_portmon 32768 61000 rhost 2} ${alignr} ${tcp_portmon 32768 61000 rservice 2}
 
 ${alignc} Docker containers
-${execi 4 docker ps --format 2>/dev/null "- {{.Names}}\n  {{.Status}}\t{{.Size}}\n"}
+${execi 5 docker ps --format 2>/dev/null "- {{.Names}}\n  {{.Status}}\t{{.Size}}\n"}
 
-# ${execi 2 tail -n3 /var/log/syslog | fold -w44}
+#${execi 5 tail -n3 /var/log/syslog | fold -w44}
 ]]
