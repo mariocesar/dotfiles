@@ -11,6 +11,7 @@ Plug 'airblade/vim-gitgutter'
 Plug 'yggdroot/indentline'
 Plug 'othree/javascript-libraries-syntax.vim'
 Plug 'posva/vim-vue'
+Plug 'jceb/vim-orgmode'
 
 call plug#end()
 
