@@ -4,7 +4,7 @@
     signingkey = FBF5320F
 
 [core]
-    editor = vim
+	editor = nvim
     autocrlf = input
     quotepath = false
     excludesfile = /Users/mariocesar/.gitignore
