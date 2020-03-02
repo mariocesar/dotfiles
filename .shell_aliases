@@ -7,6 +7,7 @@ alias ls='exa --group-directories-first'
 alias l='ls -1'
 alias ll='ls -l'
 alias la='ls -al'
+alias tree='tree --dirsfirst -I __pycache__ -I "*.pyc"'
 alias ltree='ls --tree --depth=2'
 alias ltree3='ls --tree --depth=3'
 alias ltree4='ls --tree --depth=4'
@@ -27,7 +28,7 @@ alias proxy='ssh -C2qTnN -D 8080'
 alias pp="ps axuf | pager"
 
 alias vimrc="vim ~/.config/nvim/init.vim"
-alias vim=nvim
+alias keysrc="vim ~/.config/sxhkd/sxhkdrc"
 
 function copy {
     # Copies the contents of a given file to the system or X Windows clipboard
