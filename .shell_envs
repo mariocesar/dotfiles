@@ -6,10 +6,12 @@ export LANGUAGE="en_US:en"
 export EDITOR='vim'
 export SSH_KEY_PATH="~/.ssh/rsa_id"
 
+export XDG_CACHE_HOME=$HOME/.cache
+export XDG_CONFIG_HOME=$HOME/.config
+export XDG_DATA_HOME=$HOME/.local/share
+
 # PATH is an environment variable on Unix-like operating systems.
 # Specifying a set of directories where executable programs are located
-
-mkdir -p "${HOME}/.bin"
 
 PATH="${HOME}/.bin:${PATH}"
 
