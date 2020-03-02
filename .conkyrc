@@ -4,8 +4,8 @@ conky.config = {
     border_inner_margin=0,
     border_outer_margin=0,
     border_width=0,
-    cpu_avg_samples=5,
-    default_color='222221',
+    cpu_avg_samples=2,
+    default_color='cecece',
     double_buffer=true,
     draw_borders=true,
     draw_graph_borders=true,
@@ -34,11 +34,12 @@ conky.config = {
 }
 
 conky.text = [[
-OS: ${execi 10000 lsb_release -sd}
-Kernel: ${kernel}
-CPU: ${execi 10000 cat /proc/cpuinfo | grep 'model name' | sed -e 's/model name.*: //'| uniq | cut -c 1-26}
-GPU: ${nvidia modelname}
-Uptime: ${uptime}
+OS:${alignr}${texeci 10000 lsb_release -sd}
+Kernel:${alignr}${kernel}
+CPU:${alignr}${texeci 10000 cat /proc/cpuinfo | grep 'model name' | sed -e 's/model name.*: //'| uniq | cut -c 1-25}
+GPU:${alignr}${nvidia modelname}
+Uptime:${alignr}${uptime}
+Dropbox:${alignr}${texeci 2 dropbox status}
 
 Santa Cruz, Bolivia:${alignr}${tztime America/La_Paz %H:%M}
 America/Chicago:${alignr}${tztime America/Chicago %H:%M}
@@ -74,18 +75,8 @@ ${downspeedgraph enp4s0 15,117} ${upspeedgraph enp4s0 15,115}
 Download: ${downspeed enp4s0}k/s${goto 125}Upload: ${upspeed enp4s0}k/s
 Total: ${totaldown enp4s0} ${goto 125}Total: ${totalup enp4s0}
 
-Inbound Connect: ${tcp_portmon 1 32767 count}${alignr}Service/Port
-${tcp_portmon 1 32767 rhost 0} ${alignr} ${tcp_portmon 1 32767 lservice 0}
-${tcp_portmon 1 32767 rhost 1} ${alignr} ${tcp_portmon 1 32767 lservice 1}
-${tcp_portmon 1 32767 rhost 2} ${alignr} ${tcp_portmon 1 32767 lservice 2}
-
-Outbound Connect: ${tcp_portmon 32768 61000 count}${alignr}Service/Port
-${tcp_portmon 32768 61000 rhost 0} ${alignr} ${tcp_portmon 32768 61000 rservice 0}
-${tcp_portmon 32768 61000 rhost 1} ${alignr} ${tcp_portmon 32768 61000 rservice 1}
-${tcp_portmon 32768 61000 rhost 2} ${alignr} ${tcp_portmon 32768 61000 rservice 2}
-
 ${alignc} Docker containers
-${execi 5 docker ps --format 2>/dev/null "- {{.Names}}\n  {{.Status}}\t{{.Size}}\n"}
+${texeci 5 docker ps --format 2>/dev/null "- {{.Names}}\n  {{.Status}}\t{{.Size}}\n"}
 
 #${execi 5 tail -n3 /var/log/syslog | fold -w44}
 ]]
