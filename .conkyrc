@@ -41,6 +41,8 @@ GPU:${alignr}${nvidia modelname}
 Uptime:${alignr}${uptime}
 Dropbox:${alignr}${texeci 2 dropbox status}
 
+${texeci 30 /usr/lib/update-notifier/apt-check --human-readable}
+
 Santa Cruz, Bolivia:${alignr}${tztime America/La_Paz %H:%M}
 America/Chicago:${alignr}${tztime America/Chicago %H:%M}
 Buenos Aires, Argentina:${alignr}${tztime America/Buenos_Aires %H:%M}
@@ -51,7 +53,6 @@ ${cpubar 7,}
 ${voffset -6}${cpubar cpu0 7,59}${cpubar cpu1 7,60}${cpubar cpu2 7,60}${cpubar cpu3 7,60}
 ${voffset -6}${cpubar cpu4 7,59}${cpubar cpu5 7,60}${cpubar cpu6 7,60}${cpubar cpu7 7,60}
 ${voffset -6}${cpubar cpu8 7,59}${cpubar cpu9 7,60}${cpubar cpu10 7,60}${cpubar cpu11 7,60}
-${voffset -6}${cpubar cpu12 7,59}${cpubar cpu13 7,60}${cpubar cpu14 7,60}${cpubar cpu15 7,60}
 
 RAM Usage: ${memperc}%${alignr}${mem}/${memmax}
 ${membar}
@@ -75,8 +76,6 @@ ${downspeedgraph enp4s0 15,117} ${upspeedgraph enp4s0 15,115}
 Download: ${downspeed enp4s0}k/s${goto 125}Upload: ${upspeed enp4s0}k/s
 Total: ${totaldown enp4s0} ${goto 125}Total: ${totalup enp4s0}
 
-${alignc} Docker containers
+${alignc}Docker containers
 ${texeci 5 docker ps --format 2>/dev/null "- {{.Names}}\n  {{.Status}}\t{{.Size}}\n"}
-
-#${execi 5 tail -n3 /var/log/syslog | fold -w44}
 ]]
