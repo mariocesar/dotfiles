@@ -66,6 +66,14 @@ SPACESHIP_PROMPT_ADD_NEWLINE=false
 ZSH_AUTOSUGGEST_USE_ASYNC="true"
 ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste accept-line)
 
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=10000000
+SAVEHIST=10000000
+
+setopt EXTENDED_HISTORY
+setopt INC_APPEND_HISTORY
+setopt SHARE_HISTORY
+
 source ~/.local/share/antigen/antigen.zsh
 
 antigen use oh-my-zsh
