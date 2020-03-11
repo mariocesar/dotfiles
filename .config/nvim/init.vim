@@ -1,7 +1,6 @@
 call plug#begin('~/.local/share/nvim/plugged')
 
 Plug 'ctrlpvim/ctrlp.vim'
-Plug 'mattn/emmet-vim'
 Plug 'editorconfig/editorconfig-vim'
 Plug 'mattn/emmet-vim'
 Plug 'morhetz/gruvbox'
@@ -11,7 +10,9 @@ Plug 'airblade/vim-gitgutter'
 Plug 'yggdroot/indentline'
 Plug 'othree/javascript-libraries-syntax.vim'
 Plug 'posva/vim-vue'
-Plug 'jceb/vim-orgmode'
+
+Plug 'godlygeek/tabular'
+Plug 'plasticboy/vim-markdown'
 
 call plug#end()
 
@@ -21,6 +22,8 @@ syntax on
 set termguicolors
 set t_Co=256
 colorscheme gruvbox
+
+hi Normal guibg=NONE ctermbg=NONE
 
 let mapleader=","
 
@@ -46,9 +49,9 @@ set nocursorcolumn
 set scrolljump=5
 
 set autoread  " Detect when a file is changed
-set nocompatible
 set nobackup
 set noswapfile
+set nofoldenable
 
 set listchars=tab:→\ ,eol:¬,trail:•,extends:❯,precedes:❮,nbsp:·
 set showbreak=↪
