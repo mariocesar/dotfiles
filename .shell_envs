@@ -1,3 +1,5 @@
+#!/usr/bin/env zsh
+
 export LC_ALL="en_US.UTF-8"
 export LC_COLLATE=C
 export LANG="en_US.UTF-8"
@@ -13,6 +15,7 @@ export XDG_DATA_HOME=$HOME/.local/share
 # PATH is an environment variable on Unix-like operating systems.
 # Specifying a set of directories where executable programs are located
 
+
 PATH="${HOME}/.bin:${PATH}"
 
 if [ -d "${HOME}/.cargo/bin" ]; then
@@ -26,6 +29,14 @@ fi
 
 if [ -d "${HOME}/.cargo/bin" ]; then
     PATH="${HOME}/.cargo/bin:${PATH}"
+fi
+
+if [ -d "${HOME}/.go/bin" ]; then
+    PATH="${HOME}/.go/bin:${PATH}"
+fi
+
+if [ -d "${HOME}/.rvm/bin" ]; then
+    PATH="${HOME}/.rvm/bin:${PATH}"
 fi
 
 PATH="${HOME}/.local/bin:${PATH}"
