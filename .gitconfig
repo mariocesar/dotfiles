@@ -60,20 +60,9 @@
     tool = meld
     renameLimit = 4020
 
-[instaweb]
-    httpd=webrick
-    port=1234
-    browser=open
-
 [oh-my-zsh]
     hide-dirty = 1
     hide-status = 1
 
-[filter "lfs"]
-    clean = git-lfs clean -- %f
-    smudge = git-lfs smudge -- %f
-    process = git-lfs filter-process
-    required = true
-
-[difftool "sourcetree"]
-    cmd = opendiff \"$LOCAL\" \"$REMOTE\"
+[pull]
+	ff = only
