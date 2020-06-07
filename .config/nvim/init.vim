@@ -9,10 +9,11 @@ Plug 'tpope/vim-surround'
 Plug 'airblade/vim-gitgutter'
 Plug 'yggdroot/indentline'
 Plug 'othree/javascript-libraries-syntax.vim'
-Plug 'posva/vim-vue'
-
 Plug 'godlygeek/tabular'
-Plug 'plasticboy/vim-markdown'
+Plug 'posva/vim-vue'
+Plug 'vimwiki/vimwiki'
+Plug 'reedes/vim-pencil'
+Plug 'reedes/vim-textobj-sentence'
 
 call plug#end()
 
@@ -39,30 +40,54 @@ set splitbelow
 set splitright
 set mouse=a
 set linespace=0
-set autoindent smartindent
-set laststatus=2
+set autoindent
+set smartindent
+set laststatus=0
 set conceallevel=0
 set clipboard+=unnamedplus
-
+set nowrap    " don't wrap lines
 set nocursorline
 set nocursorcolumn
 set scrolljump=5
-
 set autoread  " Detect when a file is changed
-set nobackup
-set noswapfile
 set nofoldenable
-
-set listchars=tab:→\ ,eol:¬,trail:•,extends:❯,precedes:❮,nbsp:·
+set list
+set listchars=space:·,tab:→\ ,trail:·,extends:❯,precedes:❮,nbsp:·
+set showbreak=↪
 set showbreak=↪
 set fillchars=diff:⣿,vert:│
-
-set updatetime=300
-set shortmess+=c
+set updatetime=100
 set signcolumn=yes
 set cmdheight=1
-set lazyredraw " Do not update the screen while a command/macro is running
-set title
+set lazyredraw     " Do not update the screen while a command/macro is running
+set synmaxcol=800  " Don't try to lines highlight longer than 800 characters.
+set shortmess=aITW " suppress PRESS ENTER messages by shortening messages
+set hlsearch       " highlight matches
+set ttimeout
+set ttimeoutlen=100
+
+set nobackup
+set noswapfile
+set noundofile
+" set undofile
+" set undolevels=1000
+" set undoreload=10000
+
+" Highlight trailing whitespace
+highlight RedundantSpaces guifg=White guibg=DarkGray
+match RedundantSpaces /\s\+$/
+
+" Trim trailing spaces on save
+function! StripTrailingWhitespaces()
+    normal mZ
+    " Strip trailing whitespaces
+    silent execute ':%s/\s\+$//e'
+    " Strip extra newlines from EOF
+    silent execute ':%s/\n\+\%$//e'
+    normal `Z
+endfunction
+
+autocmd BufWritePre *.vim,*.py,*.html,*.css,*.js,*.yml,*.ini,*.conf,Makefile :call StripTrailingWhitespaces()
 
 " vim-vue
 let g:vue_pre_processors = 'detect_on_enter'
@@ -88,6 +113,15 @@ set wildignore+=*/public/media/**
 set wildignore+=*/public/static/**
 set wildignore+=*/node_modules/**
 set wildignore+=*DS_Store*
+
+let g:vimwiki_list = [{
+   \'path': '~/Dropbox/Wiki/',
+   \'syntax': 'markdown',
+   \'ext': 'md'
+\}]
+
+map <Leader>w' <Plug>VimwikiSplitLink
+map <Leader>w\ <Plug>VimwikiVSplitLink
 
 " Emmet
 let g:user_emmet_install_global = 0
@@ -140,9 +174,9 @@ let g:coc_global_extensions = [
   \ 'coc-json',
   \ ]
 
-" Cleanup search highlight
-vnoremap <c-S-d> y<ESC>/<c-r>"<CR>
-nnoremap <ESC><ESC> :let @/ = ""<CR>
+" Cleanup search highlight and redraw
+noremap <silent> <ESC><ESC> :<C-u>nohlsearch<cr><C-l>
+inoremap <silent> <ESC><ESC> <C-o>:nohlsearch<cr>
 
 " Mantain the selected blocks when indenting
 vnoremap < <gv
@@ -186,3 +220,11 @@ augroup django
     autocmd FileType jinja,htmldjango nmap <buffer> <Leader>df {{<space><space>}}<left><left><left>
 augroup END
 
+augroup markdown
+    autocmd!
+    autocmd FileType markdown,mkd let g:pencil#textwidth=80
+    autocmd FileType markdown,mkd setlocal colorcolumn=80
+    autocmd FileType markdown,mkd call textobj#sentence#init()
+                              \ | call pencil#init({'wrap': 'hard'})
+
+augroup END
