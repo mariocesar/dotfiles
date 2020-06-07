@@ -1,3 +1,5 @@
+#!/usr/bin/env zsh
+
 # defaults
 alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
@@ -28,7 +30,9 @@ alias proxy='ssh -C2qTnN -D 8080'
 alias pp="ps axuf | pager"
 
 alias vimrc="vim ~/.config/nvim/init.vim"
+alias tmuxrc="vim ~/.tmux.conf"
 alias keysrc="vim ~/.config/sxhkd/sxhkdrc"
+alias wiki="vim -c VimwikiIndex"
 
 function copy {
     # Copies the contents of a given file to the system or X Windows clipboard
@@ -53,11 +57,11 @@ function p() {
     '
 }
 
-lt() { ls -ltrsa "$@" | tail; }
+function lt() { ls -ltrsa "$@" | tail; }
 
-psgrep() { ps axuf | grep -v grep | grep "$@" -i --color=auto; }
+function psgrep() { ps axuf | grep -v grep | grep "$@" -i --color=auto; }
 
-truecolor() {
+function truecolor() {
     awk 'BEGIN{
             s="/\\/\\/\\/\\/\\"; s=s s s s s s s s;
             for (colnum = 0; colnum<77; colnum++) {
@@ -72,3 +76,4 @@ truecolor() {
             printf "\n";
         }'
 }
+
