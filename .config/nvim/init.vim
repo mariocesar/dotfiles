@@ -15,6 +15,9 @@ Plug 'vimwiki/vimwiki'
 Plug 'reedes/vim-pencil'
 Plug 'reedes/vim-textobj-sentence'
 
+Plug 'vim-python/python-syntax'
+Plug 'nvie/vim-flake8'
+
 call plug#end()
 
 filetype plugin on
@@ -208,6 +211,14 @@ augroup json
     autocmd BufNewFile,BufRead,BufReadPost .eslintrc set syntax=json
     autocmd BufNewFile,BufRead,BufReadPost .terserrc set syntax=json
 augroup END
+
+" Python setup
+let g:python_highlight_all = 1
+let g:flake8_show_in_gutter = 1
+let g:flake8_quickfix_height = 3
+let g:flake8_error_marker='❌'
+let g:flake8_warning_marker='❗'
+autocmd BufWritePost *.py call flake8#Flake8()
 
 " Django setup
 augroup django
