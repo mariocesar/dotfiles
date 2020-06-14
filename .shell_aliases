@@ -34,6 +34,21 @@ alias tmuxrc="vim ~/.tmux.conf"
 alias keysrc="vim ~/.config/sxhkd/sxhkdrc"
 alias wiki="vim -c VimwikiIndex"
 
+function loadenv {
+    test -f .env || echo "No .env file in the working directory"
+    oldenv=$(env|sort)
+    export $(grep -v '^#' .env | xargs -d '\n')
+    diff <(echo "$oldenv") <(env | sort) | colordiff
+}
+
+function unloadenv {
+    test -f .env || echo "No .env file in the working directory"
+    oldenv=$(env|sort)
+    unset $(grep -v '^#' .env | sed -E 's/(.*)=.*/\1/' | xargs -d '\n')
+    diff <(echo "$oldenv") <(env | sort) | colordiff
+}
+
+
 function copy {
     # Copies the contents of a given file to the system or X Windows clipboard
     emulate -L zsh

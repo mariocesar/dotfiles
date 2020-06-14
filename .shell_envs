@@ -27,10 +27,6 @@ if [ -d "${HOME}/.yarn/bin" ]; then
     PATH="${HOME}/.config/yarn/global/node_modules/.bin:${PATH}"
 fi
 
-if [ -d "${HOME}/.cargo/bin" ]; then
-    PATH="${HOME}/.cargo/bin:${PATH}"
-fi
-
 if [ -d "${HOME}/.go/bin" ]; then
     PATH="${HOME}/.go/bin:${PATH}"
 fi
@@ -54,7 +50,7 @@ if [ -d "${HOME}/.pyenv/bin" ]; then
     export PATH="${HOME}/.pyenv/bin:$PATH"
     eval "$(pyenv init - zsh)"
     eval "$(pyenv virtualenv-init -)"
-    
+
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # Fix installation in MacOS
         # OPENSSL_PREFIX=$(brew --prefix openssl)

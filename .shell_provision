@@ -1,3 +1,5 @@
+#!/usr/bin/bash
+
 function fetchinstall() {
     if [ ! -f  "${1}" ]; then
         echo "Installing ${1}";
