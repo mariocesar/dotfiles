@@ -48,6 +48,10 @@ function unloadenv {
     diff <(echo "$oldenv") <(env | sort) | colordiff
 }
 
+function webcam-noautofocus {
+    v4l2-ctl -d /dev/video0 --set-ctrl=focus_auto=0
+    v4l2-ctl -d /dev/video0 --set-ctrl=focus_absolute=0
+}
 
 function copy {
     # Copies the contents of a given file to the system or X Windows clipboard
