@@ -13,25 +13,7 @@
     ci = commit
     co = checkout
     st = status
-    serve = !git daemon --reuseaddr --verbose --base-path=. --export-all ./.git --enable=receive-pack
     branches = branch -a
-
-    # Refuse to merge and exit with a non-zero status
-    # unless the current HEAD is already up-to-date
-    # or the merge can be resolved as a fast-forward.
-    pull = pull --ff-only --rebase
-    update = merge --ff-only
-    join = merge --no-ff
-
-    # Mercurial flavor
-    addremove = !git add --all . && git add -u
-
-    graph = log --oneline --graph
-    diff2 = !git difftool -d
-
-    serve-start = instaweb --start
-    serve-stop = instaweb --stop
-
     search = "!f() { git grep \"$1\" $(git rev-list --all); } && f"
 
 [color]
@@ -43,9 +25,12 @@
 
 [merge]
     summary = true
-    conflictstyle = diff3
-    strategy-option = patience
-    tool = meld
+    ff = no
+    commit = no
+
+[pull]
+    default = matching
+    rebase = true
 
 [push]
     default = current
@@ -64,5 +49,3 @@
     hide-dirty = 1
     hide-status = 1
 
-[pull]
-	ff = only
