@@ -2,10 +2,8 @@
 set -ex
 
 sudo apt update
-
 sudo apt upgrade -y
+sudo apt-get autoremove
 
 flatpak update -y
-
-snap refresh 
 

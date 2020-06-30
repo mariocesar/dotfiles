@@ -8,11 +8,6 @@ journalctl --disk-usage
 sudo journalctl --vacuum-time=7d
 journalctl --disk-usage
 
-snap list --all | awk '/disabled/{print $1, $3}' |
-    while read snapname revision; do
-        sudo snap remove "$snapname" --revision="$revision"
-    done
-
 du -sh ~/.cache/thumbnails ||:
 rm -fr ~/.cache/thumbnails
 
