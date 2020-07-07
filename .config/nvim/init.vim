@@ -146,6 +146,9 @@ let g:ctrlp_custom_ignore = {
 let g:ctrlp_map = '<Leader>p'
 let g:ctrlp_cmd = 'CtrlP'
 
+" Fix for annoyances
+nnoremap Q <Nop> " Disabling exmode enter
+
 " Shortcuts
 vnoremap <Leader>s :sort<CR>
 
