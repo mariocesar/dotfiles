@@ -1,20 +1,43 @@
+let g:python3_host_prog = '/home/mariocesar/.pyenv/versions/neovim/bin/python3'
+let g:python_host_prog = '/home/mariocesar/.pyenv/versions/neovim2/bin/python'
+
 call plug#begin('~/.local/share/nvim/plugged')
 
+" Navigation and browse
 Plug 'ctrlpvim/ctrlp.vim'
-Plug 'editorconfig/editorconfig-vim'
-Plug 'mattn/emmet-vim'
-Plug 'morhetz/gruvbox'
-Plug 'tomtom/tcomment_vim'
-Plug 'tpope/vim-surround'
-Plug 'airblade/vim-gitgutter'
-Plug 'yggdroot/indentline'
-Plug 'othree/javascript-libraries-syntax.vim'
-Plug 'godlygeek/tabular'
-Plug 'posva/vim-vue'
-Plug 'vimwiki/vimwiki'
-Plug 'reedes/vim-pencil'
-Plug 'reedes/vim-textobj-sentence'
+Plug 'preservim/nerdtree'
 
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+
+" Text formatting
+Plug 'yggdroot/indentline'
+Plug 'editorconfig/editorconfig-vim'
+
+" Autocomplete
+Plug 'mattn/emmet-vim'
+Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+Plug 'deoplete-plugins/deoplete-jedi'
+
+" TODO: Use Intellisense automatic sync between vscode and read settings for
+" .vscode folder
+"Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
+
+" Theme and visuals
+Plug 'morhetz/gruvbox'
+Plug 'airblade/vim-gitgutter'
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+Plug 'norcalli/nvim-colorizer.lua'
+
+" Languages
+Plug 'othree/javascript-libraries-syntax.vim'
+Plug 'posva/vim-vue'
+
+" Productivity
+Plug 'vimwiki/vimwiki'
+
+" Python
 Plug 'vim-python/python-syntax'
 Plug 'nvie/vim-flake8'
 
@@ -34,18 +57,21 @@ let mapleader=","
 set hidden
 set ruler
 set encoding=utf-8
+
 set expandtab
 set smarttab
 set shiftwidth=4
 set softtabstop=4
 set tabstop=4
+
+set autoindent
+set smartindent
+
 set splitbelow
 set splitright
 set mouse=a
 set linespace=0
-set autoindent
-set smartindent
-set laststatus=0
+set laststatus=1
 set conceallevel=0
 set clipboard+=unnamedplus
 set nowrap    " don't wrap lines
@@ -64,7 +90,17 @@ set signcolumn=yes
 set cmdheight=1
 set lazyredraw     " Do not update the screen while a command/macro is running
 set synmaxcol=800  " Don't try to lines highlight longer than 800 characters.
-set shortmess=aITW " suppress PRESS ENTER messages by shortening messages
+
+set shortmess=A   " Ignore swap file
+set shortmess+=I   " No splash message
+set shortmess+=O   " file-read ovewrite previous
+set shortmess+=T   " Truncate non-file message in middle
+set shortmess+=W   " Don't echo WRITE when writing
+set shortmess+=a   " Use abbreviation for file messages [RO] instead of [Read only]
+set shortmess+=c   " Completition messages
+set shortmess+=o   " file-write ovewrite previous
+set shortmess+=t   " Truncate messages at the start
+
 set hlsearch       " highlight matches
 set ttimeout
 set ttimeoutlen=100
@@ -92,10 +128,17 @@ endfunction
 
 autocmd BufWritePre *.vim,*.py,*.html,*.css,*.js,*.yml,*.ini,*.conf,Makefile :call StripTrailingWhitespaces()
 
-" vim-vue
-let g:vue_pre_processors = 'detect_on_enter'
+" Plug
+let g:plug_window = 'botright new | resize 20'
 
-" Javascript Libraries Syntax
+
+" Status bar
+let AirlineTheme = 'jellybeans'
+let g:airline_powerline_fonts = 1
+let g:airline#extensions#tabline#enabled = 1
+
+" Javascript related
+let g:vue_pre_processors = 'detect_on_enter'
 let g:used_javascript_libs = 'jquery,underscore,react,vue'
 
 " Ignore files
@@ -126,11 +169,13 @@ let g:vimwiki_list = [{
 map <Leader>w' <Plug>VimwikiSplitLink
 map <Leader>w\ <Plug>VimwikiVSplitLink
 
+" Autocomplete
+let g:deoplete#enable_at_startup = 1
+
 " Emmet
 let g:user_emmet_install_global = 0
 autocmd FileType html,htmldjango,css,jsx,js,vue EmmetInstall
-"let g:user_emmet_leader_key = '<leader>e'
-let g:user_emmet_leader_key = '<leader>,<CR>'
+let g:user_emmet_leader_key=','
 
 " Python Speedups
 let g:python_host_skip_check=1
@@ -146,6 +191,14 @@ let g:ctrlp_custom_ignore = {
 let g:ctrlp_map = '<Leader>p'
 let g:ctrlp_cmd = 'CtrlP'
 
+" NerdTree
+
+"" Open Nerdtree when a folder is specified
+map <Leader>e :NERDTreeToggle<CR>
+
+let g:NERDTreeDirArrowExpandable = '▸'
+let g:NERDTreeDirArrowCollapsible = '▾'
+
 " Fix for annoyances
 nnoremap Q <Nop> " Disabling exmode enter
 
@@ -154,7 +207,6 @@ vnoremap <Leader>s :sort<CR>
 
 noremap <Leader>q :q<CR>
 noremap <Leader>w :w<CR>
-
 noremap <leader>c :tabnew<CR>
 noremap <leader>q :tabclose<CR>
 noremap <leader>j :tabprevious<CR>
@@ -169,16 +221,6 @@ noremap <leader>. :lcd %:p:h<CR>
 " tab  selection in visual mode
 vmap <Tab> >gv
 vmap <S-Tab> <gv
-
-" Neoclide/coc setup
-let g:coc_global_extensions = [
-  \ 'coc-snippets',
-  \ 'coc-pairs',
-  \ 'coc-tsserver',
-  \ 'coc-eslint',
-  \ 'coc-prettier',
-  \ 'coc-json',
-  \ ]
 
 " Cleanup search highlight and redraw
 noremap <silent> <ESC><ESC> :<C-u>nohlsearch<cr><C-l>
@@ -232,13 +274,4 @@ augroup django
 
     autocmd FileType jinja,htmldjango nmap <buffer> <Leader>dt {%<space><space>%}<left><left><left>
     autocmd FileType jinja,htmldjango nmap <buffer> <Leader>df {{<space><space>}}<left><left><left>
-augroup END
-
-augroup markdown
-    autocmd!
-    autocmd FileType markdown,mkd let g:pencil#textwidth=80
-    autocmd FileType markdown,mkd setlocal colorcolumn=80
-    autocmd FileType markdown,mkd call textobj#sentence#init()
-                              \ | call pencil#init({'wrap': 'hard'})
-
 augroup END
