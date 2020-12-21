@@ -25,6 +25,8 @@ alias ..='cd ..'
 alias ...='cd ../..'
 alias -- -="cd -"
 
+alias o="xdg-open"
+
 alias makepassword="pwgen -y -n 18 1"
 alias proxy='ssh -C2qTnN -D 8080'
 alias pp="ps axuf | pager"
@@ -33,6 +35,8 @@ alias vimrc="vim ~/.config/nvim/init.vim"
 alias tmuxrc="vim ~/.tmux.conf"
 alias keysrc="vim ~/.config/sxhkd/sxhkdrc"
 alias wiki="vim -c VimwikiIndex"
+
+function docker-stop-all { docker ps && docker stop $(docker ps -q); }
 
 function loadenv {
     test -f .env || echo "No .env file in the working directory"
@@ -94,5 +98,28 @@ function truecolor() {
             }
             printf "\n";
         }'
+}
+
+function test_emojis() {
+    echo "♥👍😍🙊🥱🥺✨✅🎊🏄"
+}
+
+function countdown(){
+    date1=$((`date +%s` + $1));
+    while [ "$date1" -ge `date +%s` ]; do 
+    ## Is this more than 24h away?
+    days=$(($(($(( $date1 - $(date +%s))) * 1 ))/86400))
+    echo -ne "$days day(s) and $(date -u --date @$(($date1 - `date +%s`)) +%H:%M:%S)\r"; 
+    sleep 0.1
+    done
+}
+
+function stopwatch(){
+    date1=`date +%s`; 
+    while true; do 
+    days=$(( $(($(date +%s) - date1)) / 86400 ))
+    echo -ne "$days day(s) and $(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)\r";
+    sleep 0.1
+    done
 }
 

@@ -39,17 +39,11 @@ PATH="${HOME}/.local/bin:${PATH}"
 
 export PATH
 
-# Node setup
-
-export NPM_CONFIG_PREFIX=${HOME}/.local
-
 # Pyenv setup
 if [ -d "${HOME}/.pyenv/bin" ]; then
     export PYENV_VIRTUALENV_DISABLE_PROMPT=1
-    export CFLAGS='-O2'
     export PATH="${HOME}/.pyenv/bin:$PATH"
-    eval "$(pyenv init - zsh)"
-    eval "$(pyenv virtualenv-init -)"
+    source ~/.pyenv.zsh
 
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # Fix installation in MacOS
@@ -58,5 +52,12 @@ if [ -d "${HOME}/.pyenv/bin" ]; then
         export LDFLAGS="-L${OPENSSL_PREFIX}/lib"
         export CPPFLAGS="-I${OPENSSL_PREFIX}/include"
         export PKG_CONFIG_PATH="${OPENSSL_PREFIX}/lib/pkgconfig"
-    fi 
+    fi
 fi
+
+# if [ -d "${HOME}/.config/nvm" ]; then
+#     export NVM_DIR="$HOME/.config/nvm"
+#     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+#     [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+# fi
+
