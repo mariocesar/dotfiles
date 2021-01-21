@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-set -ex
+set -eux
 
 sudo apt update
-sudo apt upgrade -y
+sudo apt upgrade -y --allow-downgrades
 sudo apt-get autoremove
 
 flatpak uninstall -y --unused
