@@ -1,53 +1,67 @@
+set nocompatible
+filetype off
+
 let g:python3_host_prog = '/home/mariocesar/.pyenv/versions/neovim/bin/python3'
 let g:python_host_prog = '/home/mariocesar/.pyenv/versions/neovim2/bin/python'
 
 call plug#begin('~/.local/share/nvim/plugged')
 
-" Navigation and browse
-Plug 'ctrlpvim/ctrlp.vim'
-Plug 'preservim/nerdtree'
+    " Navigation and browse
+    Plug 'ctrlpvim/ctrlp.vim'
+    Plug 'preservim/nerdtree'
 
-Plug 'vim-airline/vim-airline'
-Plug 'vim-airline/vim-airline-themes'
+    " Text formatting
+    Plug 'yggdroot/indentline'
+    Plug 'editorconfig/editorconfig-vim'
 
-" Text formatting
-Plug 'yggdroot/indentline'
-Plug 'editorconfig/editorconfig-vim'
+    " Autocomplete
+    Plug 'mattn/emmet-vim'
+    Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
-" Autocomplete
-Plug 'mattn/emmet-vim'
-Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-Plug 'deoplete-plugins/deoplete-jedi'
+    " Theme and visuals
+    Plug 'morhetz/gruvbox'
+    Plug 'airblade/vim-gitgutter'
+    Plug 'itchyny/lightline.vim'
+    Plug 'norcalli/nvim-colorizer.lua'
 
-" TODO: Use Intellisense automatic sync between vscode and read settings for
-" .vscode folder
-"Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
+    " Languages
+    Plug 'othree/javascript-libraries-syntax.vim'
+    Plug 'posva/vim-vue'
+    Plug 'tpope/vim-ragtag' " Endings for xml languages
+    Plug 'othree/html5.vim', { 'for': 'html' }
 
-" Theme and visuals
-Plug 'morhetz/gruvbox'
-Plug 'airblade/vim-gitgutter'
-Plug 'vim-airline/vim-airline'
-Plug 'vim-airline/vim-airline-themes'
-Plug 'norcalli/nvim-colorizer.lua'
+    " Productivity
+    Plug 'vim-ctrlspace/vim-ctrlspace'
+    Plug 'vimwiki/vimwiki'
+    Plug 'vifm/vifm.vim'
 
-" Languages
-Plug 'othree/javascript-libraries-syntax.vim'
-Plug 'posva/vim-vue'
-
-" Productivity
-Plug 'vimwiki/vimwiki'
-
-" Python
-Plug 'vim-python/python-syntax'
-Plug 'nvie/vim-flake8'
+    " Python
+    Plug 'vim-python/python-syntax'
+    Plug 'nvie/vim-flake8', { 'for': 'python' }
 
 call plug#end()
 
-filetype plugin on
+filetype plugin indent on
 syntax on
 
 set termguicolors
 set t_Co=256
+
+if &term =~ '256color'
+    " disable background color erase
+    set t_ut=
+endif
+
+" enable 24 bit color support if supported
+if (has("termguicolors"))
+    if (!(has("nvim")))
+        let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+        let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+    endif
+    set termguicolors
+endif
+
+
 colorscheme gruvbox
 
 hi Normal guibg=NONE ctermbg=NONE
@@ -58,11 +72,13 @@ set hidden
 set ruler
 set encoding=utf-8
 
+" Tabs vs spaces
 set expandtab
 set smarttab
 set shiftwidth=4
 set softtabstop=4
 set tabstop=4
+set shiftround " round indent to a multiple of 'shiftwidth'
 
 set autoindent
 set smartindent
@@ -71,8 +87,8 @@ set splitbelow
 set splitright
 set mouse=a
 set linespace=0
-set laststatus=1
 set conceallevel=0
+set backspace=indent,eol,start " make backspace behave in a sane manner
 set clipboard+=unnamedplus
 set nowrap    " don't wrap lines
 set nocursorline
@@ -91,7 +107,10 @@ set cmdheight=1
 set lazyredraw     " Do not update the screen while a command/macro is running
 set synmaxcol=800  " Don't try to lines highlight longer than 800 characters.
 
-set shortmess=A   " Ignore swap file
+set laststatus=2
+set title          " Vim sets terminal title
+
+set shortmess=A    " Ignore swap file
 set shortmess+=I   " No splash message
 set shortmess+=O   " file-read ovewrite previous
 set shortmess+=T   " Truncate non-file message in middle
@@ -116,6 +135,20 @@ set noundofile
 highlight RedundantSpaces guifg=White guibg=DarkGray
 match RedundantSpaces /\s\+$/
 
+" Make comments italic
+highlight Comment cterm=italic term=italic gui=italic
+
+" GitGutter
+let g:gitgutter_realtime = 1
+let g:gitgutter_sign_added = '+'
+let g:gitgutter_sign_modified = '±'
+let g:gitgutter_sign_removed = '⨯'
+let g:gitgutter_sign_removed_first_line = '⨯'
+let g:gitgutter_sign_modified_removed = '±'
+let g:gitgutter_highlight_nr_lines = 1
+
+autocmd BufEnter * GitGutterLineNrHighlightsEnable
+
 " Trim trailing spaces on save
 function! StripTrailingWhitespaces()
     normal mZ
@@ -131,17 +164,42 @@ autocmd BufWritePre *.vim,*.py,*.html,*.css,*.js,*.yml,*.ini,*.conf,Makefile :ca
 " Plug
 let g:plug_window = 'botright new | resize 20'
 
-
 " Status bar
-let AirlineTheme = 'jellybeans'
-let g:airline_powerline_fonts = 1
-let g:airline#extensions#tabline#enabled = 1
+let g:lightline = {
+  \ 'colorscheme': 'wombat',
+\ }
 
 " Javascript related
 let g:vue_pre_processors = 'detect_on_enter'
 let g:used_javascript_libs = 'jquery,underscore,react,vue'
 
-" Ignore files
+" Autocomplete COC
+
+let g:coc_global_extensions = [
+\ 'coc-css',
+\ 'coc-json',
+\ 'coc-tsserver',
+\ 'coc-git',
+\ 'coc-eslint',
+\ 'coc-tslint-plugin',
+\ 'coc-pairs',
+\ 'coc-sh',
+\ 'coc-vimlsp',
+\ 'coc-emmet',
+\ 'coc-prettier',
+\ 'coc-ultisnips',
+\ 'coc-explorer',
+\ 'coc-diagnostic'
+\ ]
+
+autocmd CursorHold * silent call CocActionAsync('highlight')
+
+" coc-prettier
+command! -nargs=0 Prettier :CocCommand prettier.formatFile
+nmap <leader>f :CocCommand prettier.formatFile<cr>
+
+" Manage files
+set path+=**    " Searches current directory recursively
 set wildmenu
 set wildmode=longest,full
 
@@ -172,14 +230,13 @@ map <Leader>w\ <Plug>VimwikiVSplitLink
 " Autocomplete
 let g:deoplete#enable_at_startup = 1
 
+
+let g:CtrlSpaceDefaultMappingKey = "<Leader><space> "
+
 " Emmet
 let g:user_emmet_install_global = 0
 autocmd FileType html,htmldjango,css,jsx,js,vue EmmetInstall
 let g:user_emmet_leader_key=','
-
-" Python Speedups
-let g:python_host_skip_check=1
-let g:python3_host_skip_check=1
 
 " Ctrl+P options
 
@@ -191,13 +248,11 @@ let g:ctrlp_custom_ignore = {
 let g:ctrlp_map = '<Leader>p'
 let g:ctrlp_cmd = 'CtrlP'
 
-" NerdTree
+map <Leader>vv :Vifm<CR>
+map <Leader>vs :VsplitVifm<CR>
+map <Leader>vt :TabVifm<CR>
 
-"" Open Nerdtree when a folder is specified
-map <Leader>e :NERDTreeToggle<CR>
-
-let g:NERDTreeDirArrowExpandable = '▸'
-let g:NERDTreeDirArrowCollapsible = '▾'
+map <Leader>tt :new term://zsh<CR>     " Open terminal
 
 " Fix for annoyances
 nnoremap Q <Nop> " Disabling exmode enter
@@ -258,6 +313,9 @@ augroup json
 augroup END
 
 " Python setup
+let g:python_host_skip_check=1
+let g:python3_host_skip_check=1
+
 let g:python_highlight_all = 1
 let g:flake8_show_in_gutter = 1
 let g:flake8_quickfix_height = 3
