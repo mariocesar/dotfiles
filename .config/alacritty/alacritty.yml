@@ -1,4 +1,4 @@
-background_opacity: 0.96
+background_opacity: 1
 draw_bold_text_with_bright_colors: true
 
 dpi:
@@ -29,7 +29,7 @@ shell:
 colors:
   # Default colors
   primary:
-    background: '#0c0c0c'
+    background: '#282423'
     foreground: '#f8f8f2'
 
   # Normal colors
