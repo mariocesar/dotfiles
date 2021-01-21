@@ -1,13 +1,13 @@
 [user]
     email = mariocesar.c50@gmail.com
-    name = Mario César
-    signingkey = FBF5320F
+	name = Mario César
+	signingkey = F757C8CD
 
 [core]
-	editor = nvim
+    editor = nvim
     autocrlf = input
     quotepath = false
-    excludesfile = /Users/mariocesar/.gitignore
+	excludesfile = /Users/mariocesar/.gitignore_global
 
 [alias]
     ci = commit
@@ -30,7 +30,7 @@
 
 [pull]
     default = matching
-    rebase = true
+	rebase = true
 
 [push]
     default = current
@@ -49,3 +49,18 @@
     hide-dirty = 1
     hide-status = 1
 
+[init]
+	defaultBranch = master
+[branch]
+	autoSetupRebase = always
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[difftool "sourcetree"]
+	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
+	path = 
+[mergetool "sourcetree"]
+	cmd = /Applications/Sourcetree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
+	trustExitCode = true

@@ -1,4 +1,4 @@
-background_opacity: 0.98
+background_opacity: 0.96
 draw_bold_text_with_bright_colors: true
 
 dpi:
@@ -21,12 +21,15 @@ window:
 
 scrolling:
   history: 10000
-  multiplier: 3
+  multiplier: 1
+
+shell:
+  program: /bin/zsh
 
 colors:
   # Default colors
   primary:
-    background: '#2c2c2c'
+    background: '#0c0c0c'
     foreground: '#f8f8f2'
 
   # Normal colors
@@ -53,18 +56,18 @@ colors:
 
 font:
   normal:
-    family: monospace
+    family: Fira Code
     style: Regular
 
   bold:
-    family: monospace
+    family: Fira Code
     style: Bold
 
   italic:
-    family: monospace
+    family: Fira Code
     style: Italic
 
-  size: 9
+  size: 14
 
   offset:
     x: 0
@@ -75,6 +78,7 @@ font:
     y: 0
 
   use_thin_strokes: true
+  scale_with_dpi: true
 
 mouse:
   hide_when_typing: true
