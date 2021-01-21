@@ -1,13 +1,4 @@
-echo -n "Loading zplug"
-
-export ZPLUG_HOME=${HOME}/.zplug
-source $ZPLUG_HOME/init.zsh
-
-zplug "denysdovhan/spaceship-prompt", use:spaceship.zsh, from:github, as:theme
-
-if ! zplug check; then
-    zplug install
-fi
+export PATH="${HOME}/.local/bin:${PATH}"
 
 SPACESHIP_GIT_STATUS_SHOW=false
 SPACESHIP_USER_SHOW=true
@@ -24,11 +15,20 @@ SPACESHIP_PROMPT_ORDER=(
     char          # Prompt character
 )
 
+echo -n "Loading zplug"
+
+export ZPLUG_HOME=${HOME}/.zplug
+source $ZPLUG_HOME/init.zsh
+
+zplug "denysdovhan/spaceship-prompt", use:spaceship.zsh, from:github, as:theme
+
+if ! zplug check; then
+    zplug install
+fi
+
 zplug load
 
 echo " [done]"
-
-export PATH="${HOME}/.local/bin:${PATH}"
 
 source "${HOME}/.aliases"
 
