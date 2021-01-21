@@ -192,7 +192,9 @@ let g:coc_global_extensions = [
 \ 'coc-diagnostic'
 \ ]
 
-autocmd CursorHold * silent call CocActionAsync('highlight')
+if exists("*CocActionAsync")
+    autocmd CursorHold * silent call CocActionAsync('highlight')
+endif
 
 " coc-prettier
 command! -nargs=0 Prettier :CocCommand prettier.formatFile
