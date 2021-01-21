@@ -1,7 +1,5 @@
 source ~/.shell_provision
 
-export ZSH=$HOME/.oh-my-zsh
-
 # Set name of the theme to load. Optionally, if you set this to "random"
 # it'll load a random theme each time that oh-my-zsh is loaded.
 # See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
@@ -69,14 +67,14 @@ ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste accept-line)
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
+source "${HOME}/.zgen/zgen.zsh"
 
-source ~/.local/share/antigen/antigen.zsh
-
-antigen use oh-my-zsh
-# antigen bundle osx
-antigen bundle zsh-users/zsh-completions
-antigen theme denysdovhan/spaceship-prompt
-antigen apply
+if ! zgen saved; then
+    zgen oh-my-zsh
+    zgen load zsh-users/zsh-completions src
+    zgen load denysdovhan/spaceship-prompt spaceship
+    zgen save
+fi
 
 source ~/.shell_envs
 source ~/.shell_aliases
