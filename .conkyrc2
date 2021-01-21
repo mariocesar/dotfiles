@@ -48,7 +48,7 @@ conky.text = [[
 <Leaver>s   Sort selected
 <Leader>tt  Terminal
 
--- 
+--
 
 h j k l move one character
 ⬅ ⬇ ⬆ ➡
@@ -60,7 +60,7 @@ h j k l move one character
 b   w   Previous/next word
 %   Jump to matching bracket { } [ ] ( )
 
-H   M   L   Move to top/middle/bottom of screen 
+H   M   L   Move to top/middle/bottom of screen
 
 z   Scroll the line with the cursor to:
   zt  Top of the screen

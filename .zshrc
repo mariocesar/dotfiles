@@ -1,6 +1,6 @@
 echo -n "Loading zplug"
 
-export ZPLUG_HOME=/usr/local/opt/zplug
+export ZPLUG_HOME=${HOME}/.zplug
 source $ZPLUG_HOME/init.zsh
 
 zplug "denysdovhan/spaceship-prompt", use:spaceship.zsh, from:github, as:theme
