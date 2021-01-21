@@ -5,6 +5,8 @@ alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 
+alias vim=nvim
+
 alias ls='ls --color=auto --group-directories-first'
 alias l='ls -1'
 alias ll='ls -l'
