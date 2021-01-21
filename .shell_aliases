@@ -123,3 +123,23 @@ function stopwatch(){
     done
 }
 
+function makevirtualenv() {
+    local name=$(basename $(pwd))
+    echo Creating virtualenv `${name}`.
+
+    (
+        set -eux
+        pyenv virtualenv 3.8.6 ${name}
+        pyenv local ${name}
+        pip install -U pip setuptools wheel
+    )
+
+    echo Creation of `${name}` completed.
+}
+
+function keeptrying() {
+    while ! $($*)
+    do
+        echo "Try again"
+    done
+}
