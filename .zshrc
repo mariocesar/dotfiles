@@ -1,5 +1,11 @@
 export PATH="${HOME}/.local/bin:${PATH}"
 
+export HISTSIZE=10000
+export SAVEHIST=10000
+export HISTFILE=~/.zhistory
+setopt INC_APPEND_HISTORY
+setopt EXTENDED_HISTORY
+
 SPACESHIP_GIT_STATUS_SHOW=false
 SPACESHIP_USER_SHOW=true
 SPACESHIP_HOST_SHOW=true
@@ -15,8 +21,6 @@ SPACESHIP_PROMPT_ORDER=(
     char          # Prompt character
 )
 
-echo -n "Loading zplug"
-
 export ZPLUG_HOME=${HOME}/.zplug
 source $ZPLUG_HOME/init.zsh
 
@@ -27,8 +31,6 @@ if ! zplug check; then
 fi
 
 zplug load
-
-echo " [done]"
 
 source "${HOME}/.aliases"
 

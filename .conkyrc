@@ -74,9 +74,9 @@ ${top_mem name 2}${goto 100}${top_mem pid 2}${goto 140}${top_mem cpu 2}%${goto 1
 ${top_mem name 3}${goto 100}${top_mem pid 3}${goto 140}${top_mem cpu 3}%${goto 185}${top_mem mem 3}%
 
 Network: ${alignr}
-${downspeedgraph enp4s0 15,117} ${upspeedgraph enp4s0 15,115}
-Download: ${downspeed enp4s0}k/s${goto 125}Upload: ${upspeed enp4s0}k/s
-Total: ${totaldown enp4s0} ${goto 125}Total: ${totalup enp4s0}
+${downspeedgraph wlx386b1cd41cc4 15,117} ${upspeedgraph wlx386b1cd41cc4 15,115}
+Download: ${downspeed wlx386b1cd41cc4}/s${goto 125}Upload: ${upspeed wlx386b1cd41cc4}/s
+Total: ${totaldown wlx386b1cd41cc4} ${goto 125}Total: ${totalup wlx386b1cd41cc4}
 
 ${alignc}Docker containers
 ${texeci 5 docker ps --format 2>/dev/null "- {{.Names}}\n  {{.Status}}\t{{.Size}}\n"}

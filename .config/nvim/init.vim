@@ -8,7 +8,6 @@ call plug#begin('~/.local/share/nvim/plugged')
 
     " Navigation and browse
     Plug 'ctrlpvim/ctrlp.vim'
-    Plug 'preservim/nerdtree'
 
     " Text formatting
     Plug 'yggdroot/indentline'
@@ -39,6 +38,8 @@ call plug#begin('~/.local/share/nvim/plugged')
     Plug 'vim-python/python-syntax'
     Plug 'nvie/vim-flake8', { 'for': 'python' }
 
+    " Syntax
+    Plug 'chr4/nginx.vim'
 call plug#end()
 
 filetype plugin indent on
@@ -94,6 +95,7 @@ set nowrap    " don't wrap lines
 set nocursorline
 set nocursorcolumn
 set scrolljump=5
+set scrolloff=8
 set autoread  " Detect when a file is changed
 set nofoldenable
 set list
@@ -130,6 +132,8 @@ set noundofile
 " set undofile
 " set undolevels=1000
 " set undoreload=10000
+
+set exrc " Enable the loading of local .vimrc config files in the current directory
 
 " Highlight trailing whitespace
 highlight RedundantSpaces guifg=White guibg=DarkGray
@@ -219,6 +223,11 @@ set wildignore+=*/public/media/**
 set wildignore+=*/public/static/**
 set wildignore+=*/node_modules/**
 set wildignore+=*DS_Store*
+
+let g:netrw_liststyle = 3
+let g:netrw_banner = 0
+let g:netrw_winsize = 25
+let g:netrw_list_hide = '__pycache__,\.git,egg\-info'
 
 let g:vimwiki_list = [{
    \'path': '~/Dropbox/Wiki/',

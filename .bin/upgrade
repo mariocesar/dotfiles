@@ -3,7 +3,7 @@ set -eux
 
 sudo apt update
 sudo apt upgrade -y --allow-downgrades
-sudo apt-get autoremove
+sudo apt-get autoremove -y
 
 flatpak uninstall -y --unused
 flatpak update -y
