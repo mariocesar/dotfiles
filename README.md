@@ -5,7 +5,7 @@ This works for me, not always, but when it works, it makes my life easier. I use
 When I have to work on something challenging, and I'm stuck. I'm here sharpening knives instead of wandering on Tik Tok or YouTube. It makes me spend time learning and improving. It makes me move forward.
 
 ``` terminal
-python install --help
+python install.py --help
 usage: install.py [-h] [--noinput] [--force] [--fake]
 
 Install dotfiles
@@ -16,5 +16,4 @@ options:
   --force     If target file exists it replaces it
   --fake
 
-python install.py
 ```
