@@ -44,6 +44,13 @@ cmd("Reload", "source $MYVIMRC", {
     desc = 'reload config file with :Reload'
 })
 
+-- open (new) terminal at the bottom of the current tab
+cmd("Terminal", function(tbl)
+    require("term"):open{
+        cmd = #tbl.args > 0 and tbl.args or nil
+    }
+end, { nargs = "?" })
+
 -- Keymaps
 local map, opts = vim.keymap.set, {
     noremap = true,
@@ -153,7 +160,9 @@ end
 -- Markdown preferences
 
 local markdown = au("markdown")
-local wrap = markdown({"FileType"}, {pattern="markdown"})
+local wrap = markdown({"FileType"}, {
+    pattern = "markdown"
+})
 
 function wrap.handler()
     vim.opt_local.wrap = true
