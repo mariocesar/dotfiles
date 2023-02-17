@@ -1,66 +1,49 @@
 [user]
-    email = mariocesar.c50@gmail.com
-	name = Mario César
-	signingkey = F757C8CD
+email = mariocesar.c50@gmail.com
+name = Mario César
 
 [core]
-    editor = nvim
-    autocrlf = input
-    quotepath = false
-	excludesfile = /Users/mariocesar/.gitignore_global
+editor = nvim
+autocrlf = input
+quotepath = false
 
 [alias]
-    ci = commit
-    co = checkout
-    st = status
-    branches = branch -a
-    search = "!f() { git grep \"$1\" $(git rev-list --all); } && f"
+ci = commit
+co = checkout
+st = status
+branches = branch -a
+search = "!f() { git grep \"$1\" $(git rev-list --all); } && f"
 
 [color]
-    ui = true
-    branch = auto
-    diff = auto
-    status = auto
-    interactive = auto
+ui = true
+branch = auto
+diff = auto
+status = auto
+interactive = auto
 
 [merge]
-    summary = true
-    ff = no
-    commit = no
+summary = true
+ff = no
+commit = no
 
 [pull]
-    default = matching
-	rebase = true
+default = matching
+rebase = true
 
 [push]
-    default = current
+default = current
 
 [credential]
-    helper = store
-
-[mergetool]
-    prompt = false
-
-[diff]
-    tool = meld
-    renameLimit = 4020
-
-[oh-my-zsh]
-    hide-dirty = 1
-    hide-status = 1
+helper = store
 
 [init]
-	defaultBranch = master
+defaultBranch = main
+
 [branch]
-	autoSetupRebase = always
+autoSetupRebase = always
+
 [filter "lfs"]
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
-	required = true
-[difftool "sourcetree"]
-	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
-	path = 
-[mergetool "sourcetree"]
-	cmd = /Applications/Sourcetree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
-	trustExitCode = true
+clean = git-lfs clean -- %f
+smudge = git-lfs smudge -- %f
+process = git-lfs filter-process
+required = true
