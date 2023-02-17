@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 import argparse
-import glob
-import re
 import os
+import re
 import sys
 from pathlib import Path
-from itertools import chain
+from typing import Generator, Tuple
 
 ROOT_DIR = Path(__file__).parent.resolve()
 HOME_DIR = Path.home()
-
-os.chdir(ROOT_DIR.parent)
 
 exclude_patterns = [
     re.compile(r"^\.git/").match,
@@ -22,12 +19,14 @@ exclude_patterns = [
     re.compile(r"install\.py").match,
 ]
 
-skip = lambda path: any(
-    map(lambda match: match(str(path.relative_to(ROOT_DIR))), exclude_patterns)
-)
+
+def skip(path: Path) -> bool:
+    return any(
+        map(lambda match: match(str(path.relative_to(ROOT_DIR))), exclude_patterns)
+    )
 
 
-def step(message, interactive=False):
+def step(message: str, interactive: bool = False):
     if interactive:
         said_yes = (input(message) or "n").lower().strip()[0] == "y"
         if said_yes:
@@ -38,7 +37,7 @@ def step(message, interactive=False):
     return True
 
 
-def walk(path: Path):
+def walk(path: Path) -> Generator[Tuple[Path, Path], None, None]:
     for item in path.glob("*"):
         if skip(item):
             continue
@@ -52,38 +51,44 @@ def walk(path: Path):
             yield source, dest
 
 
-def main(options):
+def main(force: bool, interactive: bool, fake: bool) -> None:
     dotfiles = walk(ROOT_DIR)
 
     for source, dest in dotfiles:
-        print(f"~/{dest.relative_to(HOME_DIR)} ", end="", flush=True)
+        if force and dest.is_file():
+            if step(f"Delete {dest!s} before install it? (Y/n): ", interactive):
+                print(f"rm {dest}")
 
-        if options.force and dest.is_file():
-            if step(f"Delete {dest!s} before install it? (Y/n): ", options.interactive):
-                dest.unlink()
-
-            print(f"[Force]", end=" ", flush=True)
+                if not fake:
+                    dest.unlink()
 
         if dest.parent != ROOT_DIR:
             if not dest.parent.exists():
-                dest.parent.mkdir(parents=True)
+                print(f"mkdir -p {dest}")
+
+                if not fake:
+                    dest.parent.mkdir(parents=True)
 
         if dest.exists():
-            print(f"[Ok]")
-        else:
-            if step(f"Create the symlink to {dest!s}? (Y/n): ", options.interactive):
-                dest.symlink_to(source)
+            print(f"touch {dest}")
+            continue
 
-            print(f"[Done]")
+        if step(f"Create the symlink to {dest!s}? (Y/n): ", interactive):
+            print(f"ln -s {dest} {source}")
+
+            if not fake:
+                dest.symlink_to(source)
 
 
 if __name__ == "__main__":
+    os.chdir(ROOT_DIR.parent)
+
     parser = argparse.ArgumentParser(description="Install dotfiles")
     parser.add_argument(
-        "--interactive",
-        action="store_true",
-        default=False,
-        help="Ask to confirm every action",
+        "--noinput",
+        action="store_false",
+        default=True,
+        help="Don't ask to confirm every action",
     )
     parser.add_argument(
         "--force",
@@ -91,10 +96,15 @@ if __name__ == "__main__":
         default=False,
         help="If target file exists it replaces it",
     )
-
+    parser.add_argument(
+        "--fake",
+        action="store_true",
+        default=False,
+    )
     options = parser.parse_args()
+
     try:
-        main(options)
+        main(options.force, options.interactive, options.fake)
     except KeyboardInterrupt:
         print("\n\n-- Stop --")
         sys.exit(1)
