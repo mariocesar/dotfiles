@@ -1,37 +1,17 @@
-export PATH="${HOME}/.local/bin:${PATH}"
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-SPACESHIP_GIT_STATUS_SHOW=false
-SPACESHIP_USER_SHOW=true
-SPACESHIP_HOST_SHOW=true
-SPACESHIP_PROMPT_ADD_NEWLINE=false
-SPACESHIP_PROMPT_ORDER=(
-    user          # Username section
-    dir           # Current directory section
-    host          # Hostname section
-    git           # Git section (git_branch + git_status)
-    pyenv
-    line_sep      # Line break
-    exit_code     # Exit code section
-    char          # Prompt character
-)
+eval source <(/usr/local/bin/starship init zsh --print-full-init)
 
-echo -n "Loading zplug"
+TREE_IGNORE="cache|log|logs|node_modules|vendor"
 
-export ZPLUG_HOME=${HOME}/.zplug
-source $ZPLUG_HOME/init.zsh
+export PATH="/Users/mariocesar/.local/bin:${PATH}"
+export DOCKER_SCAN_SUGGEST=false
+export EDITOR=nvim
 
-zplug "denysdovhan/spaceship-prompt", use:spaceship.zsh, from:github, as:theme
+eval "$(direnv hook zsh)"
 
-if ! zplug check; then
-    zplug install
-fi
+source ~/.aliases
+source ~/.zshbindkeys
 
-zplug load
-
-echo " [done]"
-
-source "${HOME}/.aliases"
-
-if [ -f ~/.zshrc.$(hostname) ]; then
-    source ~/.zshrc.$(hostname)
-fi
+test -f ~/.pyenvrc && source ~/.pyenvrc ||:
+test -f ~/.zshrc.$(hostname) && source ~/.zshrc.$(hostname) ||:
