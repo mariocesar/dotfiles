@@ -45,52 +45,71 @@ cmd("Reload", "source $MYVIMRC", {
 })
 
 -- Keymaps
-local keymap = vim.keymap.set
+local map, opts = vim.keymap.set, {
+    noremap = true,
+    silent = true
+}
 
-keymap('n', 'Q', '<nop', {
-    desc = "Disabling exmode enter"
+map('n', 'Q', '<nop', {
+    desc = "Disabling exmode enter",
+    unpack(opts)
 })
-keymap('n', '<leader>q', '<cmd>quit<cr>', {
-    desc = "Quit"
+map('n', '<leader>q', '<cmd>quit<cr>', {
+    desc = "Quit",
+    unpack(opts)
 })
-keymap('n', '<leader>c', '<cmd>tabnew<cr>', {
-    desc = "New tab"
+map('n', '<leader>c', '<cmd>tabnew<cr>', {
+    desc = "New tab",
+    unpack(opts)
 })
-keymap('n', '<leader>n', '<cmd>tabnext<cr>', {
-    desc = "Switch to next tab"
+map('n', '<leader>n', '<cmd>tabnext<cr>', {
+    desc = "Switch to next tab",
+    unpack(opts)
 })
-keymap('n', '<leader>%', '<cmd>vsplit<cr>', {
-    desc = "Split vertical"
+map('n', '<leader>%', '<cmd>vsplit<cr>', {
+    desc = "Split vertical",
+    unpack(opts)
 })
-keymap('n', '<leader>"', '<cmd>split<cr>', {
-    desc = "Split horizontal"
+map('n', '<leader>"', '<cmd>split<cr>', {
+    desc = "Split horizontal",
+    unpack(opts)
 })
-keymap('n', '<leader>s', '<cmd>write<cr>', {
-    desc = 'Save buffer on normal mode'
+map('n', '<leader>s', '<cmd>write<cr>', {
+    desc = 'Save buffer on normal mode',
+    unpack(opts)
 })
-keymap('n', '<silent> <esc><esc>', '<cmd><C-u>nohlsearch<cr><C-l>', {
-    desc = 'Cleanup search highlight and redraw'
+map('n', '<silent> <esc><esc>', '<cmd><C-u>nohlsearch<cr><C-l>', {
+    desc = 'Cleanup search highlight and redraw',
+    unpack(opts)
 })
-keymap('i', '<silent> <esc><esc>', '<C-o>:nohlsearch<cr>', {
-    desc = 'Cleanup search highlight and redraw'
+map('i', '<silent> <esc><esc>', '<C-o>:nohlsearch<cr>', {
+    desc = 'Cleanup search highlight and redraw',
+    unpack(opts)
 })
-keymap('v', '<', '<gv', {
-    desc = 'Mantain the selected blocks when indenting'
+map('v', '<', '<gv', {
+    desc = 'Mantain the selected blocks when indenting',
+    unpack(opts)
 })
-keymap('v', '>', '>gv', {
-    desc = 'Mantain the selected blocks when indenting'
+map('v', '>', '>gv', {
+    desc = 'Mantain the selected blocks when indenting',
+    unpack(opts)
 })
 
 -- Paste on Normal, Insert and Command-Line mode
-keymap('n', '<D-v>', 'a<C-r>+<Esc>', {
-    desc = 'Paste'
+map('n', '<D-v>', 'a<C-r>+<Esc>', {
+    desc = 'Paste',
+    unpack(opts)
 })
-keymap('i', '<D-v>', '<C-r>+', {
-    desc = 'Paste'
+map('i', '<D-v>', '<C-r>+', {
+    desc = 'Paste',
+    unpack(opts)
 })
-keymap('c', '<D-v>', '<C-r>+', {
-    desc = 'Paste'
+map('c', '<D-v>', '<C-r>+', {
+    desc = 'Paste',
+    unpack(opts)
 })
+
+-- Auto commands
 
 local au = require("au")
 
@@ -121,4 +140,12 @@ local conceal = json({'BufEnter'}, {
 
 function conceal.handler()
     opt.conceallevel = 0
+end
+
+-- briefly highlight a selection on yank
+
+local yank = au("user_yank")
+
+function yank.TextYankPost()
+  vim.highlight.on_yank()
 end
