@@ -11,8 +11,14 @@ quotepath = false
 ci = commit
 co = checkout
 st = status
-branches = branch -a
+remotes = remote --verbose
+tags = tag -l
+branches = branch --all
+aliases = config --get-regexp alias
 search = "!f() { git grep \"$1\" $(git rev-list --all); } && f"
+
+ls = log --pretty=oneline -n 20 --graph --abbrev-commit
+s = status -s
 
 [color]
 ui = true
