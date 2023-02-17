@@ -29,6 +29,42 @@ alias pp="ps axuf | pager"
 
 alias vimrc="vim ~/.config/nvim/init.lua"
 
+# Print each PATH entry on a separate line
+alias path='echo -e ${PATH//:/\\n}'
+
+# find . -name .gitattributes | args dirname
+alias args="xargs -n1"
+
+alias lanip="ipconfig getifaddr en0"
+
+function publicip() {
+    dig +short txt ch whoami.cloudflare @1.0.0.1 | awk -F'"' '{ print $2}'
+}
+
+function publicip6() {
+    dig -6 TXT +short o-o.myaddr.l.google.com @ns1.google.com | awk -F'"' '{ print $2}'
+}
+
+function digall() {
+    dig +nocmd any +multiline +noall +answer "$1"
+}
+
+function urlencode() {
+    python -c '
+import sys
+import urllib.parse
+print(urllib.parse.quote(sys.argv[1], safe=""))
+' "${*}"
+}
+
+function base64encode() {
+    python -c '
+import base64
+import sys
+print(base64.b64encode(sys.argv[1].encode("utf8")).decode())
+' "${*}"
+}
+
 function docker-stop-all { docker ps && docker stop $(docker ps -q); }
 
 function truecolor() {
