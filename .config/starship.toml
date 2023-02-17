@@ -1,0 +1,14 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+add_newline = true
+
+[character] 
+success_symbol = '[❯](bold green)'
+
+[package]
+disabled = true
+
+[python]
+pyenv_version_name = true
+detect_files = ['pyproject.toml', 'requirements.txt', 'setup.py']
+detect_folders = ['.venv']
