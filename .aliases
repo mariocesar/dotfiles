@@ -65,6 +65,14 @@ print(base64.b64encode(sys.argv[1].encode("utf8")).decode())
 ' "${*}"
 }
 
+function todo() {
+    grep -EI '\s+(TODO|LATER|FIXME):?' \
+      -r -n \
+      --exclude-dir={node_modules,.git,lib,.venv,.cache,".cache_*"} \
+      --exclude={"*bundle.js","*.map","*.min.js","*.csv",TODO.md,todos.txt} \
+      .
+}
+
 function docker-stop-all { docker ps && docker stop $(docker ps -q); }
 
 function truecolor() {

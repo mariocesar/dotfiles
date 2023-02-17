@@ -168,3 +168,6 @@ function wrap.handler()
     vim.opt_local.wrap = true
     vim.opt_local.linebreak = true
 end
+
+-- TODO: load init.lua from a working directory. Similar to .envrc load setup
+
