@@ -66,10 +66,13 @@ print(base64.b64encode(sys.argv[1].encode("utf8")).decode())
 }
 
 function todo() {
-    grep -EI '(TODO|FIXME|LATER):?\s' \
-      -r -n \
+    grep -E '(TODO|FIXME|LATER|NOTE|ISSUE|SLOW):?\s' \
+      --recursive \
+      --binary-file=without-match \
+      --line-number \
+      --line-buffered \
       --exclude-dir={node_modules,.git,lib,.venv,.cache,".cache_*",__pycache__,.yarn} \
-      --exclude={"*bundle.js","*.bundle","*.pyc","jquery*.js","*.map","*.min.js","*.csv","*.xls","*.png","*.svg","*.jpg","*.zip","*.gz","*.json","*.json",TODO.md,todos.txt} \
+      --exclude={"*bundle.js","*.bundle","*.pyc","jquery*.js","*.map","*.min.js","*.csv","*.xls","*.xml","*.svg","*.json",TODO.md,todos.txt} \
       .
 }
 
