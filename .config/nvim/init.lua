@@ -79,50 +79,33 @@ keymap('c', '<D-v>', '<C-r>+', {
     desc = 'Paste'
 })
 
-opt.relativenumber = true
+local au = require("au")
 
-local group_yaml = create_augroup('yaml', {
-    clear = true
-})
+-- Toggle between relative and absolute line numbers depending on mode
 
-create_autocmd('BufLeave,FocusLost,InsertEnter', {
-    pattern = '*',
-    group = group_yaml,
-    callback = function()
-        opt.relativenumber = false
+local number = au("user_number")
+local relative = number {"BufEnter", "FocusGained", "InsertLeave", "TermLeave", "WinEnter"}
+local absolute = number {"BufLeave", "FocusLost", "InsertEnter", "TermEnter", "WinLeave"}
+
+function relative.handler()
+    if vim.opt_local.number:get() and vim.fn.mode() ~= "i" then
+        vim.opt_local.relativenumber = true
     end
-})
+end
 
-create_autocmd('BufEnter,FocusGained,InsertLeave', {
-    pattern = '*',
-    group = group_yaml,
-    callback = function()
-        opt.relativenumber = true
+function absolute.handler()
+    if vim.opt_local.number:get() then
+        vim.opt_local.relativenumber = false
     end
+end
+
+-- JSON show conceal chars
+
+local json = au("json")
+local conceal = json({'BufEnter'}, {
+    pattern = '*.json'
 })
 
-local group_json = create_augroup('json', {
-    clear = true
-})
-
-create_autocmd('BufEnter', {
-    pattern = '*.json',
-    group = group_json,
-    callback = function()
-        opt.conceallevel = 0
-    end
-})
-
-create_autocmd('FileType', {
-    pattern = 'markdown',
-    callback = function()
-        opt.comments = ':* ,:>'
-    end
-})
-
-create_autocmd({'DirChanged'}, {
-    pattern = {'global'},
-    callback = function()
-        -- TODO: Search and execute .nvim.lua if found.
-    end
-})
+function conceal.handler()
+    opt.conceallevel = 0
+end
