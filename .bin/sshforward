@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
+set -eu
 
 port=$1
 shift
 
-set -ex
+set -x
 
 ssh -o "ServerAliveInterval 30" \
     -o "ServerAliveCountMax 2" \

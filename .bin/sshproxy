@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -eu
+
+port=$1
+shift
+
+set -x
+
+ssh -C2qTnN -D ${port:-8080} "$@"
