@@ -104,7 +104,7 @@ if __name__ == "__main__":
     options = parser.parse_args()
 
     try:
-        main(options.force, options.interactive, options.fake)
+        main(options.force, not options.noinput, options.fake)
     except KeyboardInterrupt:
         print("\n\n-- Stop --")
         sys.exit(1)
