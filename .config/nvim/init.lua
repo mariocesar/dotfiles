@@ -147,5 +147,15 @@ end
 local yank = au("user_yank")
 
 function yank.TextYankPost()
-  vim.highlight.on_yank()
+    vim.highlight.on_yank()
+end
+
+-- Markdown preferences
+
+local markdown = au("markdown")
+local wrap = markdown({"FileType"}, {pattern="markdown"})
+
+function wrap.handler()
+    vim.opt_local.wrap = true
+    vim.opt_local.linebreak = true
 end
