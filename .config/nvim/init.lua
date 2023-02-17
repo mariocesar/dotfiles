@@ -2,7 +2,6 @@ local execute = vim.api.nvim_command
 local fn = vim.fn
 local opt = vim.opt
 local global = vim.g
-local keymap = vim.keymap.set
 local create_autocmd = vim.api.nvim_create_autocmd
 local create_augroup = vim.api.nvim_create_augroup
 
@@ -29,7 +28,24 @@ opt.wildignore = {'*/node_modules/**', '*/*_cache/*', '*/.git/**', '*.o', '*~', 
                   '*.zip', '*.tar.gz', '*.min.*', '*.png', '*.jpg', '*.jpeg', '*.svg', '*.gif', '*/__pycache__/',
                   '*/.idea/**', '*/.cache/**', '*/var/**', '*/venv/**', '*/.venv/**', '*DS_Store*'}
 
+-- Commands
+local cmd = vim.api.nvim_create_user_command
+
+cmd("Cwd", "cd %:p:h", {
+    desc = 'set cwd to directory of current file'
+})
+cmd("Run", '!"%:p"', {
+    desc = 'Execute current file'
+})
+cmd("Config", "edit $MYVIMRC", {
+    desc = 'open config file with :Config'
+})
+cmd("Reload", "source $MYVIMRC", {
+    desc = 'reload config file with :Reload'
+})
+
 -- Keymaps
+local keymap = vim.keymap.set
 
 keymap('n', 'Q', '<nop', {
     desc = "Disabling exmode enter"
@@ -51,9 +67,6 @@ keymap('n', '<leader>"', '<cmd>split<cr>', {
 })
 keymap('n', '<leader>s', '<cmd>write<cr>', {
     desc = 'Save buffer on normal mode'
-})
-keymap('n', '<leader>.', '<cmd>lcd %:p:h<cr>', {
-    desc = 'Set the current directory to the parent dir of the current file.'
 })
 keymap('n', '<silent> <esc><esc>', '<cmd><C-u>nohlsearch<cr><C-l>', {
     desc = 'Cleanup search highlight and redraw'
