@@ -9,6 +9,6 @@ success_symbol = '[❯](bold green)'
 disabled = true
 
 [python]
-pyenv_version_name = true
+pyenv_version_name = false
 detect_files = ['pyproject.toml', 'requirements.txt', 'setup.py']
 detect_folders = ['.venv']
