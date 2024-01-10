@@ -9,7 +9,7 @@ from typing import Generator, Tuple
 ROOT_DIR = Path(__file__).parent.resolve()
 HOME_DIR = Path.home()
 
-exclude_patterns = [
+EXCLUDE_PATTERNS = [
     re.compile(r"^\.git/").match,
     re.compile(r"^\.vscode$").match,
     re.compile(r"^\.gitignore$").match,
@@ -20,64 +20,68 @@ exclude_patterns = [
 ]
 
 
-def skip(path: Path) -> bool:
-    return any(
-        map(lambda match: match(str(path.relative_to(ROOT_DIR))), exclude_patterns)
-    )
+class Installer:
+    def __init__(self, force: bool, interactive: bool, fake: bool) -> None:
+        self.force = force
+        self.interactive = interactive
+        self.fake = fake
 
+    def confirm(self, message: str):
+        if not self.interactive:
+            return True
 
-def step(message: str, interactive: bool = False):
-    if interactive:
         said_yes = (input(message) or "n").lower().strip()[0] == "y"
+
         if said_yes:
             return True
         else:
             return False
 
-    return True
+    def list_dotfiles(self, path: Path) -> Generator[Tuple[Path, Path], None, None]:
+        def skip(path: Path) -> bool:
+            return any(
+                map(lambda match: match(str(path.relative_to(ROOT_DIR))), EXCLUDE_PATTERNS)
+            )
 
+        for item in path.glob("*"):
+            if skip(item):
+                continue
 
-def walk(path: Path) -> Generator[Tuple[Path, Path], None, None]:
-    for item in path.glob("*"):
-        if skip(item):
-            continue
+            if item.is_dir():
+                yield from self.list_dotfiles(item)
+            else:
+                source = ROOT_DIR / item.relative_to(ROOT_DIR)
+                dest = HOME_DIR / item.relative_to(ROOT_DIR)
 
-        if item.is_dir():
-            yield from walk(item)
-        else:
-            source = ROOT_DIR / item.relative_to(ROOT_DIR)
-            dest = HOME_DIR / item.relative_to(ROOT_DIR)
+                yield source, dest
 
-            yield source, dest
+    def run(self) -> None:
+        dotfiles = self.list_dotfiles(ROOT_DIR)
 
+        for source, dest in dotfiles:
+            if self.force and dest.is_file():
+                if self.confirm(f"Delete {dest!s} before install it? (Y/n): "):
+                    print(f"rm {dest}")
 
-def main(force: bool, interactive: bool, fake: bool) -> None:
-    dotfiles = walk(ROOT_DIR)
+                    if not self.fake:
+                        dest.unlink()
 
-    for source, dest in dotfiles:
-        if force and dest.is_file():
-            if step(f"Delete {dest!s} before install it? (Y/n): ", interactive):
-                print(f"rm {dest}")
+            if dest.parent != ROOT_DIR:
+                if not dest.parent.exists():
+                    print(f"mkdir -p {dest.parent}")
 
-                if not fake:
-                    dest.unlink()
+                    if not self.fake:
+                        dest.parent.mkdir(parents=True)
 
-        if dest.parent != ROOT_DIR:
-            if not dest.parent.exists():
-                print(f"mkdir -p {dest}")
+            if dest.exists():
+                print(f"touch {dest}")
+                continue
 
-                if not fake:
-                    dest.parent.mkdir(parents=True)
+            if self.confirm(f"Create the symlink to {dest!s}? (Y/n): "):
+                print(f"ln -s {dest} {source}")
 
-        if dest.exists():
-            print(f"touch {dest}")
-            continue
-
-        if step(f"Create the symlink to {dest!s}? (Y/n): ", interactive):
-            print(f"ln -s {dest} {source}")
-
-            if not fake:
-                dest.symlink_to(source)
+                if not self.fake:
+                    dest.symlink_to(source)
 
 
 if __name__ == "__main__":
@@ -104,7 +108,7 @@ if __name__ == "__main__":
     options = parser.parse_args()
 
     try:
-        main(options.force, not options.noinput, options.fake)
+        Installer(options.force, not options.noinput, options.fake).run()
     except KeyboardInterrupt:
         print("\n\n-- Stop --")
         sys.exit(1)
