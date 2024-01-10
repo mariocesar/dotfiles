@@ -79,23 +79,10 @@ class Installer:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Install dotfiles")
-    parser.add_argument(
-        "--noinput",
-        action="store_false",
-        default=True,
-        help="Don't ask to confirm every action",
-    )
-    parser.add_argument(
-        "--force",
-        action="store_true",
-        default=False,
-        help="If target file exists it replaces it",
-    )
-    parser.add_argument(
-        "--fake",
-        action="store_true",
-        default=False,
-    )
+    parser.add_argument("--noinput", action="store_false", help="Run without interactive prompts")
+    parser.add_argument("--force", action="store_true", help="Replace existing files")
+    parser.add_argument("--fake", action="store_true", help="Simulate actions without making changes")
+
     options = parser.parse_args()
 
     try:
