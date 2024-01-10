@@ -88,8 +88,6 @@ class Installer:
 
 
 if __name__ == "__main__":
-    os.chdir(ROOT_DIR.parent)
-
     parser = argparse.ArgumentParser(description="Install dotfiles")
     parser.add_argument(
         "--noinput",
