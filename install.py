@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 import argparse
-import os
 import re
 import sys
 from pathlib import Path
-from typing import Generator, Tuple
+from typing import Generator
 
 ROOT_DIR = Path(__file__).parent.resolve()
 HOME_DIR = Path.home()
