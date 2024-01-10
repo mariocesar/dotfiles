@@ -60,9 +60,7 @@ class Installer:
                 yield source, dest
 
     def run(self) -> None:
-        dotfiles = self.list_dotfiles(ROOT_DIR)
-
-        for source, dest in dotfiles:
+        for source, dest in self.list_dotfiles(ROOT_DIR):
             if self.force and dest.is_file():
                 if self.confirm(f"Delete {dest!s} before install it? (Y/n): "):
                     print(f"rm {dest}")
@@ -70,12 +68,11 @@ class Installer:
                     if not self.fake:
                         dest.unlink()
 
-            if dest.parent != ROOT_DIR:
-                if not dest.parent.exists():
-                    print(f"mkdir -p {dest.parent}")
+            if dest.parent != ROOT_DIR and not dest.parent.exists():
+                print(f"mkdir -p {dest.parent}")
 
-                    if not self.fake:
-                        dest.parent.mkdir(parents=True)
+                if not self.fake:
+                    dest.parent.mkdir(parents=True)
 
             if dest.exists():
                 print(f"touch {dest}")
