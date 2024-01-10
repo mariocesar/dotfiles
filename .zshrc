@@ -1,17 +1,17 @@
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
-eval source <(/usr/local/bin/starship init zsh --print-full-init)
-
-TREE_IGNORE="cache|log|logs|node_modules|vendor"
-
+export TREE_IGNORE="cache|log|logs|node_modules|vendor"
 export PATH="/Users/mariocesar/.local/bin:${PATH}"
 export DOCKER_SCAN_SUGGEST=false
 export EDITOR=nvim
 
-eval "$(direnv hook zsh)"
+[ -f ~/.zshrc.$(hostname) ] && source ~/.zshrc.$(hostname)
+[ -f ~/.aliases ] && source ~/.aliases
+[ -f ~/.zshbindkeys ] && source ~/.zshbindkeys
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-source ~/.aliases
-source ~/.zshbindkeys
+[ ! -f ~/.direnvinit ] && direnv hook zsh > ~/.direnvinit
+source ~/.direnvinit
 
-test -f ~/.pyenvrc && source ~/.pyenvrc ||:
-test -f ~/.zshrc.$(hostname) && source ~/.zshrc.$(hostname) ||:
+[ ! -f ~/.pyenvinit ] && pyenv init - > ~/.pyenvinit
+source ~/.pyenvinit
+
+[ -f /opt/homebrew/opt/spaceship/spaceship.zsh ] && eval source /opt/homebrew/opt/spaceship/spaceship.zsh
