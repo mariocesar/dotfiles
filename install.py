@@ -74,10 +74,9 @@ class Installer:
             self.perform_action(f"Destination exists: {dest}", lambda: dest.touch())
 
     def perform_action(self, message: str, action: Callable):
-        if self.fake:
-            print(f"[DRY RUN] {message}")
-        else:
-            print(message)
+        print(f"{'[DRY RUN] ' if self.fake else ''}{message}")
+
+        if not self.fake:
             action()
 
 
