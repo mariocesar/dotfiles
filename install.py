@@ -29,31 +29,30 @@ class Installer:
 
     def confirm(self, message: str) -> bool:
         """Prompt for confirmation if interactive mode is enabled."""
-        return not self.interactive or input(message).lower() == 'y'
+        return not self.interactive or input(message).lower() == "y"
 
-    def list_dotfiles(self, path: Path) -> Generator[Tuple[Path, Path], None, None]:
-        def skip(path: Path) -> bool:
-            return any(
-                map(
-                    lambda match: match(str(path.relative_to(ROOT_DIR))),
-                    EXCLUDE_PATTERNS,
-                )
-            )
+    def should_skip(self, path: Path) -> bool:
+        """Check if a file should be skipped based on exclude patterns."""
+        return any(
+            map(lambda match: match(str(path.relative_to(ROOT_DIR))), EXCLUDE_PATTERNS)
+        )
 
+    def list_dotfiles(self, path: Path) -> Generator[Path, None, None]:
+        """Generate a list of dotfiles to be installed, skipping excluded ones."""
         for item in path.glob("*"):
-            if skip(item):
+            if self.should_skip(item):
                 continue
 
             if item.is_dir():
                 yield from self.list_dotfiles(item)
             else:
-                source = ROOT_DIR / item.relative_to(ROOT_DIR)
-                dest = HOME_DIR / item.relative_to(ROOT_DIR)
-
-                yield source, dest
+                yield item
 
     def run(self) -> None:
-        for source, dest in self.list_dotfiles(ROOT_DIR):
+        for path in self.list_dotfiles(ROOT_DIR):
+            source = ROOT_DIR / path.relative_to(ROOT_DIR)
+            dest = HOME_DIR / path.relative_to(ROOT_DIR)
+
             if self.force and dest.is_file():
                 if self.confirm(f"Delete {dest!s} before install it? (Y/n): "):
                     print(f"rm {dest}")
@@ -61,7 +60,7 @@ class Installer:
                     if not self.fake:
                         dest.unlink()
 
-            if dest.parent != ROOT_DIR and not dest.parent.exists():
+            if not dest.parent.exists():
                 print(f"mkdir -p {dest.parent}")
 
                 if not self.fake:
