@@ -77,6 +77,7 @@ class Installer:
         if self.fake:
             print(f"[DRY RUN] {message}")
         else:
+            print(message)
             action()
 
 
