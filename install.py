@@ -27,16 +27,9 @@ class Installer:
         self.interactive = interactive
         self.fake = fake
 
-    def confirm(self, message: str):
-        if not self.interactive:
-            return True
-
-        said_yes = (input(message) or "n").lower().strip()[0] == "y"
-
-        if said_yes:
-            return True
-        else:
-            return False
+    def confirm(self, message: str) -> bool:
+        """Prompt for confirmation if interactive mode is enabled."""
+        return not self.interactive or input(message).lower() == 'y'
 
     def list_dotfiles(self, path: Path) -> Generator[Tuple[Path, Path], None, None]:
         def skip(path: Path) -> bool:
