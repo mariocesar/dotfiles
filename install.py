@@ -40,7 +40,10 @@ class Installer:
     def list_dotfiles(self, path: Path) -> Generator[Tuple[Path, Path], None, None]:
         def skip(path: Path) -> bool:
             return any(
-                map(lambda match: match(str(path.relative_to(ROOT_DIR))), EXCLUDE_PATTERNS)
+                map(
+                    lambda match: match(str(path.relative_to(ROOT_DIR))),
+                    EXCLUDE_PATTERNS,
+                )
             )
 
         for item in path.glob("*"):
