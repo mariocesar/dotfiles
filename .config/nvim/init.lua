@@ -28,6 +28,10 @@ opt.wildignore = {'*/node_modules/**', '*/*_cache/*', '*/.git/**', '*.o', '*~', 
                   '*.zip', '*.tar.gz', '*.min.*', '*.png', '*.jpg', '*.jpeg', '*.svg', '*.gif', '*/__pycache__/',
                   '*/.idea/**', '*/.cache/**', '*/var/**', '*/venv/**', '*/.venv/**', '*DS_Store*'}
 
+require('plugins')
+
+vim.cmd[[colorscheme tokyonight-night]]
+
 -- Commands
 local cmd = vim.api.nvim_create_user_command
 
@@ -101,6 +105,25 @@ map('v', '>', '>gv', {
     desc = 'Mantain the selected blocks when indenting',
     unpack(opts)
 })
+map('n', '<leader>p', '<cmd>Clap files<cr>', {
+    desc = 'Navigate files in the current working directory',
+    unpack(opts)
+})
+
+---
+
+vim.g.clap_provider_dotfiles = {
+  source = {
+    '~/.config/nvim/init.lua',
+    '~/.config/nvim/lua/plugins.lua',
+    '~/.zshrc',
+    '~/.zshrc.tango'
+  },
+  sink = 'e',
+  description = 'Open some dotfile',
+}
+
+map('n', '<leader>d', '<cmd>Clap dotfiles<cr>', {unpack(opts)})
 
 -- Paste on Normal, Insert and Command-Line mode
 map('n', '<D-v>', 'a<C-r>+<Esc>', {
@@ -170,4 +193,3 @@ function wrap.handler()
 end
 
 -- TODO: load init.lua from a working directory. Similar to .envrc load setup
-
