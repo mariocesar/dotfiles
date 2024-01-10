@@ -6,6 +6,7 @@ name = Mario César
 editor = nvim
 autocrlf = input
 quotepath = false
+excludesfile = /Users/mariocesar/.git-excludesfile
 
 [alias]
 ci = commit
