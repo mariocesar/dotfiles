@@ -10,6 +10,7 @@ ROOT_DIR = Path(__file__).parent.resolve()
 HOME_DIR = Path.home()
 
 EXCLUDE_PATTERNS = [
+    re.compile(r".*\.DS_Store").match,
     re.compile(r"^\.git/").match,
     re.compile(r"^\.vscode$").match,
     re.compile(r"^\.gitignore$").match,

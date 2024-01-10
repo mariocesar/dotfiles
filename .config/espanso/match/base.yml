@@ -1,0 +1,160 @@
+matches:
+  - trigger: "!today"
+    replace: "{{mydate}}"
+    vars:
+      - name: mydate
+        type: date
+        params:
+          format: "%d/%m/%Y"
+
+  - trigger: "!now"
+    replace: "{{mydate}}"
+    vars:
+      - name: mydate
+        type: date
+        params:
+          format: "%d/%m/%Y %H:%M:%S"
+
+  - trigger: "!walink"
+    replace: "https://wa.me/591$|$"
+
+  - trigger: "<--"
+    replace: "←"
+
+  - trigger: "-->"
+    replace: "→"
+
+  - trigger: "<=="
+    replace: "⇦"
+
+  - trigger: "==>"
+    replace: "⇨"
+
+  - trigger: ":check:"
+    replace: "✅"
+
+  - trigger: ":cross:"
+    replace: "❌"
+
+  - trigger: ":circle:"
+    replace: "⭕️"
+
+  - trigger: "!gracias"
+    replace: "¡Muchas Gracias! 🙏"
+
+  - trigger: ":shrug:"
+    replace: "¯\\_(ツ)_/¯"
+
+  - trigger: "!token"
+    replace: "{{output}}"
+    backend: Clipboard
+    vars:
+      - name: output
+        type: script
+        params:
+          args:
+            - python3
+            - -c
+            - |-
+              import secrets
+              print(secrets.token_urlsafe())
+
+  - trigger: "_init"
+    replace: "__init__"
+
+  - trigger: "__main"
+    replace: "__main__"
+
+  - trigger: "def:str"
+    backend: Clipboard
+    replace: "def __str__(self):\nself.$|$"
+
+  - trigger: "if:main"
+    backend: Clipboard
+    replace: "if __name__ == \"__main__\":\n    $|$"
+
+  - trigger: "__all"
+    backend: Clipboard
+    replace: "__all__ = [\n$|$"
+
+  - trigger: "!myip"
+    replace: "{{output}}"
+    vars:
+      - name: output
+        type: shell
+        params:
+          cmd: "curl -s 4.icanhazip.com"
+
+  - trigger: ".django.conf"
+    backend: Clipboard
+    replace: "from django.conf import settings"
+
+  - trigger: ">checkin"
+    backend: Clipboard
+    replace: |-
+      Buenos días equipo 🌅, *Daily Check In - CTO*
+
+      1. ❤️  *¿Cómo te sientes hoy?*: $|$
+      2. ⏪ *¿Qué logros y problemas tuviste el día anterior a este checkin?*:
+      3. 🎯 *¿Cuáles son tus prioridades hoy?*:
+      4. ⛔️ *¿Hay algo que esté deteniendo tu progreso, o sea un desafío grande?*:
+
+  ## Boilerplates
+
+  - trigger: ">main.py"
+    backend: Clipboard
+    replace: "if __name__ == \"__main__\":\n$|$"
+
+  - trigger: ">models.py"
+    backend: Clipboard
+    replace: |-
+      from django.db import models
+
+      class ModelName(models.Model):
+          $|$
+
+          def __str__(self):
+              return str(self.pk)
+
+  - trigger: ">urls.py"
+    backend: Clipboard
+    replace: |-
+      from django.urls import path
+
+      from . import views
+
+      urlpatterns = [
+          path('', views.$|$),
+      ]
+
+  - trigger: ">admin.py"
+    backend: Clipboard
+    replace: |-
+      from django.contrib import admin
+
+      from .models import $|$
+
+      @admin.register()
+      class ModelAdmin(admin.ModelAdmin):
+          pass
+
+  - trigger: ">command.py"
+    backend: Clipboard
+    replace: |-
+      from django.core.management.base import BaseCommand
+
+
+      class Command(BaseCommand):
+          def handle(self, **options):
+              $|$
+
+  - trigger: "//component.tsx"
+    backend: Clipboard
+    replace: |-
+      export default function $|$({ children }: { children: React.ReactNode }) {
+        return (
+          <div>
+            {children}
+          </div>
+        )
+      }
