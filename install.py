@@ -3,7 +3,7 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import Generator
+from typing import Generator, Callable
 
 ROOT_DIR = Path(__file__).parent.resolve()
 HOME_DIR = Path.home()
@@ -52,28 +52,32 @@ class Installer:
             source = ROOT_DIR / path.relative_to(ROOT_DIR)
             dest = HOME_DIR / path.relative_to(ROOT_DIR)
 
+
             if self.force and dest.is_file():
-                if self.confirm(f"Delete {dest!s} before install it? (Y/n): "):
-                    print(f"rm {dest}")
+                self.handle_file_removal(dest)
 
-                    if not self.fake:
-                        dest.unlink()
+            self.create_directory_if_not_exists(dest.parent)
+            self.create_or_update_symlink(source, dest)
 
-            if not dest.parent.exists():
-                print(f"mkdir -p {dest.parent}")
+    def handle_file_removal(self, dest: Path):
+        if self.confirm(f"Delete {dest} before installing? (Y/n): "):
+            self.perform_action(f"Removing {dest}", lambda: dest.unlink())
 
-                if not self.fake:
-                    dest.parent.mkdir(parents=True)
+    def create_directory_if_not_exists(self, directory: Path):
+        if not directory.exists():
+            self.perform_action(f"Creating directory {directory}", lambda: directory.mkdir(parents=True))
 
-            if dest.exists():
-                print(f"touch {dest}")
-                continue
+    def create_or_update_symlink(self, source: Path, dest: Path):
+        if not dest.exists() and self.confirm(f"Create the symlink {dest}? (Y/n): "):
+            self.perform_action(f"Linking {source} to {dest}", lambda: dest.symlink_to(source))
+        else:
+            self.perform_action(f"Destination exists: {dest}", lambda: dest.touch())
 
-            if self.confirm(f"Create the symlink to {dest!s}? (Y/n): "):
-                print(f"ln -s {dest} {source}")
-
-                if not self.fake:
-                    dest.symlink_to(source)
+    def perform_action(self, message: str, action: Callable):
+        if self.fake:
+            print(f"[DRY RUN] {message}")
+        else:
+            action()
 
 
 if __name__ == "__main__":
