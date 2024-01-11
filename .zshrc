@@ -14,6 +14,6 @@ source ~/.direnvinit
 [ ! -f ~/.pyenvinit ] && pyenv init - > ~/.pyenvinit
 source ~/.pyenvinit
 
-[ -f "/opt/homebrew/opt/spaceship/spaceship.zsh" ] && eval source /opt/homebrew/opt/spaceship/spaceship.zsh
+eval "$(starship init zsh)"
 
 [ -e "${HOME}/.iterm2_shell_integration.zsh" ] && source "${HOME}/.iterm2_shell_integration.zsh"
