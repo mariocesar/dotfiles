@@ -16,7 +16,7 @@ brew "amazon-ecs-cli"
 brew "awscli"
 
 brew "fzf"
-brew "exa"
+brew "eza"
 
 brew "xz"
 brew "libtiff"
