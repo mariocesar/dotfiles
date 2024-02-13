@@ -1,56 +1,78 @@
 [user]
-email = mariocesar.c50@gmail.com
-name = Mario César
+  email = mariocesar.c50@gmail.com
+  name = Mario César
 
 [core]
-editor = nvim
-autocrlf = input
-quotepath = false
-excludesfile = /Users/mariocesar/.git-excludesfile
+  editor = nvim
+  autocrlf = input
+  quotepath = false
 
 [alias]
-ci = commit
-co = checkout
-st = status
-remotes = remote --verbose
-tags = tag -l
-branches = branch --all
-aliases = config --get-regexp alias
-search = "!f() { git grep \"$1\" $(git rev-list --all); } && f"
-
-ls = log --pretty=oneline -n 20 --graph --abbrev-commit
-s = status -s
+  ci = commit
+  co = checkout
+  st = status
+  s = status --short --branch
+  l = log -M --stat --abbrev-commit --graph
+  lg = log --pretty=oneline -n 20 --graph --abbrev-commit
+  remotes = remote --verbose
+  tags = tag -l
+  branches = branch --all
+  aliases = config --get-regexp alias
+  search = "!f() { git grep \"$1\" $(git rev-list --all); } && f"
+  gone = "!f() { git fetch --all --prune; git branch -vv | awk '/: gone]/{print $1}' | xargs git branch -D; }; f"
 
 [color]
-ui = true
-branch = auto
-diff = auto
-status = auto
-interactive = auto
+  ui = true
+  branch = auto
+  diff = auto
+  status = auto
+  interactive = auto
 
 [merge]
-summary = true
-ff = no
-commit = no
+  summary = true
+  ff = no
+  commit = no
+
+[diff]
+  external = difft
+  algorithm = histogram
+  colorMoved = default
+  noprefix = true
+  tool = difftastic
+  colorMoved = default
+
+[difftool]
+  prompt = false
+
+[difftool "difftastic"]
+  cmd = difft "$LOCAL" "$REMOTE"
 
 [pull]
-default = matching
-rebase = true
+  default = matching
+  rebase = true
 
 [push]
-default = current
+  default = current
 
 [credential]
-helper = store
+  helper = store
 
 [init]
-defaultBranch = main
+  defaultBranch = main
 
 [branch]
-autoSetupRebase = always
+  autoSetupRebase = always
+	sort = -committerdate
 
 [filter "lfs"]
-clean = git-lfs clean -- %f
-smudge = git-lfs smudge -- %f
-process = git-lfs filter-process
-required = true
+  clean = git-lfs clean -- %f
+  smudge = git-lfs smudge -- %f
+  process = git-lfs filter-process
+  required = true
+
+[rerere]
+  enabled = true
+
+[pager]
+  difftool = true
+  diff = false
