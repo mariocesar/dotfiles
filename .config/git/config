@@ -1,11 +1,12 @@
 [user]
   email = mariocesar.c50@gmail.com
-  name = Mario César
+	name = Mario-César
 
 [core]
   editor = nvim
   autocrlf = input
   quotepath = false
+  excludesFile = ~/.config/git/gitignore
 
 [alias]
   ci = commit
@@ -34,11 +35,9 @@
   commit = no
 
 [diff]
-  external = difft
   algorithm = histogram
   colorMoved = default
   noprefix = true
-  tool = difftastic
   colorMoved = default
 
 [difftool]

@@ -1,6 +1,9 @@
 npm-debug.log
+
 .DS_Store
 .idea/
 .vscode/
+.vscode/bookmarks.json
+
 *~
 
