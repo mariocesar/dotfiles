@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 alias vim=nvim
+alias vimrc="vim ~/.config/nvim/init.lua"
 
 alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
@@ -20,66 +21,37 @@ alias cd..="cd .."
 alias ..='cd ..'
 alias ...='cd ../..'
 
-function new-python-project() {
-    (
-      set -eux
-      git init $1
-      cd $1
-
-      mkdir src/$1
-      touch src/$1/__init__.py
-      curl -L --output ".gitignore" https://github.com/github/gitignore/raw/main/Python.gitignore
-      touch README.md
-
-      poetry init \
-          --name $1 \
-          --dev-dependency=black \
-          --dev-dependency=isort \
-          --quiet
-
-      poetry install --quiet
-    )
-}
-
 alias tf="terraform"
 alias tfplan='terraform plan -lock=false'
 alias makepassword="pwgen -y -n 18 1"
-alias pp="ps axuf | pager"
-alias vimrc="vimr ~/.config/nvim/init.lua"
-
-# Print each PATH entry on a separate line
 alias path='echo -e ${PATH//:/\\n}'
 
-# find . -name .gitattributes | args dirname
-alias args="xargs -n1"
-
-
 function git-short() {
-    git log --pretty=format:%h -1 HEAD
+  git log --pretty=format:%h -1 HEAD
 }
 
 function git-hash() {
-    git log --pretty=format:%H -1 HEAD
+  git log --pretty=format:%H -1 HEAD
 }
 
 function lan-ip() {
-    ipconfig getifaddr en0
+  ipconfig getifaddr en0
 }
 
 function public-ip() {
-    dig +short txt ch whoami.cloudflare @1.0.0.1 | awk -F'"' '{ print $2}'
+  dig +short txt ch whoami.cloudflare @1.0.0.1 | awk -F'"' '{ print $2}'
 }
 
 function public-ip6() {
-    dig -6 TXT +short o-o.myaddr.l.google.com @ns1.google.com | awk -F'"' '{ print $2}'
+  dig -6 TXT +short o-o.myaddr.l.google.com @ns1.google.com | awk -F'"' '{ print $2}'
 }
 
 function dig-all() {
-    dig +nocmd any +multiline +noall +answer "$1"
+  dig +nocmd any +multiline +noall +answer "$1"
 }
 
 function urlencode() {
-    python -c '
+  python -c '
 import sys
 import urllib.parse
 print(urllib.parse.quote(sys.argv[1], safe=""))
@@ -87,7 +59,7 @@ print(urllib.parse.quote(sys.argv[1], safe=""))
 }
 
 function base64encode() {
-    python -c '
+  python -c '
 import base64
 import sys
 print(base64.b64encode(sys.argv[1].encode("utf8")).decode())
@@ -95,20 +67,18 @@ print(base64.b64encode(sys.argv[1].encode("utf8")).decode())
 }
 
 function todo() {
-    grep -E '(TODO|FIXME|LATER|NOTE|ISSUE|SLOW):?\s' \
-      --recursive \
-      --binary-file=without-match \
-      --line-number \
-      --line-buffered \
-      --exclude-dir={node_modules,.git,lib,.venv,.cache,".cache_*",__pycache__,.yarn} \
-      --exclude={"*bundle.js","*.bundle","*.pyc","jquery*.js","*.map","*.min.js","*.csv","*.xls","*.xml","*.svg","*.json",TODO.md,todos.txt} \
-      .
+  grep -E '(TODO|FIXME|LATER|NOTE|ISSUE|SLOW):?\s' \
+    --recursive \
+    --binary-file=without-match \
+    --line-number \
+    --line-buffered \
+    --exclude-dir={node_modules,.git,lib,.venv,.cache,".cache_*",__pycache__,.yarn} \
+    --exclude={"*bundle.js","*.bundle","*.pyc","jquery*.js","*.map","*.min.js","*.csv","*.xls","*.xml","*.svg","*.json",TODO.md,todos.txt} \
+    .
 }
 
-function docker-stop-all { docker ps && docker stop $(docker ps -q); }
-
 function truecolor() {
-    awk 'BEGIN{
+  awk 'BEGIN{
             s="/\\/\\/\\/\\/\\"; s=s s s s s s s s;
             for (colnum = 0; colnum<77; colnum++) {
                 r = 255-(colnum*255/76);
@@ -124,19 +94,23 @@ function truecolor() {
 }
 
 function emojis() {
-    echo "♥👍😍🙊🥱🥺✨✅🎊🏄"
+  echo "👍😄🎉💻🔥🚀🌟🌈🌺🍕🎶📚🌞🌍🍦🏆"
 }
 
 function keeptrying() {
-    while ! $($*)
-    do
-        echo "Trying again in 2s"
-        sleep 2
-    done
+  while ! $($*); do
+    echo "Trying again in 2s"
+    sleep 2
+  done
+}
+
+function docker-stop-all {
+  docker ps
+  docker stop $(docker ps -q)
 }
 
 function docker-volume-ls() {
-    docker run --rm -v ${1}:/data -it alpine find /data -type f
+  docker run --rm -v ${1}:/data -it alpine find /data -type f
 }
 
 function docker-cat-entrypoint-contents() {
@@ -144,11 +118,11 @@ function docker-cat-entrypoint-contents() {
   local entrypoint=$(docker inspect --format='{{json .Config.Entrypoint}}' "$image_name")
 
   if [ -z "$entrypoint" ] || [ "$entrypoint" = "null" ]; then
-      echo "Entrypoint: Not found"
+    echo "Entrypoint: Not found"
   else
-      local entrypoint_script=$(echo "$entrypoint" | jq -r '.[]' | base64 --decode)
-      echo "Entrypoint:"
-      echo "$entrypoint_script"
+    local entrypoint_script=$(echo "$entrypoint" | jq -r '.[]' | base64 --decode)
+    echo "Entrypoint:"
+    echo "$entrypoint_script"
   fi
 }
 
@@ -162,46 +136,10 @@ function docker-prune() {
   )
 }
 
-function ssm2dotenv() {
-  local firstarg="$1"
-
-  if [ -z $firstarg ] || [ $firstarg = '-help']; then
-    echo "Usage: ssm2env /path/group"
-    echo "Do not append slash at the end of the group"
-    return 1
-  fi
-
+function cleanup() {
   (
-    aws ssm get-parameters-by-path \
-      --path "$firstarg/" \
-      --recursive \
-      --with-decryption \
-      --query "Parameters[*].{Name: Name, Value: Value}" \
-      --output text \
-      | sed "s#$firstarg/##" \
-      | awk '{print $1"="$2}'
+    set -ex
+    find . -type f -name .DS_Store -delete
+    find . -type f -name "*.pyc" -delete
   )
-}
-
-function dotenv2ssm() {
-  local firstarg=$1
-  local secondarg=$2
-
-  if [ -z $firstarg ] || [ $firstarg = '-help']; then
-    echo "Usage: ssm2env /path/group"
-    echo "Do not append slash at the end of the group"
-    return 1
-  fi
-
-	cat $secondArg | grep -v '^#\|^[[:space:]]*$$' | while read line; do \
-		key=$(echo $line | cut -d= -f1); \
-		value=$(echo $line | cut -d= -f2-); \
-		response=$(aws ssm put-parameter \
-			--name "/$$key" \
-			--value "$value" \
-			--type String \
-			--overwrite); \
-		version=$(echo $response | jq -r '.Version'); \
-		echo "Parameter $key updated to version $version"; \
-	done
 }
