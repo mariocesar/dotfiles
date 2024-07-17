@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-import argparse
 import re
 import sys
+import argparse
+from collections.abc import Callable, Generator
 from pathlib import Path
-from typing import Generator, Callable
+
 
 ROOT_DIR = Path(__file__).parent.resolve()
 HOME_DIR = Path.home()
+
 
 EXCLUDE_PATTERNS = [
     re.compile(r".*\.DS_Store").match,
@@ -15,13 +17,14 @@ EXCLUDE_PATTERNS = [
     re.compile(r"^\.gitignore$").match,
     re.compile(r"\.pyc$").match,
     re.compile(r"~$").match,
+    re.compile(r"ruff\.toml").match,
     re.compile(r"README\.md").match,
     re.compile(r"install\.py").match,
 ]
 
 
 class Installer:
-    def __init__(self, force: bool, interactive: bool, fake: bool) -> None:
+    def __init__(self, *, force: bool, interactive: bool, fake: bool) -> None:
         self.force = force
         self.interactive = interactive
         self.fake = fake
@@ -32,9 +35,7 @@ class Installer:
 
     def should_skip(self, path: Path) -> bool:
         """Check if a file should be skipped based on exclude patterns."""
-        return any(
-            map(lambda match: match(str(path.relative_to(ROOT_DIR))), EXCLUDE_PATTERNS)
-        )
+        return any(match(str(path.relative_to(ROOT_DIR))) for match in EXCLUDE_PATTERNS)
 
     def list_dotfiles(self, path: Path) -> Generator[Path, None, None]:
         """Generate a list of dotfiles to be installed, skipping excluded ones."""
@@ -52,7 +53,6 @@ class Installer:
             source = ROOT_DIR / path.relative_to(ROOT_DIR)
             dest = HOME_DIR / path.relative_to(ROOT_DIR)
 
-
             if self.force and dest.is_file():
                 self.handle_file_removal(dest)
 
@@ -65,7 +65,9 @@ class Installer:
 
     def create_directory_if_not_exists(self, directory: Path):
         if not directory.exists():
-            self.perform_action(f"Creating directory {directory}", lambda: directory.mkdir(parents=True))
+            self.perform_action(
+                f"Creating directory {directory}", lambda: directory.mkdir(parents=True)
+            )
 
     def create_or_update_symlink(self, source: Path, dest: Path):
         if not dest.exists() and self.confirm(f"Create the symlink {dest}? (Y/n): "):
@@ -84,12 +86,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Install dotfiles")
     parser.add_argument("--noinput", action="store_false", help="Run without interactive prompts")
     parser.add_argument("--force", action="store_true", help="Replace existing files")
-    parser.add_argument("--fake", action="store_true", help="Simulate actions without making changes")
+    parser.add_argument(
+        "--fake", action="store_true", help="Simulate actions without making changes"
+    )
 
     options = parser.parse_args()
 
     try:
-        Installer(options.force, not options.noinput, options.fake).run()
+        Installer(
+            force=options.force,
+            interactive=not options.noinput,
+            fake=options.fake,
+        ).run()
     except KeyboardInterrupt:
         print("\n\n-- Stop --")
         sys.exit(1)

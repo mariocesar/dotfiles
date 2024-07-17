@@ -1,0 +1,44 @@
+exclude        = ["docs/*", "*/migrations/*", ".git/*"]
+line-length    = 100
+indent-width   = 4
+target-version = "py311"
+
+[lint]
+    select = [
+        "E",   # pycodestyle errors
+        "W",   # pycodestyle warnings
+        "N",   # pep8-naming
+        "F",   # flake8 errors
+        "S",   # Bandig
+        "SIM", # Simplify
+        "I",   # isort
+        "B",   # bugbear
+        "C",   # comprehensions
+        "PL",  # pylint error
+        "FBT", # Avoid boolean traps
+        "UP",  # pyupgrade
+        "T10", # Avoid debuggers
+        "ICN", # Import conventions
+        "PT",  # Pytest style
+        "ERA", # Error return annotations
+        "TD",  # Correct use of TODO comments
+        "PIE", # Unnecesary code
+        "PTH", # Best use of pathlib
+        "RET", # Best use of return
+        "INP", # Avoid implicit namespace package
+    ]
+
+    fixable   = ["ALL"]
+    unfixable = []
+
+    [lint.isort]
+        lines-after-imports        = 2
+        case-sensitive             = true
+        order-by-type              = true
+        force-sort-within-sections = true
+        combine-as-imports         = true
+        force-to-top               = ["sys", "re"]
+        relative-imports-order     = "closest-to-furthest"
+
+[format]
+    quote-style = "double"
