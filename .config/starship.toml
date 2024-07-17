@@ -2,13 +2,16 @@
 
 add_newline = true
 
-[character] 
-success_symbol = '[❯](bold green)'
+[character]
+    success_symbol = '[❯](bold green)'
 
 [package]
-disabled = true
+    disabled = true
+
+[docker_context]
+    disabled = true
 
 [python]
-pyenv_version_name = false
-detect_files = ['pyproject.toml', 'requirements.txt', 'setup.py']
-detect_folders = ['.venv']
+    pyenv_version_name = false
+    detect_files       = ['pyproject.toml', 'requirements.txt', 'setup.py']
+    detect_folders     = ['.venv']
