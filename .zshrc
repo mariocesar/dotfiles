@@ -4,22 +4,22 @@ export PATH="/Users/${USER}/.local/bin:${PATH}"
 export DOCKER_SCAN_SUGGEST=false
 export EDITOR=nvim
 
-[ -f ~/.zshrc.$(hostname) ] && source ~/.zshrc.$(hostname)
-[ -f ~/.aliases ] && source ~/.aliases
-[ -f ~/.zshbindkeys ] && source ~/.zshbindkeys
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+function load_if_exists() { if [ -f "$1" ]; then source "$1"; fi; }
 
-[ ! -f ~/.direnvinit ] && direnv hook zsh > ~/.direnvinit
+load_if_exists ~/.zshrc.$(hostname)
+load_if_exists ~/.aliases
+load_if_exists ~/.zshbindkeys
+load_if_exists ~/.fzf.zsh
+load_if_exists ~/.iterm2_shell_integration.zsh
+load_if_exists ~/.cargo/env
+
+[ ! -f ~/.direnvinit ] && direnv hook zsh >~/.direnvinit
 source ~/.direnvinit
 
-[ ! -f ~/.pyenvinit ] && pyenv init - > ~/.pyenvinit
+[ ! -f ~/.pyenvinit ] && pyenv init - >~/.pyenvinit
 source ~/.pyenvinit
 
 eval "$(starship init zsh)"
-
-[ -e "${HOME}/.iterm2_shell_integration.zsh" ] && source "${HOME}/.iterm2_shell_integration.zsh"
-
-[ -f "${HOME}/.zshrc.$(hostname).zsh" ] && source "${HOME}/.zshrc.$(hostname).zsh" ]
 
 setopt HIST_IGNORE_ALL_DUPS
 setopt HIST_SAVE_NO_DUPS
