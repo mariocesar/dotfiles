@@ -21,34 +21,49 @@ alias cd..="cd .."
 alias ..='cd ..'
 alias ...='cd ../..'
 
-alias tf="terraform"
-alias tfplan='terraform plan -lock=false'
 alias makepassword="pwgen -y -n 18 1"
 alias path='echo -e ${PATH//:/\\n}'
 
-function git-short() {
-  git log --pretty=format:%h -1 HEAD
+# Terraform
+alias tf="terraform"
+alias tfplan='terraform plan -lock=false'
+
+# Github CLI
+alias suggest="gh copilot suggest"
+alias explain="gh copilot explain"
+
+# Git CLI
+alias git-short=git log --pretty=format:%h -1 HEAD
+alias git-hash=git log --pretty=format:%H -1 HEAD
+
+function assert_inside_git() {
+    if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+        echo "Error: Not inside a git repository."
+        return 1
+    fi
 }
 
-function git-hash() {
-  git log --pretty=format:%H -1 HEAD
+function assert_arguments_provided() {
+    if [ $# -eq 0 ]; then
+        echo "Error: Commit message is required."
+        echo "Usage: ci <commit message>"
+        return 1
+    fi
 }
 
-function lan-ip() {
-  ipconfig getifaddr en0
+function ci() {
+  # Usage: ci <commit message>
+  assert_inside_git || return 1
+  assert_arguments_provided "$@" || return 1
+
+  git commit --amend -m "$*"
 }
 
-function public-ip() {
-  dig +short txt ch whoami.cloudflare @1.0.0.1 | awk -F'"' '{ print $2}'
-}
-
-function public-ip6() {
-  dig -6 TXT +short o-o.myaddr.l.google.com @ns1.google.com | awk -F'"' '{ print $2}'
-}
-
-function dig-all() {
-  dig +nocmd any +multiline +noall +answer "$1"
-}
+# Networking
+alias lan-ip=ipconfig getifaddr en0
+alias public-ip=dig +short txt ch whoami.cloudflare @1.0.0.1 | awk -F'"' '{ print $2}'
+alias public-ip6=dig -6 TXT +short o-o.myaddr.l.google.com @ns1.google.com | awk -F'"' '{ print $2}'
+alias dig-all=dig +nocmd any +multiline +noall +answer "$1"
 
 function urlencode() {
   python -c '
