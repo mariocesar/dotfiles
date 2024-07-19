@@ -5,6 +5,12 @@ local global = vim.g
 local create_autocmd = vim.api.nvim_create_autocmd
 local create_augroup = vim.api.nvim_create_augroup
 
+global.mapleader = ','
+
+-- Fixes slow startup time
+global.loaded_python_provider = 0
+global.loaded_python3_provider = 0
+
 opt.number = true
 opt.mouse = 'a'
 opt.hlsearch = false
@@ -13,18 +19,13 @@ opt.smartindent = true
 opt.breakindent = true
 opt.cursorline = false
 opt.autowrite = true
-
 opt.tabstop = 2
 opt.shiftwidth = 2
 opt.softtabstop = 2
 opt.expandtab = true
-
 opt.splitbelow = true
 opt.splitright = true
-
 opt.scrolloff = 10
-
-global.mapleader = ','
 
 opt.wildignore = {
   '*/node_modules/**',
@@ -55,7 +56,7 @@ opt.wildignore = {
 
 require('plugins')
 
-vim.cmd[[colorscheme tokyonight-night]]
+vim.cmd [[colorscheme tokyonight-night]]
 
 -- Commands
 local cmd = vim.api.nvim_create_user_command
@@ -78,7 +79,9 @@ cmd("Terminal", function(tbl)
     require("term"):open{
         cmd = #tbl.args > 0 and tbl.args or nil
     }
-end, { nargs = "?" })
+end, {
+    nargs = "?"
+})
 
 -- Keymaps
 local map, opts = vim.keymap.set, {
@@ -135,17 +138,15 @@ map('n', '<leader>p', '<cmd>Clap files<cr>', {
     unpack(opts)
 })
 
----
-
 vim.g.clap_provider_dotfiles = {
-  source = {
-    '~/.config/nvim/init.lua',
-    '~/.config/nvim/lua/plugins.lua',
-    '~/.zshrc',
-    '~/.zshrc.tango'
-  },
-  sink = 'e',
-  description = 'Open some dotfile',
+    source = {
+        '~/.config/nvim/init.lua',
+        '~/.config/nvim/lua/plugins.lua',
+        '~/.zshrc',
+        '~/.zshrc.tango'
+    },
+    sink = 'e',
+    description = 'Open some dotfile'
 }
 
 map('n', '<leader>d', '<cmd>Clap dotfiles<cr>', {unpack(opts)})
@@ -217,18 +218,28 @@ function wrap.handler()
     vim.opt_local.linebreak = true
 end
 
-if vim.g.neovide then
-    vim.g.neovide_scale_factor = 0.9
-    vim.g.neovide_hide_mouse_when_typing = true
-    vim.g.neovide_remember_window_size = true
-    vim.g.neovide_fullscreen = false
-    vim.g.neovide_confirm_quit = true
+if global.neovide then
+    global.neovide_scale_factor = 0.9
+    global.neovide_hide_mouse_when_typing = true
+    global.neovide_remember_window_size = true
+    global.neovide_fullscreen = false
+    global.neovide_confirm_quit = true
 
-    vim.g.neovide_scroll_animation_length = 0.1
-    vim.g.neovide_cursor_animation_length = 0.05
-    vim.g.neovide_cursor_trail_size = 0.25
-    vim.g.neovide_refresh_rate = 60
+    global.neovide_scroll_animation_length = 0.1
+    global.neovide_cursor_animation_length = 0.05
+    global.neovide_cursor_trail_size = 0.25
+    global.neovide_refresh_rate = 60
 end
 
+-- Delay the loading of syntax highlighting for large files
+vim.api.nvim_create_autocmd('BufReadPre', {
+    pattern = '*',
+    callback = function()
+        if vim.fn.getfsize(vim.fn.expand('%')) > 100 * 1024 then
+            vim.cmd('syntax off')
+        end
+    end
+})
 
 -- TODO: load init.lua from a working directory. Similar to .envrc load setup
+--
