@@ -20,6 +20,7 @@ EXCLUDE_PATTERNS = [
     re.compile(r"ruff\.toml").match,
     re.compile(r"README\.md").match,
     re.compile(r"install\.py").match,
+    re.compile(r"Brew.+").match,
 ]
 
 
