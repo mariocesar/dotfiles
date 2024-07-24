@@ -17,6 +17,7 @@ EXCLUDE_PATTERNS = [
     re.compile(r"^\.gitignore$").match,
     re.compile(r"\.pyc$").match,
     re.compile(r"~$").match,
+    re.compile(r".+_cache/").match,
     re.compile(r"ruff\.toml").match,
     re.compile(r"README\.md").match,
     re.compile(r"install\.py").match,
