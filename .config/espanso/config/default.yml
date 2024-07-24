@@ -32,7 +32,7 @@ search_trigger: off
 # --- Auto-restart
 
 # Enable/disable the config auto-reload after a file change is detected.
-# auto_restart: false
+auto_restart: true
 
 # --- Clipboard threshold
 

@@ -99,6 +99,52 @@ matches:
       3. 🎯 *¿Cuáles son tus prioridades hoy?*:
       4. ⛔️ *¿Hay algo que esté deteniendo tu progreso, o sea un desafío grande?*:
 
+  - trigger: "!gpt"
+    replace: "{{output}}"
+    vars:
+      - name: form
+        type: form
+        params:
+          layout: |-
+            Assistant: [[assistant]]
+            Model: [[model]]
+            [[prompt]]
+          fields:
+            assistant:
+              type: choice
+              default: just-answer
+              values:
+                - just-answer
+                - just-answer-spanish
+                - jira-ticket
+                - critique-code
+                - critique-code-spanish
+                - communication-english
+                - communication-spanish
+                - communication-spanish-fast
+            model:
+              type: choice
+              values:
+                - gpt-4o-mini
+                - gpt-4o
+                - gpt-4-turbo
+                - gpt-3.5-turbo
+                - claude-3-5-sonnet-20240620
+                - claude-3-opus-20240229
+                - claude-3-sonnet-20240229
+                - claude-3-haiku-20240307
+                - claude-instant-1.2
+              default: claude-3-5-sonnet-20240620
+            prompt:
+              multiline: true
+
+      - name: output
+        type: shell
+        params:
+          debug: true
+          cmd: |-
+            /Users/mariocesarayala/.local/bin/gpt {{form.assistant}} --log_level DEBUG --model {{form.model}} --prompt "$ESPANSO_FORM_PROMPT"
+
   ## Boilerplates
 
   - trigger: ">main.py"
