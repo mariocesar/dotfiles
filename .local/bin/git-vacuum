@@ -1,0 +1,120 @@
+#!/bin/bash
+set -eu
+
+VERSION="1.0.0"
+
+usage() {
+    cat << EOF
+git vacuum $VERSION
+
+Usage: git vacuum [-b <branch>] [-g] [-q] [-d] [-t <timeout>] [-c] [-o] [-h] [-v]
+
+Options:
+  -b, --branch <branch>  Specify the branch to work on (default: current branch)
+  -g, --aggressive       Use aggressive garbage collection
+  -q, --quiet            Suppress all non-error output
+  -d, --dry-run          Perform a dry run without making changes
+  -t, --timeout <secs>   Set a timeout in seconds (default: 1800)
+  -c, --clean            Clean untracked files and directories
+  -o, --optimize         Optimize the repository for better performance
+  -h, --help             Show this help message and exit
+  -v, --version          Show version information and exit
+
+Description:
+  git-vacuum performs maintenance tasks on a Git repository.
+  When run without options, it performs common maintenance tasks on the current branch.
+EOF
+}
+
+# Logging functions
+info() {
+    if [ "${quiet:-false}" = false ]; then
+        printf "vacuum: %s\n" "$1" >&2
+    fi
+}
+
+error() {
+    printf "vacuum error: %s\n" "$1" >&2
+}
+
+run_git_command() {
+    local command="$1"
+    local error_message="$2"
+    if [ "${dry_run:-false}" = true ]; then
+        info "Would run: $command"
+        return 0
+    fi
+    if ! output=$(timeout "${timeout:-1800}" bash -c "$command" 2>&1); then
+        error "$error_message"
+        [ "${quiet:-false}" = false ] && printf "%s\n" "$output" >&2
+        return 1
+    fi
+    [ "${quiet:-false}" = false ] && printf "%s\n" "$output" >&2
+}
+
+main() {
+    local branch=""
+    local gc_aggressive=false
+    local quiet=false
+    local dry_run=false
+    local clean_untracked=false
+    local optimize_repo=false
+    local timeout=1800
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -b|--branch) branch="$2"; shift 2 ;;
+            -g|--aggressive) gc_aggressive=true; shift ;;
+            -q|--quiet) quiet=true; shift ;;
+            -d|--dry-run) dry_run=true; shift ;;
+            -t|--timeout) timeout="$2"; shift 2 ;;
+            -c|--clean) clean_untracked=true; shift ;;
+            -o|--optimize) optimize_repo=true; shift ;;
+            -h|--help) usage; exit 0 ;;
+            -v|--version) echo "git-vacuum version $VERSION"; exit 0 ;;
+            *) error "Unknown option: $1"; usage; exit 1 ;;
+        esac
+    done
+
+    # If no branch is specified, use the current branch
+    if [ -z "$branch" ]; then
+        branch=$(git rev-parse --abbrev-ref HEAD)
+    fi
+
+    info "Starting git maintenance on branch $branch"
+
+    # Check if the branch exists
+    if ! run_git_command "git show-ref --verify --quiet refs/heads/$branch || git show-ref --verify --quiet refs/remotes/origin/$branch" "Branch '$branch' does not exist locally or remotely"; then
+        return 1
+    fi
+
+    # Perform git operations
+    run_git_command "git checkout -f $branch" "Failed to checkout $branch branch" || return 1
+    run_git_command "git fetch --all --prune" "Failed to fetch and prune" || return 1
+    run_git_command "git remote prune origin" "Failed to prune origin" || return 1
+    
+    if [ "$clean_untracked" = true ]; then
+        run_git_command "git clean -fd" "Failed to clean untracked files and directories" || return 1
+    fi
+    
+    run_git_command "git repack" "Failed to repack" || return 1
+    run_git_command "git prune-packed" "Failed to prune packed objects" || return 1
+    run_git_command "git reflog expire --expire=1.month.ago" "Failed to expire reflog" || return 1
+    
+    if [ "$gc_aggressive" = true ]; then
+        run_git_command "git gc --aggressive" "Failed to run aggressive garbage collection" || return 1
+    else
+        run_git_command "git gc" "Failed to run garbage collection" || return 1
+    fi
+    
+    if [ "$optimize_repo" = true ]; then
+        run_git_command "git fsck" "Failed to run filesystem check" || return 1
+        run_git_command "git prune" "Failed to prune unreachable objects" || return 1
+    fi
+    
+    run_git_command "git pull origin $branch" "Failed to pull from origin/$branch" || return 1
+    
+    info "Git maintenance completed successfully"
+}
+
+main "$@"
