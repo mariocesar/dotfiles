@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+import subprocess
+import datetime
+from collections import defaultdict
+import argparse
+
+
+def get_commit_counts(start_date, end_date):
+    cmd = [
+        "git",
+        "log",
+        f"--since={start_date.isoformat()}",
+        f"--until={end_date.isoformat()}",
+        "--format=%cd",
+        "--date=format:%w-%H",  # Format: day of week (0-6) - hour (00-23)
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    commits = result.stdout.strip().split("\n")
+    counts = defaultdict(lambda: defaultdict(int))
+    for commit in commits:
+        if commit:
+            day, hour = commit.split("-")
+            counts[int(day)][int(hour)] += 1
+    return counts
+
+
+def print_horizontal_punchcard(counts):
+    days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    print("     " + "".join(f"{h:3d}" for h in range(24)))
+    print("     " + "-" * 72)
+
+    for day in range(7):
+        row = ""
+        for hour in range(24):
+            count = counts[day][hour]
+            if count == 0:
+                row += "   "
+            elif count < 5:
+                row += " ░ "
+            elif count < 10:
+                row += " ▒ "
+            elif count < 20:
+                row += " ▓ "
+            else:
+                row += " █ "
+        total = sum(counts[day].values())
+        print(f"{days[day]:3s} {row} | {total:3d}")
+
+    print("\nLegend: ░ (1-4), ▒ (5-9), ▓ (10-19), █ (20+)")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Generate a git commit punchcard.")
+    parser.add_argument(
+        "--days", type=int, default=365, help="Number of days to analyze (default: 365)"
+    )
+    args = parser.parse_args()
+
+    end_date = datetime.date.today()
+    start_date = end_date - datetime.timedelta(days=args.days)
+
+    counts = get_commit_counts(start_date, end_date)
+    print(f"Commit Punchcard ({start_date.isoformat()} to {end_date.isoformat()}):")
+    print_horizontal_punchcard(counts)
+
+
+if __name__ == "__main__":
+    main()
