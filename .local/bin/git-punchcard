@@ -26,7 +26,7 @@ def get_commit_counts(start_date, end_date):
 
 def print_horizontal_punchcard(counts):
     days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-    print("    " + "".join(f"{h:3d}" for h in range(24)))
+    print("    " + "".join(f"{h:<3d}" for h in range(24)))
     print("    " + "-" * 73)
 
     for day in range(7):
@@ -36,17 +36,17 @@ def print_horizontal_punchcard(counts):
             if count == 0:
                 row += "   "
             elif count < 5:
-                row += "░░░"
+                row += " ◌ "
             elif count < 10:
-                row += "▒▒▒"
+                row += " ○ "
             elif count < 20:
-                row += "▓▓▓"
+                row += " ◍ "
             else:
-                row += "███"
+                row += " ● "
         total = sum(counts[day].values())
         print(f"{days[day]:3s} {row} | {total:3d}")
 
-    print("\nLegend: ░ (1-4), ▒ (5-9), ▓ (10-19), █ (20+)")
+    print("\nLegend: ◌ (1-4), ○ (5-9), ◍ (10-19), ● (20+)")
 
 
 def main():
