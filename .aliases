@@ -24,6 +24,9 @@ alias ...='cd ../..'
 alias makepassword="pwgen -y -n 18 1"
 alias path='echo -e ${PATH//:/\\n}'
 
+# Term
+alias imgcat="wezterm imgcat"
+
 # Terraform
 alias tf="terraform"
 alias tfplan='terraform plan -lock=false'
