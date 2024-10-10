@@ -6,6 +6,9 @@ config.window_decorations = 'RESIZE'
 config.initial_cols = 100
 config.initial_rows = 40
 
+config.colors = {
+  background = '#202124'
+}
 
 config.leader = {
   key = 'a',
@@ -15,12 +18,12 @@ config.leader = {
 
 config.keys = {
   {
-    key = '"',
+    key = '%',
     mods = 'LEADER',
     action = wezterm.action.SplitHorizontal { domain = 'CurrentPaneDomain' },
   },
   {
-    key = '%',
+    key = '"',
     mods = 'LEADER',
     action = wezterm.action.SplitVertical { domain = 'CurrentPaneDomain' },
   },
