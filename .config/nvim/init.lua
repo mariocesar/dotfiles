@@ -26,6 +26,7 @@ opt.expandtab = true
 opt.splitbelow = true
 opt.splitright = true
 opt.scrolloff = 10
+opt.clipboard = 'unnamedplus'
 
 opt.wildignore = {
   '*/node_modules/**',
