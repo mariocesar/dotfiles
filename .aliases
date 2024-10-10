@@ -161,3 +161,8 @@ function cleanup() {
     find . -type f -name "*.pyc" -delete
   )
 }
+
+function fzfcopy() {
+  fzf --multi | pbcopy
+}
+
