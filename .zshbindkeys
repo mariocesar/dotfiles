@@ -19,7 +19,39 @@ bindkey "\eOH" beginning-of-line
 bindkey "\eOF" end-of-line
 
 # Tab to menucomplete, Shift + Tab to do it backward
+
 bindkey "\e[Z" menu-complete
 
 # Search and open in Vim
-bindkey -s '^o' 'nvim $(fzf)\n'
+
+search-and-edit() {
+  local file
+  file=$(fd --type f --strip-cwd-prefix | fzf --select-1 --prompt="Edit> ")
+  nvim "$file"
+  zle newline-and-history
+  zle reset-prompt
+}
+
+zle -N search-and-edit
+
+bindkey "^P" search-and-edit
+
+# Search for directory and change to it
+
+search-directory-and-cd() {
+  local dir
+  dir=$(fd --type d | fzf --select-1 --exit-0 --prompt="Dir> ")
+  cd "$dir"
+  zle newline-and-history
+  zle reset-prompt
+}
+
+zle -N search-directory-and-cd
+
+bindkey "^G" search-directory-and-cd
+
+# Ctrl + U to delete from the cursor to the beginning of the line
+bindkey "^U" backward-kill-line
+
+# Ctrl + K to delete from the cursor to the end of the line
+bindkey "^K" kill-line
