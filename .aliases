@@ -166,3 +166,16 @@ function fzfcopy() {
   fzf --multi | pbcopy
 }
 
+function suggest-commit-message() {
+  local commit_message
+  assert_inside_git || return 1
+
+  if [ -z "$(git diff --staged)" ]; then
+    echo "Error: No staged content to commit."
+    return 1
+  fi
+
+  local commit_message=$(gpt --model gpt-3.5-turbo --prompt "Return only a short concise and adecuate git commit message following industry standards for the following patch:\n$(git diff --staged)\n")
+
+  git commit --edit -m "$commit_message"
+}
