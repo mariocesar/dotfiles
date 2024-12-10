@@ -1,23 +1,37 @@
 local execute = vim.api.nvim_command
+
 local fn = vim.fn
 local opt = vim.opt
 local global = vim.g
+
 local create_autocmd = vim.api.nvim_create_autocmd
 local create_augroup = vim.api.nvim_create_augroup
 
-global.mapleader = ','
+global.mapleader = ' '
+global.maplocalleader = ' '
+global.have_nerd_fonts = true
 
 -- Fixes slow startup time
 global.loaded_python_provider = 0
 global.loaded_python3_provider = 0
 
+
 opt.number = true
+opt.signcolumn = 'yes'
+opt.updatetime = 300
+opt.timeoutlen = 300
+
 opt.mouse = 'a'
+
+opt.ignorecase = true
+opt.smartcase = true
 opt.hlsearch = false
+opt.inccommand = 'split'
+
 opt.autoindent = true
 opt.smartindent = true
 opt.breakindent = true
-opt.cursorline = false
+opt.cursorline = true
 opt.autowrite = true
 opt.tabstop = 2
 opt.shiftwidth = 2
@@ -26,7 +40,21 @@ opt.expandtab = true
 opt.splitbelow = true
 opt.splitright = true
 opt.scrolloff = 10
-opt.clipboard = 'unnamedplus'
+
+opt.list = true
+opt.listchars = {
+  tab = '▸ ',
+  trail = '·',
+  extends = '>',
+  precedes = '<',
+  nbsp = '␣'
+}
+
+-- Schedule after UIEnter to avoid increase startup time
+vim.schedule(function()
+  -- Sync clipboard with system clipboard
+  opt.clipboard = 'unnamedplus'
+end)
 
 opt.wildignore = {
   '*/node_modules/**',
