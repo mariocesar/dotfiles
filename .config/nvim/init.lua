@@ -87,6 +87,16 @@ require('plugins')
 
 vim.cmd [[colorscheme tokyonight-night]]
 
+-- Filetype
+
+vim.filetype.add {
+  extension = {
+    jinja = 'jinja',
+    jinja2 = 'jinja',
+    j2 = 'jinja',
+  }
+}
+
 -- Commands
 local cmd = vim.api.nvim_create_user_command
 
