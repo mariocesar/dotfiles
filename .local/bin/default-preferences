@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -eux
+
+# Disable press-and-hold for keys in some appss
+defaults write com.microsoft.VSCode   ApplePressAndHoldEnabled -bool false
+defaults write com.github.wez.wezterm ApplePressAndHoldEnabled -bool false
+
+# Useful for typing fast when coding 
+defaults write -g InitialKeyRepeat -int 15
+defaults write -g KeyRepeat -int 4
+
