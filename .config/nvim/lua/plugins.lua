@@ -5,8 +5,16 @@ return require('packer').startup(function(use)
   use 'folke/tokyonight.nvim'
   use {'liuchengxu/vim-clap',  run=':Clap install-binary!' }
   use 'tpope/vim-surround'
+
   use 'github/copilot.vim'
   if vim.fn.exists('g:vscode') == 1 then
     vim.cmd('autocmd VimEnter * Copilot disable')
   end
+
+  use {
+    'lewis6991/gitsigns.nvim',
+    config = function()
+      require('gitsigns').setup()
+    end
+  }
 end)
