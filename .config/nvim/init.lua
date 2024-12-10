@@ -122,12 +122,12 @@ end, {
     nargs = "?"
 })
 
--- Keymaps
 local map, opts = vim.keymap.set, {
     noremap = true,
     silent = true
 }
 
+-- Normal mode
 map('n', 'Q', '<nop', {
     desc = "Disabling exmode enter",
     unpack(opts)
@@ -160,10 +160,18 @@ map('n', '<silent> <esc><esc>', '<cmd><C-u>nohlsearch<cr><C-l>', {
     desc = 'Cleanup search highlight and redraw',
     unpack(opts)
 })
+map('n', '<leader>p', '<cmd>Clap files<cr>', {
+    desc = 'Navigate files in the current working directory',
+    unpack(opts)
+})
+
+-- Insert mode
 map('i', '<silent> <esc><esc>', '<C-o>:nohlsearch<cr>', {
     desc = 'Cleanup search highlight and redraw',
     unpack(opts)
 })
+
+-- Visual mode
 map('v', '<', '<gv', {
     desc = 'Mantain the selected blocks when indenting',
     unpack(opts)
@@ -172,9 +180,10 @@ map('v', '>', '>gv', {
     desc = 'Mantain the selected blocks when indenting',
     unpack(opts)
 })
-map('n', '<leader>p', '<cmd>Clap files<cr>', {
-    desc = 'Navigate files in the current working directory',
-    unpack(opts)
+
+-- Terminal mode
+map('t', '<esc><esc>', '<C-\\><C-n>', {
+    desc = 'Exit terminal mode',
 })
 
 vim.g.clap_provider_dotfiles = {
@@ -191,6 +200,15 @@ vim.g.clap_provider_dotfiles = {
 map('n', '<leader>d', '<cmd>Clap dotfiles<cr>', {unpack(opts)})
 
 -- Paste on Normal, Insert and Command-Line mode
+
+map('v', '<C-c>', function() 
+    vim.api.nvim_command('normal! gvy')
+    vim.notify('Copied to clipboard')
+  end, {
+    desc = 'Copy to clipboard',
+    unpack(opts)
+})
+
 map('n', '<D-v>', 'a<C-r>+<Esc>', {
     desc = 'Paste',
     unpack(opts)
