@@ -1,22 +1,23 @@
-vim.cmd [[packadd packer.nvim]]
-
-return require('packer').startup(function(use)
-  use 'wbthomason/packer.nvim'
-  use 'folke/tokyonight.nvim'
-  use {'liuchengxu/vim-clap',  run=':Clap install-binary!' }
-  use 'tpope/vim-surround'
-
-  use 'github/copilot.vim'
-  if vim.fn.exists('g:vscode') == 1 then
-    vim.cmd('autocmd VimEnter * Copilot disable')
-  end
-
-  use {
-    'lewis6991/gitsigns.nvim',
+return {
+  'folke/tokyonight.nvim', -- colorscheme
+  'tpope/vim-surround',
+  'mg979/vim-visual-multi',
+  {
+    'liuchengxu/vim-clap',
+    build = ':Clap install-binary!'
+  },
+  {
+    'github/copilot.vim',
     config = function()
-      require('gitsigns').setup()
+      if vim.fn.exists('g:vscode') == 1 then
+        vim.api.nvim_create_autocmd('VimEnter', {
+          callback = function() vim.cmd('Copilot disable') end
+        })
+      end
     end
+  },
+  {
+    'lewis6991/gitsigns.nvim',
+    config = function() require('gitsigns').setup() end
   }
-
-  use 'mg979/vim-visual-multi'
-end)
+}

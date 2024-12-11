@@ -7,8 +7,12 @@ local global = vim.g
 local create_autocmd = vim.api.nvim_create_autocmd
 local create_augroup = vim.api.nvim_create_augroup
 
-global.mapleader = ' '
-global.maplocalleader = ' '
+require("config.lazy")
+require("lazy").setup("plugins")
+
+global.mapleader = ','
+global.maplocalleader = '\\'
+
 global.have_nerd_fonts = true
 
 -- Fixes slow startup time
@@ -83,7 +87,6 @@ opt.wildignore = {
   '*DS_Store*'
 }
 
-require('plugins')
 
 vim.cmd [[colorscheme tokyonight-night]]
 
@@ -225,24 +228,6 @@ map('c', '<D-v>', '<C-r>+', {
 -- Auto commands
 
 local au = require("au")
-
--- Toggle between relative and absolute line numbers depending on mode
-
-local number = au("user_number")
-local relative = number {"BufEnter", "FocusGained", "InsertLeave", "TermLeave", "WinEnter"}
-local absolute = number {"BufLeave", "FocusLost", "InsertEnter", "TermEnter", "WinLeave"}
-
-function relative.handler()
-    if vim.opt_local.number:get() and vim.fn.mode() ~= "i" then
-        vim.opt_local.relativenumber = true
-    end
-end
-
-function absolute.handler()
-    if vim.opt_local.number:get() then
-        vim.opt_local.relativenumber = false
-    end
-end
 
 -- JSON show conceal chars
 
