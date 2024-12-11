@@ -17,4 +17,6 @@ return require('packer').startup(function(use)
       require('gitsigns').setup()
     end
   }
+
+  use 'mg979/vim-visual-multi'
 end)
