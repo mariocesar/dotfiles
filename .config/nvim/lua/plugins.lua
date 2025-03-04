@@ -1,10 +1,22 @@
 return {
   'folke/tokyonight.nvim', -- colorscheme
   'tpope/vim-surround',
+  'tpope/vim-repeat',
   'mg979/vim-visual-multi',
   {
     'liuchengxu/vim-clap',
-    build = ':Clap install-binary!'
+    build = ':Clap install-binary!',
+    cmd = 'Clap',
+    config = function()
+      vim.g.enable_clap_auto_resize = true
+      vim.g.clap_enable_background_shadow = true
+      vim.g.clap_provider_dotfiles = {
+        source = "fd --type f --hidden --follow --exclude .git . ~/.dotfiles/",
+        description = 'Open some dotfile',
+        sink = 'e',
+        previewer = 'head -n 500 {}'
+      }
+    end
   },
   {
     'github/copilot.vim',

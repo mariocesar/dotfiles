@@ -7,11 +7,11 @@ local global = vim.g
 local create_autocmd = vim.api.nvim_create_autocmd
 local create_augroup = vim.api.nvim_create_augroup
 
-require("config.lazy")
-require("lazy").setup("plugins")
-
 global.mapleader = ','
 global.maplocalleader = '\\'
+
+require("config.lazy")
+require("lazy").setup("plugins")
 
 global.have_nerd_fonts = true
 
@@ -168,6 +168,15 @@ map('n', '<leader>p', '<cmd>Clap files<cr>', {
   desc = 'Navigate files in the current working directory',
   unpack(opts)
 })
+
+map('n', '<C-d>', '<C-d>zz', {
+  desc = 'Scroll down and center',
+})
+
+map('n', '<C-u>', '<C-u>zz', {
+  desc = 'Scroll up and center',
+})
+
 
 -- Insert mode
 map('i', '<silent> <esc><esc>', '<C-o>:nohlsearch<cr>', {
