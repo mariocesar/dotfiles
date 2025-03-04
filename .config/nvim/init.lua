@@ -53,6 +53,9 @@ opt.listchars = {
   nbsp = '␣'
 }
 
+vim.o.modeline = true
+vim.o.modelines = 10
+
 -- Schedule after UIEnter to avoid increase startup time
 vim.schedule(function()
   -- Sync clipboard with system clipboard
