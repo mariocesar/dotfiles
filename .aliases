@@ -90,7 +90,7 @@ function todo() {
     --binary-file=without-match \
     --line-number \
     --line-buffered \
-    --exclude-dir={node_modules,.git,lib,.venv,.cache,".cache_*",__pycache__,.yarn} \
+    --exclude-dir={node_modules,.git,lib,.venv,.cache,".cache_*",__pycache__,.yarn,static} \
     --exclude={"*bundle.js","*.bundle","*.pyc","jquery*.js","*.map","*.min.js","*.csv","*.xls","*.xml","*.svg","*.json",TODO.md,todos.txt} \
     .
 }
