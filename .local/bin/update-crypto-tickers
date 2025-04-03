@@ -51,18 +51,29 @@ def main():
         "BAKE",
     ]
     copy_mode = "--copy" in sys.argv
+    watch_mode = "--watch" in sys.argv
 
-    if not copy_mode:
-        print("Fetching prices:")
+    def render():
+        prices = asyncio.run(fetch_prices(symbols))
 
-    prices = asyncio.run(fetch_prices(symbols))
+        for symbol, price in prices:
+            if copy_mode:
+                print(f"{price:,.4f}".replace(",", "").replace(".", ","))
+            else:
+                print(f"{symbol:>4} - USDT {price:>10,.2f}")
 
-    for symbol, price in prices:
-        if copy_mode:
-            print(f"{price:,.4f}".replace(",", "").replace(".", ","))
-        else:
-            print(f"{symbol:>4} - USDT {price:>10,.2f}")
+    while watch_mode:
+        try:
+            render()
+            print("\033[F" * len(symbols), flush=True, end="")
+        except KeyboardInterrupt:
+            print()
+            break
+        except Exception as e:
+            print(f"Error: {e}")
+            break
 
+    render()
 
 if __name__ == "__main__":
     main()
