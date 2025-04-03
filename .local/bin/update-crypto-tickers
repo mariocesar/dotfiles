@@ -1,47 +1,68 @@
 #!/usr/bin/env -S uv run --quiet --script
 # /// script
-# dependencies = ["requests", "pandas", "rich"]
-# requires-python = ">=3.12" 
+# dependencies = ["httpx", "pandas", "rich"]
+# requires-python = ">=3.12"
 # ///
 # vim: set filetype=python :
+
 import sys
-import requests
+import asyncio
+
+import httpx
+
 
 ticker_url = "https://api.binance.com/api/v3/ticker/price?symbol={}USDT".format
 
 
-def get_price(symbol):
+async def get_price(client: httpx.AsyncClient, symbol: str):
     try:
-        response = requests.get(ticker_url(symbol.upper().strip()), timeout=10)
-        response.raise_for_status()  # Raise an error for bad responses.
+        response = await client.get(ticker_url(symbol.upper().strip()), timeout=10)
+        response.raise_for_status()
         data = response.json()
-        return float(data["price"])
+        return symbol, float(data["price"])
     except Exception as e:
         print(f"Error fetching price for {symbol}: {e}")
         raise e
 
 
-symbols = [
-    "BTC",
-    "USDC",
-    "SOL",
-    "BNB",
-    "ETH",
-    "ADA",
-    "XRP",
-    "TRX",
-    "LINK",
-    "DOT",
-    "SUI",
-    "AVAX",
-    "UNI",
-    "AAVE",
-    "CAKE",
-    "BAKE",
-]
+async def fetch_prices(symbols):
+    async with httpx.AsyncClient() as client:
+        tasks = [get_price(client, symbol) for symbol in symbols]
+        return await asyncio.gather(*tasks)
 
-for symbol in symbols:
-    if '--copy' in sys.argv:
-        print(f"{get_price(symbol):,.4f}".replace(",", "").replace(".", ","))
-    else:
-        print(f"{symbol:>4} - USDT {get_price(symbol):>10,.2f}")
+
+def main():
+    symbols = [
+        "BTC",
+        "USDC",
+        "SOL",
+        "BNB",
+        "ETH",
+        "ADA",
+        "XRP",
+        "TRX",
+        "LINK",
+        "DOT",
+        "SUI",
+        "AVAX",
+        "UNI",
+        "AAVE",
+        "CAKE",
+        "BAKE",
+    ]
+    copy_mode = "--copy" in sys.argv
+
+    if not copy_mode:
+        print("Fetching prices:")
+
+    prices = asyncio.run(fetch_prices(symbols))
+
+    for symbol, price in prices:
+        if copy_mode:
+            print(f"{price:,.4f}".replace(",", "").replace(".", ","))
+        else:
+            print(f"{symbol:>4} - USDT {price:>10,.2f}")
+
+
+if __name__ == "__main__":
+    main()
