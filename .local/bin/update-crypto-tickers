@@ -28,11 +28,13 @@ async def get_price(client: httpx.AsyncClient, symbol: str):
 async def fetch_prices(symbols):
     async with httpx.AsyncClient() as client:
         tasks = [get_price(client, symbol) for symbol in symbols]
-        return await asyncio.gather(*tasks)
+        results = await asyncio.gather(*tasks)
+        await asyncio.sleep(0.25)
+        return results
 
 
 def main():
-    symbols = [
+    symbols = (
         "BTC",
         "USDC",
         "SOL",
@@ -49,9 +51,10 @@ def main():
         "AAVE",
         "CAKE",
         "BAKE",
-    ]
+    )
     copy_mode = "--copy" in sys.argv
     watch_mode = "--watch" in sys.argv
+
 
     def render():
         prices = asyncio.run(fetch_prices(symbols))
@@ -61,6 +64,7 @@ def main():
                 print(f"{price:,.4f}".replace(",", "").replace(".", ","))
             else:
                 print(f"{symbol:>4} - USDT {price:>10,.2f}")
+
 
     while watch_mode:
         try:
@@ -75,5 +79,7 @@ def main():
 
     render()
 
+
 if __name__ == "__main__":
     main()
+
