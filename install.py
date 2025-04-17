@@ -26,7 +26,9 @@ EXCLUDE_RULES = """
 .vscode/
 .*_cache/
 
+Brewfile
 Brewfile.lock.json
+
 .gitignore
 ruff.toml
 README.md
