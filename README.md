@@ -1,8 +1,8 @@
 # dotfiles
 
-This works for me, not always, but when it works, it makes my life easier. I use it to save the configurations of my day-to-day tools. It makes me conscious about what I add to my config files, and because of it, I work better or faster.
+These are my personal dotfiles. They're not perfect, and they don't always work flawlessly, but when they do, they makes my life easier. I use this repository to store configurations for my everyday tools, helping me maintain awareness of what goes into my setup. As a result, I feel I work more efficiently and intentionally.
 
-When I have to work on something challenging, and I'm stuck. I'm here sharpening knives instead of wandering on Tik Tok or YouTube. It makes me spend time learning and improving. It makes me move forward.
+When facing a challenging task and feeling stuck, managing my dotfiles acts as a productive form of "sharpening knives." Rather than getting distracted by TikTok or YouTube, I spend my time refining configurations, learning, and improving my skills. It keeps me engaged, productive, and constantly moving forward.
 
 ``` terminal
 python install.py --help
@@ -15,5 +15,4 @@ options:
   --noinput   Don't ask to confirm every action
   --force     If target file exists it replaces it
   --fake
-
 ```
