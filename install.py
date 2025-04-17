@@ -1,28 +1,54 @@
-#!/usr/bin/env python3
-import re
+#!/usr/bin/env -S uv run --quiet --script
+# /// script
+# dependencies = ["pathspec", "rich"]
+# requires-python = ">=3.11"
+# ///
+# vim: set filetype=python :
 import sys
 import argparse
 from collections.abc import Callable, Generator
 from pathlib import Path
 
+from pathspec import PathSpec
+import rich
+from rich.prompt import Confirm
+
 
 ROOT_DIR = Path(__file__).parent.resolve()
 HOME_DIR = Path.home()
 
+EXCLUDE_RULES = """
+.DS_Store
+*.py[co]
+*~
 
-EXCLUDE_PATTERNS = [
-    re.compile(r".*\.DS_Store").match,
-    re.compile(r"^\.git/").match,
-    re.compile(r"^\.vscode$").match,
-    re.compile(r"^\.gitignore$").match,
-    re.compile(r"\.pyc$").match,
-    re.compile(r"~$").match,
-    re.compile(r".+_cache/").match,
-    re.compile(r"ruff\.toml").match,
-    re.compile(r"README\.md").match,
-    re.compile(r"install\.py").match,
-    re.compile(r"Brew.+").match,
-]
+.git/
+.vscode/
+.*_cache/
+
+Brewfile.lock.json
+.gitignore
+ruff.toml
+README.md
+install.py
+"""
+
+ignore_spec = PathSpec.from_lines(
+    "gitwildmatch",
+    EXCLUDE_RULES.splitlines(),
+)
+
+
+def list_dotfiles(path: Path) -> Generator[Path, None, None]:
+    """Generate a list of dotfiles to be installed, skipping excluded ones."""
+    for item in path.glob("*"):
+        if ignore_spec.match_file(item):
+            continue
+
+        if item.is_dir():
+            yield from list_dotfiles(item)
+        else:
+            yield item
 
 
 class Installer:
@@ -31,27 +57,8 @@ class Installer:
         self.interactive = interactive
         self.fake = fake
 
-    def confirm(self, message: str) -> bool:
-        """Prompt for confirmation if interactive mode is enabled."""
-        return not self.interactive or input(message).lower() == "y"
-
-    def should_skip(self, path: Path) -> bool:
-        """Check if a file should be skipped based on exclude patterns."""
-        return any(match(str(path.relative_to(ROOT_DIR))) for match in EXCLUDE_PATTERNS)
-
-    def list_dotfiles(self, path: Path) -> Generator[Path, None, None]:
-        """Generate a list of dotfiles to be installed, skipping excluded ones."""
-        for item in path.glob("*"):
-            if self.should_skip(item):
-                continue
-
-            if item.is_dir():
-                yield from self.list_dotfiles(item)
-            else:
-                yield item
-
     def run(self) -> None:
-        for path in self.list_dotfiles(ROOT_DIR):
+        for path in list_dotfiles(ROOT_DIR):
             source = ROOT_DIR / path.relative_to(ROOT_DIR)
             dest = HOME_DIR / path.relative_to(ROOT_DIR)
 
@@ -62,7 +69,7 @@ class Installer:
             self.create_or_update_symlink(source, dest)
 
     def handle_file_removal(self, dest: Path):
-        if self.confirm(f"Delete {dest} before installing? (Y/n): "):
+        if Confirm.ask(f"Delete {dest} before installing? (Y/n)"):
             self.perform_action(f"Removing {dest}", lambda: dest.unlink())
 
     def create_directory_if_not_exists(self, directory: Path):
@@ -72,13 +79,13 @@ class Installer:
             )
 
     def create_or_update_symlink(self, source: Path, dest: Path):
-        if not dest.exists() and self.confirm(f"Create the symlink {dest}? (Y/n): "):
+        if not dest.exists() and Confirm.ask(f"Create the symlink {dest}? "):
             self.perform_action(f"Linking {source} to {dest}", lambda: dest.symlink_to(source))
         else:
             self.perform_action(f"Destination exists: {dest}", lambda: dest.touch())
 
     def perform_action(self, message: str, action: Callable):
-        print(f"{'[DRY RUN] ' if self.fake else ''}{message}")
+        rich.print(f"{'[DRY RUN] ' if self.fake else ''}{message}")
 
         if not self.fake:
             action()
@@ -86,10 +93,20 @@ class Installer:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Install dotfiles")
-    parser.add_argument("--noinput", action="store_false", help="Run without interactive prompts")
-    parser.add_argument("--force", action="store_true", help="Replace existing files")
     parser.add_argument(
-        "--fake", action="store_true", help="Simulate actions without making changes"
+        "--noinput",
+        action="store_false",
+        help="Run without interactive prompts",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Replace existing files",
+    )
+    parser.add_argument(
+        "--fake",
+        action="store_true",
+        help="Simulate actions without making changes",
     )
 
     options = parser.parse_args()
