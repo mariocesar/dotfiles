@@ -35,4 +35,7 @@ export HISTTIMEFORMAT="%d/%m/%y %T  "
 export HISTCONTROL=ignoredups:ignorespace
 export HISTFILE="$HOME/.history"
 
+# Add completitions
+[ -d $HOME/.docker/completions ] && fpath=(/Users/mariocesar/.docker/completions $fpath)
+
 autoload -Uz compinit && compinit -i
