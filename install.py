@@ -34,6 +34,9 @@ class DotfileMapper:
     def __init__(self, workdir: Path, target: Path):
         self.workdir = workdir
         self.target = target
+        self.exclude_pattern = re.compile(
+            r"|".join(pattern.pattern for pattern in self.EXCLUDE_PATTERNS)
+        )
 
     def __call__(self) -> Generator[tuple[Path, Path], None, None]:
         """Generate a list of dotfiles to be installed, skipping excluded ones."""
@@ -49,7 +52,7 @@ class DotfileMapper:
         for item in basedir.glob("*"):
             rel_path = str(Path(item).relative_to(self.workdir))
 
-            if any(pattern.match(rel_path) for pattern in self.EXCLUDE_PATTERNS):
+            if self.exclude_pattern.match(rel_path):
                 continue
 
             if isdir(item):  # noqa: PTH112
