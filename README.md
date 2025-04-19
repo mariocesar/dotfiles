@@ -6,6 +6,8 @@ When facing a hard task and feeling stuck, managing my dotfiles acts as a produc
 
 ## How to Use
 
+My goal is to keep things simple, just make sure Python 3.11 or higher is installed. After that, all you need to do is clone the repo and run `python install.py`.
+
 ```bash
 git clone https://github.com/mariocesar/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
@@ -13,6 +15,12 @@ python install.py
 ```
 
 The command `python install.py` creates symlinks for all files in the repository, mirroring its structure in your home directory.
+
+For example to see the installation "Plan" you can run:
+
+```bash
+python install.py --fake --noinput
+```
 
 For additional options, run: `python install.py --help`
 
@@ -27,7 +35,3 @@ options:
   --force     Replace target files if they already exist
   --fake      Perform a dry-run without making actual changes
 ```
-
-## TODO
-
-- Decide whether this project should use only what is on Python's standard library, without any external Python package dependencies.
