@@ -3,6 +3,7 @@ import sys
 import argparse
 from collections.abc import Callable, Generator
 from functools import partial
+from os.path import isdir
 from pathlib import Path
 
 
@@ -51,7 +52,7 @@ class DotfileMapper:
             if any(pattern.match(rel_path) for pattern in self.EXCLUDE_PATTERNS):
                 continue
 
-            if item.is_dir():
+            if isdir(item):  # noqa: PTH112
                 yield from self.walk(item)
             else:
                 yield item
@@ -60,9 +61,9 @@ class DotfileMapper:
 list_dotfiles = DotfileMapper(ROOT_DIR, HOME_DIR)
 
 
-def confirm(prompt: str, *, default: bool = True, fake: bool = False) -> bool:
+def confirm(prompt: str, *, default: bool = True, interactive: bool = True) -> bool:
     """Prompt the user for confirmation."""
-    if fake:
+    if not interactive:
         return True
 
     suffix = " (Y/n): " if default else " (y/N): "
@@ -105,8 +106,8 @@ puts = Formatter()
 class Installer:
     def __init__(self, *, force: bool, interactive: bool, fake: bool) -> None:
         self.force = force
-        self.interactive = interactive
         self.fake = fake
+        self.confirm = partial(confirm, interactive=interactive)
 
     def run(self) -> None:
         for source, dest in list_dotfiles():
@@ -117,20 +118,34 @@ class Installer:
             self.create_or_update_symlink(source, dest)
 
     def handle_file_removal(self, dest: Path):
-        if confirm(f"Delete {dest} before installing? (Y/n)", fake=self.interactive):
+        if self.confirm(f"Delete {dest} before installing? (Y/n)"):
             self.perform_action(f"Removing {dest}", lambda: dest.unlink())
 
     def create_directory_if_not_exists(self, directory: Path):
         if not directory.exists():
             self.perform_action(
-                f"Creating directory {directory}", lambda: directory.mkdir(parents=True)
+                f"Creating directory {directory}",
+                lambda: directory.mkdir(parents=True),
             )
 
     def create_or_update_symlink(self, source: Path, dest: Path):
-        if not dest.exists() and confirm(f"Create the symlink {dest}?", fake=self.interactive):
-            self.perform_action(f"Linking {source} to {dest}", lambda: dest.symlink_to(source))
+        if not dest.exists():
+            if self.confirm(f"Create the symlink {dest}?"):
+                self.perform_action(
+                    f"Linking {source} to {dest}",
+                    lambda: dest.symlink_to(source),
+                )
+        elif dest.is_symlink():
+            if dest.resolve() != source:
+                if self.confirm(f"Update the symlink {dest} to point to {source}?"):
+                    self.perform_action(
+                        f"Updating link {dest} to {source}",
+                        lambda: (dest.unlink(), dest.symlink_to(source)),
+                    )
+            else:
+                self.perform_action(f"Symlink already points to {source}", lambda: None)
         else:
-            self.perform_action(f"Destination exists: {dest}", lambda: dest.touch())
+            self.perform_action(f"Destination exists: {dest}", lambda: None)
 
     def perform_action(self, message: str, action: Callable):
         puts(f"{'[FAKE] ' if self.fake else ''}{message}")
@@ -142,9 +157,10 @@ class Installer:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Install dotfiles")
     parser.add_argument(
-        "--noinput",
-        action="store_false",
-        help="Run without interactive prompts",
+        "--interactive",
+        action="store_true",
+        default=False,
+        help="Run with interactive prompts",
     )
     parser.add_argument(
         "--force",
@@ -164,7 +180,7 @@ if __name__ == "__main__":
     try:
         Installer(
             force=options.force,
-            interactive=not options.noinput,
+            interactive=options.interactive,
             fake=options.fake,
         ).run()
     except KeyboardInterrupt:
