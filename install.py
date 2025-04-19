@@ -38,9 +38,9 @@ class DotfileMapper:
     def __call__(self) -> Generator[tuple[Path, Path], None, None]:
         """Generate a list of dotfiles to be installed, skipping excluded ones."""
         for item in self.walk():
-            source = self.workdir / item.relative_to(self.workdir)
-            dest = self.target / item.relative_to(self.workdir)
-
+            rel_path = item.relative_to(self.workdir)
+            source = self.workdir / rel_path
+            dest = self.target / rel_path
             yield source, dest
 
     def walk(self, basedir: Path | None = None) -> Generator[Path, None, None]:
