@@ -1,56 +1,107 @@
-#!/usr/bin/env -S uv run --quiet --script
-# /// script
-# dependencies = ["pathspec", "rich"]
-# requires-python = ">=3.11"
-# ///
-# vim: set filetype=python :
+import re
 import sys
 import argparse
 from collections.abc import Callable, Generator
+from functools import partial
 from pathlib import Path
-
-from pathspec import PathSpec
-import rich
-from rich.prompt import Confirm
 
 
 ROOT_DIR = Path(__file__).parent.resolve()
 HOME_DIR = Path.home()
 
-EXCLUDE_RULES = """
-.DS_Store
-*.py[co]
-*~
 
-.git/
-.vscode/
-.*_cache/
+class DotfileMapper:
+    EXCLUDE_PATTERNS: list[re.Pattern] = list(
+        map(
+            re.compile,
+            (
+                r".*\.DS_Store$",
+                r"^.+\.py[co]$",
+                r"^.+\~$",
+                r"^\.git$",
+                r"^\.vscode$",
+                r"^\..*_cache$",
+                r"^Brewfile$",
+                r"^Brewfile\.lock\.json$",
+                r"^\.gitignore$",
+                r"^ruff\.toml$",
+                r"^README\.md$",
+                r"^LICENSE$",
+                r"^install\.py$",
+            ),
+        ),
+    )
 
-Brewfile
-Brewfile.lock.json
+    def __init__(self, workdir: Path, target: Path):
+        self.workdir = workdir
+        self.target = target
 
-.gitignore
-ruff.toml
-README.md
-install.py
-"""
+    def __call__(self) -> Generator[tuple[Path, Path], None, None]:
+        """Generate a list of dotfiles to be installed, skipping excluded ones."""
+        for item in self.walk():
+            source = self.workdir / item.relative_to(self.workdir)
+            dest = self.target / item.relative_to(self.workdir)
 
-ignore_spec = PathSpec.from_lines(
-    "gitwildmatch",
-    EXCLUDE_RULES.splitlines(),
-)
+            yield source, dest
+
+    def walk(self, basedir: Path | None = None) -> Generator[Path, None, None]:
+        basedir = basedir or self.workdir
+
+        for item in basedir.glob("*"):
+            rel_path = str(Path(item).relative_to(self.workdir))
+
+            if any(pattern.match(rel_path) for pattern in self.EXCLUDE_PATTERNS):
+                continue
+
+            if item.is_dir():
+                yield from self.walk(item)
+            else:
+                yield item
 
 
-def list_dotfiles(path: Path) -> Generator[Path, None, None]:
-    """Generate a list of dotfiles to be installed, skipping excluded ones."""
-    for item in path.glob("*"):
-        if ignore_spec.match_file(item):
-            continue
+list_dotfiles = DotfileMapper(ROOT_DIR, HOME_DIR)
 
-        if item.is_dir():
-            yield from list_dotfiles(item)
-        else:
-            yield item
+
+def confirm(prompt: str, *, default: bool = True, fake: bool = False) -> bool:
+    """Prompt the user for confirmation."""
+    if fake:
+        return True
+
+    suffix = " (Y/n): " if default else " (y/N): "
+    response = input(prompt + suffix).strip().lower()
+    return default if not response else response[0] == "y"
+
+
+class Formatter:
+    message_event_pattern = re.compile(r"-- (.*?) --")
+    message_tag_pattern = re.compile(r"\[(.*?)\]")
+    message_path_pattern = re.compile(r"((?:/|~/)[^\s]*)")
+
+    color_reset = "\033[0m"
+    color_cyan = "\033[36m"
+    color_bold_white = "\033[1;37m"
+    color_bold_orange = "\033[1;33m"
+
+    @staticmethod
+    def apply_color(match: re.Match, color: str) -> str:
+        return f"{color}{match.group(0)}{Formatter.color_reset}"
+
+    apply_tag_format = partial(apply_color, color=color_bold_white)
+    apply_path_format = partial(apply_color, color=color_cyan)
+    apply_event_format = partial(apply_color, color=color_bold_orange)
+
+    def __call__(self, message: str) -> None:
+        """Print text with color formatting."""
+        # Format [*] patterns as bold white
+
+        formatted = self.message_tag_pattern.sub(self.apply_tag_format, message)
+        formatted = self.message_path_pattern.sub(self.apply_path_format, formatted)
+        formatted = self.message_event_pattern.sub(self.apply_event_format, formatted)
+
+        print(formatted)
+
+
+puts = Formatter()
 
 
 class Installer:
@@ -60,10 +111,7 @@ class Installer:
         self.fake = fake
 
     def run(self) -> None:
-        for path in list_dotfiles(ROOT_DIR):
-            source = ROOT_DIR / path.relative_to(ROOT_DIR)
-            dest = HOME_DIR / path.relative_to(ROOT_DIR)
-
+        for source, dest in list_dotfiles():
             if self.force and dest.is_file():
                 self.handle_file_removal(dest)
 
@@ -71,7 +119,7 @@ class Installer:
             self.create_or_update_symlink(source, dest)
 
     def handle_file_removal(self, dest: Path):
-        if Confirm.ask(f"Delete {dest} before installing? (Y/n)"):
+        if confirm(f"Delete {dest} before installing? (Y/n)", fake=self.interactive):
             self.perform_action(f"Removing {dest}", lambda: dest.unlink())
 
     def create_directory_if_not_exists(self, directory: Path):
@@ -81,13 +129,13 @@ class Installer:
             )
 
     def create_or_update_symlink(self, source: Path, dest: Path):
-        if not dest.exists() and Confirm.ask(f"Create the symlink {dest}? "):
+        if not dest.exists() and confirm(f"Create the symlink {dest}?", fake=self.interactive):
             self.perform_action(f"Linking {source} to {dest}", lambda: dest.symlink_to(source))
         else:
             self.perform_action(f"Destination exists: {dest}", lambda: dest.touch())
 
     def perform_action(self, message: str, action: Callable):
-        rich.print(f"{'[DRY RUN] ' if self.fake else ''}{message}")
+        puts(f"{'[FAKE] ' if self.fake else ''}{message}")
 
         if not self.fake:
             action()
@@ -113,6 +161,8 @@ if __name__ == "__main__":
 
     options = parser.parse_args()
 
+    puts("-- Starting dotfiles installation --")
+
     try:
         Installer(
             force=options.force,
@@ -120,5 +170,8 @@ if __name__ == "__main__":
             fake=options.fake,
         ).run()
     except KeyboardInterrupt:
-        print("\n\n-- Stop --")
+        puts("\n\n-- Stop --")
         sys.exit(1)
+    else:
+        puts("-- Finished --")
+        sys.exit(0)
