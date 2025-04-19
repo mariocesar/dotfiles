@@ -108,6 +108,7 @@ class Installer:
         self.force = force
         self.fake = fake
         self.confirm = partial(confirm, interactive=interactive)
+        self._created_dirs = set()
 
     def run(self) -> None:
         for source, dest in list_dotfiles():
@@ -122,6 +123,11 @@ class Installer:
             self.perform_action(f"Removing {dest}", lambda: dest.unlink())
 
     def create_directory_if_not_exists(self, directory: Path):
+        if str(directory) in self._created_dirs:
+            return
+
+        self._created_dirs.add(str(directory))
+
         if not directory.exists():
             self.perform_action(
                 f"Creating directory {directory}",
