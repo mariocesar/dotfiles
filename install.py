@@ -3,7 +3,6 @@ import sys
 import argparse
 from collections.abc import Callable, Generator
 from functools import partial
-from os.path import isdir
 from pathlib import Path
 
 
