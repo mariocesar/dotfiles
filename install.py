@@ -55,7 +55,7 @@ class DotfileMapper:
             if self.exclude_pattern.match(rel_path):
                 continue
 
-            if isdir(item):  # noqa: PTH112
+            if item.is_dir():
                 yield from self.walk(item)
             else:
                 yield item
@@ -115,11 +115,8 @@ class Installer:
 
     def run(self) -> None:
         for source, dest in list_dotfiles():
-            if self.force and dest.is_file():
-                self.handle_file_removal(dest)
-
             self.create_directory_if_not_exists(dest.parent)
-            self.create_or_update_symlink(source, dest)
+            self.install(source, dest)
 
     def handle_file_removal(self, dest: Path):
         if self.confirm(f"Delete {dest} before installing? (Y/n)"):
@@ -129,34 +126,42 @@ class Installer:
         if str(directory) in self._created_dirs:
             return
 
-        self._created_dirs.add(str(directory))
-
         if not directory.exists():
             self.perform_action(
                 f"Creating directory {directory}",
                 lambda: directory.mkdir(parents=True),
             )
 
-    def create_or_update_symlink(self, source: Path, dest: Path):
-        if not dest.exists():
-            if self.confirm(f"Create the symlink {dest}?"):
-                self.perform_action(
-                    f"Linking {source} to {dest}",
-                    lambda: dest.symlink_to(source),
-                )
-        elif dest.is_symlink():
-            if dest.resolve() != source:
+        self._created_dirs.add(str(directory))
+
+    def install(self, source: Path, dest: Path):
+        if dest.exists():
+            if dest.is_symlink() and dest.resolve() != source:
                 if self.confirm(f"Update the symlink {dest} to point to {source}?"):
-                    self.perform_action(
+                    return self.perform_action(
                         f"Updating link {dest} to {source}",
                         lambda: (dest.unlink(), dest.symlink_to(source)),
                     )
-            else:
-                self.perform_action(f"Symlink already points to {source}", lambda: None)
-        else:
-            self.perform_action(f"Destination exists: {dest}", lambda: None)
 
-    def perform_action(self, message: str, action: Callable):
+                return self.perform_action(f"Symlink already points to {source}", lambda: None)
+
+            if self.force and self.confirm(f"Replace {dest} with a symlink to {source}?"):
+                return self.perform_action(
+                    f"Replacing {dest} with a symlink to {source}",
+                    lambda: (dest.unlink(), dest.symlink_to(source)),
+                )
+
+            return self.perform_action(f"Destination exists: {dest}", lambda: None)
+
+        if not self.confirm(f"Create the symlink {dest}?"):
+            return None
+
+        return self.perform_action(
+            f"Linking {source} to {dest}",
+            lambda: dest.symlink_to(source),
+        )
+
+    def perform_action(self, message: str, action: Callable) -> None:
         puts(f"{'[FAKE] ' if self.fake else ''}{message}")
 
         if not self.fake:
