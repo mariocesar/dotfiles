@@ -11,26 +11,24 @@ HOME_DIR = Path.home()
 
 
 class DotfileMapper:
-    EXCLUDE_PATTERNS: list[re.Pattern] = list(
-        map(
-            re.compile,
-            (
-                r".*\.DS_Store$",
-                r"^.+\.py[co]$",
-                r"^.+\~$",
-                r"^\.git$",
-                r"^\.vscode$",
-                r"^\..*_cache$",
-                r"^Brewfile$",
-                r"^Brewfile\.lock\.json$",
-                r"^\.gitignore$",
-                r"^ruff\.toml$",
-                r"^README\.md$",
-                r"^LICENSE$",
-                r"^install\.py$",
-            ),
-        ),
-    )
+    EXCLUDE_PATTERNS: list[re.Pattern] = [
+        re.compile(pattern)
+        for pattern in (
+            r".*\.DS_Store$",
+            r"^.+\.py[co]$",
+            r"^.+\~$",
+            r"^\.git$",
+            r"^\.vscode$",
+            r"^\..*_cache$",
+            r"^Brewfile$",
+            r"^Brewfile\.lock\.json$",
+            r"^\.gitignore$",
+            r"^ruff\.toml$",
+            r"^README\.md$",
+            r"^LICENSE$",
+            r"^install\.py$",
+        )
+    ]
 
     def __init__(self, workdir: Path, target: Path):
         self.workdir = workdir
