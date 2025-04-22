@@ -99,6 +99,7 @@ cask "dropbox"
 cask "easy-move-plus-resize"
 cask "espanso"
 cask "keycastr"  # for showing keystrokes
+cask "loom"
 
 cask "font-dejavu-sans-mono-nerd-font"
 cask "font-droid-sans-mono-nerd-font"
