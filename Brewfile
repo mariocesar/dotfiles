@@ -12,10 +12,12 @@ tap "homebrew/services"
 brew "amazon-ecs-cli"
 brew "awscli"
 
+brew "coreutils"
 brew "fzf"
 brew "eza"
 brew "pwgen"
 brew "watch"
+
 brew "yt-dlp"
 brew "xz"
 brew "libtiff"
