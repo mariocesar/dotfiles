@@ -60,7 +60,7 @@ brew "jq"
 brew "mysql-client"
 brew "neovim"
 brew "neovide"
-brew "nvm"
+brew "fnm" # Faster alternative to nvm
 brew "optipng"
 brew "pandoc"
 brew "pnpm"
