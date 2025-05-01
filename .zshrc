@@ -19,6 +19,8 @@ source ~/.direnvinit
 [ ! -f ~/.pyenvinit ] && pyenv init - >~/.pyenvinit
 source ~/.pyenvinit
 
+eval "$(fnm env --shell zsh)"
+
 eval "$(starship init zsh)"
 
 setopt HIST_IGNORE_ALL_DUPS
