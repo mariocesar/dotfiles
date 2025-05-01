@@ -19,8 +19,20 @@ global.have_nerd_fonts = true
 global.loaded_python_provider = 0
 global.loaded_python3_provider = 0
 
-opt.number = true
-opt.signcolumn = 'yes'
+if not global.vscode then
+  opt.number = true
+  opt.signcolumn = 'yes'
+
+  opt.list = true
+  opt.listchars = {
+    tab = '▸ ',
+    trail = '·',
+    extends = '>',
+    precedes = '<',
+    nbsp = '␣'
+  }
+end
+
 opt.updatetime = 300
 opt.timeoutlen = 300
 
@@ -43,15 +55,6 @@ opt.expandtab = true
 opt.splitbelow = true
 opt.splitright = true
 opt.scrolloff = 10
-
-opt.list = true
-opt.listchars = {
-  tab = '▸ ',
-  trail = '·',
-  extends = '>',
-  precedes = '<',
-  nbsp = '␣'
-}
 
 vim.o.modeline = true
 vim.o.modelines = 10
@@ -89,7 +92,9 @@ opt.wildignore = {
   '*DS_Store*'
 }
 
-vim.cmd [[colorscheme tokyonight-night]]
+if not global.vscode then
+  vim.cmd [[colorscheme tokyonight-night]]
+end
 
 -- Filetype
 

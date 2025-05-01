@@ -1,12 +1,19 @@
 return {
-  'folke/tokyonight.nvim', -- colorscheme
+  {
+    'folke/tokyonight.nvim', -- colorscheme
+    cond = not vim.g.vscode,
+  },
   'tpope/vim-surround',
   'tpope/vim-repeat',
-  'mg979/vim-visual-multi',
+  {
+    'mg979/vim-visual-multi',
+    cond = not vim.g.vscode,
+  },
   {
     'liuchengxu/vim-clap',
     build = ':Clap install-binary!',
     cmd = 'Clap',
+    cond = not vim.g.vscode,
     config = function()
       vim.g.enable_clap_auto_resize = true
       vim.g.clap_enable_background_shadow = true
@@ -20,6 +27,7 @@ return {
   },
   {
     'github/copilot.vim',
+    cond = not vim.g.vscode,
     config = function()
       if vim.fn.exists('g:vscode') == 1 then
         vim.api.nvim_create_autocmd('VimEnter', {
@@ -30,6 +38,7 @@ return {
   },
   {
     'lewis6991/gitsigns.nvim',
+    cond = not vim.g.vscode,
     config = function() require('gitsigns').setup() end
   }
 }
