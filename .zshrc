@@ -40,4 +40,7 @@ export HISTFILE="$HOME/.history"
 # Add completitions
 [ -d $HOME/.docker/completions ] && fpath=(/Users/mariocesar/.docker/completions $fpath)
 
+[ ! -f ~/.just-completions ] && just --completions zsh >~/.just-completions
+source ~/.just-completions
+
 autoload -Uz compinit && compinit -i
