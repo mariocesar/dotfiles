@@ -18,6 +18,12 @@ matches:
   - trigger: "!walink"
     replace: "https://wa.me/591$|$"
 
+  - trigger: "!linkedin"
+    replace: "https://www.linkedin.com/in/mariocesar/"
+
+  - trigger: "!github"
+    replace: "https://github.com/mariocesar"
+
   - trigger: "<--"
     replace: "←"
 
