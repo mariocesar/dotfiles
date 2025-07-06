@@ -19,7 +19,7 @@ source ~/.direnvinit
 [ ! -f ~/.pyenvinit ] && pyenv init - >~/.pyenvinit
 source ~/.pyenvinit
 
-eval "$(fnm env --shell zsh)"
+eval "$(fnm env --use-on-cd --shell zsh)"
 
 eval "$(starship init zsh)"
 

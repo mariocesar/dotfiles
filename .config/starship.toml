@@ -15,3 +15,4 @@ add_newline = true
     pyenv_version_name = false
     detect_files       = ['pyproject.toml', 'requirements.txt', 'setup.py']
     detect_folders     = ['.venv']
+

@@ -6,6 +6,13 @@ return {
   'tpope/vim-surround',
   'tpope/vim-repeat',
   {
+    'm4xshen/hardtime.nvim',
+    lazy = false,
+    cond = not vim.g.vscode,
+    dependencies = { 'MunifTanjim/nui.nvim' },
+    opts = {},
+  },
+  {
     'mg979/vim-visual-multi',
     cond = not vim.g.vscode,
   },
