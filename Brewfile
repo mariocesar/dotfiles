@@ -39,6 +39,9 @@ brew "graphicsmagick"
 brew "zlib"
 brew "imagemagick"
 
+brew "gpg"
+brew "pinentry-mac"
+
 brew "curl"
 brew "wget"
 brew "deno"
