@@ -1,3 +1,5 @@
+# sshforward 8000 ec2-user@aws-ip.aws.com
+
 #!/usr/bin/env bash
 set -eu
 
