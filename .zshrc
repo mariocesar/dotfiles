@@ -34,3 +34,4 @@ export HISTTIMEFORMAT="%d/%m/%y %T  "
 export HISTCONTROL=ignoredups:ignorespace
 export HISTFILE="$HOME/.history"
 
+. "$HOME/.local/bin/env"
