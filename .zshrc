@@ -16,9 +16,6 @@ load_if_exists ~/.cargo/env
 [ ! -f ~/.direnvinit ] && direnv hook zsh >~/.direnvinit
 source ~/.direnvinit
 
-[ ! -f ~/.pyenvinit ] && pyenv init - >~/.pyenvinit
-source ~/.pyenvinit
-
 eval "$(fnm env --use-on-cd --shell zsh)"
 
 eval "$(starship init zsh)"
@@ -37,10 +34,3 @@ export HISTTIMEFORMAT="%d/%m/%y %T  "
 export HISTCONTROL=ignoredups:ignorespace
 export HISTFILE="$HOME/.history"
 
-# Add completitions
-[ -d $HOME/.docker/completions ] && fpath=(/Users/mariocesar/.docker/completions $fpath)
-
-[ ! -f ~/.just-completions ] && just --completions zsh >~/.just-completions
-source ~/.just-completions
-
-autoload -Uz compinit && compinit -i
