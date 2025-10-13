@@ -16,7 +16,7 @@ load_if_exists ~/.cargo/env
 [ ! -f ~/.direnvinit ] && direnv hook zsh >~/.direnvinit
 source ~/.direnvinit
 
-eval "$(fnm env --use-on-cd --shell zsh)"
+# eval "$(fnm env --use-on-cd --shell zsh)"
 
 eval "$(starship init zsh)"
 
