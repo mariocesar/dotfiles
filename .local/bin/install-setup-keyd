@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+info () { echo "=> $*"; }
+error () { echo "!! $*"; }
+
+USER_CONF="$HOME/.config/keyd/default.conf"
+SYSTEM_CONF="/etc/keyd/default.conf"
+
+info "Check keyd is installed 'keyd'"
+
+if ! command -v keyd &> /dev/null; then
+    info "Installing keyd ..."
+    sudo pacman -S keyd --noconfirm
+fi
+
+info "Check user configuration is installed"
+
+if [ ! -f $USER_CONF ]; then
+    error "Missing user config in $USER_CONF"
+    exit 1
+fi
+
+info "Check syncronize configurations"
+
+if ! sudo diff -q "$USER_CONF" "$SYSTEM_CONF" >/dev/null; then
+    info "Updating system config from user config..."
+    sudo cp "$USER_CONF" "$SYSTEM_CONF"
+    sudo keyd reload
+fi
+
+info "Check service"
+
+if ! sudo systemctl is-enabled keyd.service &> /dev/null; then
+    info "Enabling and starting keyd service..."
+    sudo systemctl enable --now keyd.service
+fi
+
+info "keyd setup complete."
+
+sudo systemctl status keyd.service | grep "Active:"
+
