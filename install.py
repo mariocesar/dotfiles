@@ -87,9 +87,9 @@ class Formatter:
     def apply_color(match: re.Match, color: str) -> str:
         return f"{color}{match.group(0)}{Formatter.color_reset}"
 
-    apply_tag_format = partial(apply_color, color=color_bold_white)
-    apply_path_format = partial(apply_color, color=color_cyan)
-    apply_event_format = partial(apply_color, color=color_bold_orange)
+    apply_tag_format = staticmethod(partial(apply_color, color=color_bold_white))
+    apply_path_format = staticmethod(partial(apply_color, color=color_cyan))
+    apply_event_format = staticmethod(partial(apply_color, color=color_bold_orange))
 
     def __call__(self, message: str) -> None:
         """Print text with color formatting."""
