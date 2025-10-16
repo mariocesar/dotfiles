@@ -23,10 +23,10 @@ eval "$(starship init zsh)"
 setopt HIST_IGNORE_ALL_DUPS
 setopt HIST_SAVE_NO_DUPS
 setopt HIST_REDUCE_BLANKS
-setopt INC_APPEND_HISTORY_TIME
-setopt EXTENDED_HISTORY
-
-unsetopt share_history
+setopt inc_append_history
+setopt inc_append_history_time
+setopt extended_history
+setopt share_history
 
 export HISTSIZE=1000000000
 export HISTFILESIZE=1000000000
