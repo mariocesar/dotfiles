@@ -75,36 +75,25 @@ def confirm(prompt: str, *, default: bool = True, interactive: bool = True) -> b
     return default if not response else response[0] == "y"
 
 
-class Formatter:
-    message_event_pattern = re.compile(r"-- (.*?) --")
-    message_tag_pattern = re.compile(r"\[(.*?)\]")
-    message_path_pattern = re.compile(r"((?:/|~/)[^\s]*)")
-
+def puts(message: str) -> None:
     color_reset = "\033[0m"
     color_cyan = "\033[36m"
     color_bold_white = "\033[1;37m"
     color_bold_orange = "\033[1;33m"
 
-    @staticmethod
     def apply_color(match: re.Match, color: str) -> str:
-        return f"{color}{match.group(0)}{Formatter.color_reset}"
+        return f"{color}{match.group(0)}{color_reset}"
 
-    apply_tag_format = staticmethod(partial(apply_color, color=color_bold_white))
-    apply_path_format = staticmethod(partial(apply_color, color=color_cyan))
-    apply_event_format = staticmethod(partial(apply_color, color=color_bold_orange))
+    apply_tag_format = partial(apply_color, color=color_bold_white)
+    apply_path_format = partial(apply_color, color=color_cyan)
+    apply_event_format = partial(apply_color, color=color_bold_orange)
 
-    def __call__(self, message: str) -> None:
-        """Print text with color formatting."""
-        # Format [*] patterns as bold white
+    formatted = re.sub(r"-- (.*?) --", apply_tag_format, message)
+    formatted = re.sub(r"((?:/|~/)[^\s]*)", apply_path_format, formatted)
+    formatted = re.sub(r"\[(.*?)\]", apply_event_format, formatted)
 
-        formatted = self.message_tag_pattern.sub(self.apply_tag_format, message)
-        formatted = self.message_path_pattern.sub(self.apply_path_format, formatted)
-        formatted = self.message_event_pattern.sub(self.apply_event_format, formatted)
+    print(formatted)
 
-        print(formatted)
-
-
-puts = Formatter()
 
 
 class Installer:
