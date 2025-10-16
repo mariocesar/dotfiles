@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 alias vim=nvim
+
 alias vimrc="vim ~/.config/nvim/init.lua --cmd 'cd ~/.config/nvim'"
+alias niric="vim ~/.config/niri/config.kdl --cmd 'cd ~/.config/niri'"
 
 alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
