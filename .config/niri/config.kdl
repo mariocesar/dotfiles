@@ -11,14 +11,13 @@ output "DP-1" {
     // off
 
     mode "3840x2160@120.030"
-    scale 2
+    scale 2.0
     transform "normal"
 }
 
 
 gestures {
     hot-corners {
-        off
     }
 }
 
