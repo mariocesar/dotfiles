@@ -28,6 +28,8 @@ gestures {
 input {
     keyboard {
         xkb {
+            layout "us,latam"
+            options "grp:alt_space_toggle"
         }
         numlock
     }
