@@ -29,6 +29,7 @@ class DotfileMapper:
             r"^README\.md$",
             r"^LICENSE$",
             r"^install\.py$",
+            r"^pkglist",
         )
     ]
 

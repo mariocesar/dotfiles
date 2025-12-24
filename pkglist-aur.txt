@@ -1,0 +1,14 @@
+dgop-bin
+dms-shell-bin
+espanso-wayland
+google-chrome
+matugen-bin
+minecraft-launcher
+ngrok
+quickshell-git
+sublime-text-4
+ttf-material-icons-git
+ttf-material-symbols-variable-git
+visual-studio-code-bin
+woff2-material-symbols-variable-git
+zoom
