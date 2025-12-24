@@ -77,6 +77,7 @@ layout {
     preset-window-heights {
         proportion 1.0
         proportion 0.5
+        proportion 0.33333
     }
 
     // You can change the default width of the new windows.
@@ -131,6 +132,7 @@ overview {
 spawn-at-startup "bash" "-c" "wl-paste --watch cliphist store &"
 spawn-at-startup "dms" "run"
 spawn-at-startup "/usr/lib/mate-polkit/polkit-mate-authentication-agent-1"
+
 environment {
   XDG_CURRENT_DESKTOP "niri"
   QT_QPA_PLATFORM "wayland"
