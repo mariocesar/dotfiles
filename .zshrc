@@ -16,9 +16,11 @@ load_if_exists ~/.cargo/env
 [ ! -f ~/.direnvinit ] && direnv hook zsh >~/.direnvinit
 source ~/.direnvinit
 
-# eval "$(fnm env --use-on-cd --shell zsh)"
+eval "$(mise activate zsh)"
 
 eval "$(starship init zsh)"
+
+eval "$(direnv hook zsh)"
 
 setopt HIST_IGNORE_ALL_DUPS
 setopt HIST_SAVE_NO_DUPS
@@ -35,3 +37,6 @@ export HISTCONTROL=ignoredups:ignorespace
 export HISTFILE="$HOME/.history"
 
 . "$HOME/.local/bin/env"
+
+# bun completions
+[ -s "/home/mariocesar/.bun/_bun" ] && source "/home/mariocesar/.bun/_bun"
