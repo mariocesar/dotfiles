@@ -1,3 +1,4 @@
+export PATH="$HOME/.local/bin:$PATH"
 export TREE_IGNORE="cache|log|logs|node_modules|vendor"
 export PATH="/Users/${USER}/.local/bin:${PATH}"
 
