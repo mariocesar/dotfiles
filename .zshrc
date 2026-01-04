@@ -28,7 +28,6 @@ function load_if_exists() { if [ -f "$1" ]; then source "$1"; fi; }
 
 load_if_exists ~/.zshrc.$(hostname)
 load_if_exists ~/.aliases
-load_if_exists ~/.zshbindkeys
 load_if_exists ~/.fzf.zsh
 load_if_exists ~/.iterm2_shell_integration.zsh
 load_if_exists ~/.cargo/env

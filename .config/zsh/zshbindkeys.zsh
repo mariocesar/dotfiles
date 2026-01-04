@@ -1,3 +1,11 @@
+autoload -U up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+
+# Search command history with Ctrl+Up and Ctrl+Down
+bindkey "^[[1;5A" up-line-or-beginning-search
+bindkey "^[[1;5B" down-line-or-beginning-search
+
 # History search
 bindkey "^R" history-incremental-search-backward
 bindkey "\e[A" history-beginning-search-backward
