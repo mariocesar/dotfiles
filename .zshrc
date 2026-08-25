@@ -55,7 +55,9 @@ export HISTTIMEFORMAT="%d/%m/%y %T  "
 export HISTCONTROL=ignoredups:ignorespace
 export HISTFILE="$HOME/.history"
 
-. "$HOME/.local/bin/env"
-
 # bun completions
 [ -s "/home/mariocesar/.bun/_bun" ] && source "/home/mariocesar/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
