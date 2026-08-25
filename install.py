@@ -27,6 +27,7 @@ class DotfileMapper:
             r"^\.gitignore$",
             r"^ruff\.toml$",
             r"^README\.md$",
+            r"^CLAUDE\.md$",
             r"^LICENSE$",
             r"^install\.py$",
             r"^pkglist",
