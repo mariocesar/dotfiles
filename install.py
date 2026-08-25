@@ -70,11 +70,22 @@ list_dotfiles = DotfileMapper(ROOT_DIR, HOME_DIR)
 def confirm(prompt: str, *, default: bool = True, interactive: bool = True) -> bool:
     """Prompt the user for confirmation."""
     if not interactive:
-        return True
+        return default
 
     suffix = " (Y/n): " if default else " (y/N): "
     response = input(prompt + suffix).strip().lower()
     return default if not response else response[0] == "y"
+
+
+def backup_path(dest: Path) -> Path:
+    backup = dest.with_name(dest.name + ".bak")
+    count = 1
+
+    while backup.is_symlink() or backup.exists():
+        backup = dest.with_name(f"{dest.name}.bak.{count}")
+        count += 1
+
+    return backup
 
 
 def puts(message: str) -> None:
@@ -145,9 +156,10 @@ class Installer:
                 )
 
             if self.force and self.confirm(f"Replace {dest} with a symlink to {source}?"):
+                backup = backup_path(dest)
                 return self.perform_action(
-                    f"Replacing {dest} with a symlink to {source}",
-                    lambda: (dest.unlink(), dest.symlink_to(source)),
+                    f"Moving {dest} to {backup}, linking to {source}",
+                    lambda: (dest.rename(backup), dest.symlink_to(source)),
                 )
 
             return self.perform_action(f"Destination exists: {dest}", lambda: None)
@@ -178,7 +190,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Replace existing files",
+        help="Replace existing files, keeping the original as .bak",
     )
     parser.add_argument(
         "--fake",
