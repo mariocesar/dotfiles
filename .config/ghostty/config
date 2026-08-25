@@ -1,49 +1,80 @@
-# Font Configuration
-font-family = Fira Code
-font-size = 12
+# ~/.config/ghostty/config
+# macOS · tuned for long agent sessions (Claude Code, Codex, etc.)
 
-# Window Configuration
-window-decoration = false
+# ── Font ─────────────────────────────────────────────────────────────
+font-family = "FiraCode Nerd Font Mono"
+font-size = 10
+font-thicken = true
+
+# Ligatures are nice in an editor, confusing in agent diff output.
+# Uncomment to disable:
+font-feature = -calt
+font-feature = -liga
+
+# Slightly looser lines make long log/diff dumps easier to scan.
+adjust-cell-height = 8%
+
+# ── Window ───────────────────────────────────────────────────────────
+window-decoration = true
+macos-titlebar-style = transparent
+macos-non-native-fullscreen = false
 window-padding-x = 12
 window-padding-y = 12
-background-opacity = 0.90
-background-blur-radius = 32
+window-padding-balance = true
+window-save-state = always
+resize-overlay = never
 
-# Cursor Configuration
+# 0.90 + heavy blur looks great and hurts when you're reading a diff
+# at 11pm. 0.96 keeps the effect without eating contrast.
+background-opacity = 0.96
+background-blur = true
+minimum-contrast = 1.1
+alpha-blending = linear-corrected
+
+# ── macOS keyboard ───────────────────────────────────────────────────
+# Without this, Option produces ø/å instead of Alt — breaks alt+f,
+# alt+b, alt+. and most shell/TUI word-motion bindings.
+macos-option-as-alt = left
+
+# ── Cursor ───────────────────────────────────────────────────────────
 cursor-style = block
 cursor-style-blink = true
 
-# Scrollback
-scrollback-limit = 3023
+# ── Scrollback ───────────────────────────────────────────────────────
+# NOTE: this is BYTES, not lines. Default is 10 MB. 100 MB holds a
+# full day of agent output; bump down if you keep 15 splits open.
+scrollback-limit = 100000000
 
-# Terminal features
+# ── Behaviour ────────────────────────────────────────────────────────
 mouse-hide-while-typing = true
 copy-on-select = false
+# Keep the confirm prompt: cmd+w on a split running a 10-minute agent
+# task is an expensive mistake.
 confirm-close-surface = false
-
-# Disable annoying copied to clipboard
 app-notifications = no-clipboard-copy,no-config-reload
 
-# Key bindings for common actions
-#keybind = ctrl+c=copy_to_clipboard
-#keybind = ctrl+v=paste_from_clipboard
-keybind = ctrl+shift+n=new_window
-keybind = ctrl+t=new_tab
-keybind = ctrl+plus=increase_font_size:1
-keybind = ctrl+minus=decrease_font_size:1
-keybind = ctrl+zero=reset_font_size
+# Splits
+unfocused-split-opacity = 0.8
+unfocused-split-fill = #000000
 
-# Material 3 UI elements
-unfocused-split-opacity = 0.7
-unfocused-split-fill = #44464f
-
-# Tab configuration
-gtk-titlebar = false
-
-# Shell integration
+# ── Shell integration ────────────────────────────────────────────────
 shell-integration = detect
-shell-integration-features = cursor,sudo,title,no-cursor
+shell-integration-features = cursor,sudo,title
+
+# ── Keybindings ──────────────────────────────────────────────────────
+# macOS defaults already cover cmd+t / cmd+n / cmd+d / cmd+shift+d /
+# cmd+plus / cmd+minus / cmd+0. Don't shadow ctrl+* — TUIs need it.
+
+# Multiline input in Claude Code and friends.
 keybind = shift+enter=text:\n
 
-# Dank color generation
-config-file = ./config-dankcolors
+# Handy for agent work: clear the scrollback without clearing state.
+keybind = cmd+k=clear_screen
+
+# ── Theme ────────────────────────────────────────────────────────────
+# `ghostty +list-themes` to browse. Auto-switch example:
+# theme = dark:catppuccin-mocha,light:catppuccin-latte
+theme = Adwaita Dark
+
+# Loaded last so it wins over anything above.
+config-file = ?autho/theme.ghostty
