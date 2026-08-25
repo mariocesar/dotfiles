@@ -48,9 +48,8 @@ scrollback-limit = 100000000
 # ── Behaviour ────────────────────────────────────────────────────────
 mouse-hide-while-typing = true
 copy-on-select = false
-# Keep the confirm prompt: cmd+w on a split running a 10-minute agent
-# task is an expensive mistake.
-confirm-close-surface = false
+# `always`, not `true`: cmd+w should confirm on an idle tab too.
+confirm-close-surface = always
 app-notifications = no-clipboard-copy,no-config-reload
 
 # Splits
