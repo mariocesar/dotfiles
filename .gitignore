@@ -1,3 +1,6 @@
+__pycache__
+
 .vscode
 .DS_Store
-.config/espanso/match/private.yml
+
+.config/espanso/match/local.yml
