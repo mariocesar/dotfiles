@@ -127,7 +127,7 @@ class Installer:
         self._created_dirs.add(str(directory))
 
     def install(self, source: Path, dest: Path):
-        if dest.exists():
+        if dest.is_symlink() or dest.exists():
             if dest.is_symlink() and dest.resolve() != source:
                 if self.confirm(f"Update the symlink {dest} to point to {source}?"):
                     return self.perform_action(
