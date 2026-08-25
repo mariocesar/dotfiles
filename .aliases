@@ -41,6 +41,8 @@ alias explain="gh copilot explain"
 alias git-short=git log --pretty=format:%h -1 HEAD
 alias git-hash=git log --pretty=format:%H -1 HEAD
 
+alias gitk-branches="gitk --all --simplify-by-decoration"
+
 function assert_inside_git() {
     if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
         echo "Error: Not inside a git repository."
