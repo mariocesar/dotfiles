@@ -33,6 +33,16 @@ ls -l ~/.config/foo/config.toml
 
 `Destination exists` on a path that is already a correct symlink is normal; that is the steady state for everything installed.
 
+## Comments
+
+Terse. One line, and only when the *why* is not obvious from the line below it — a tradeoff, a footgun, a non-obvious unit. Do not:
+
+- restate what the setting or code already says
+- enumerate a tool's option values or explain the ones not chosen — that is `--help`'s job
+- write multi-line rationale; that belongs in the commit message
+
+Same for code: no docstring on an obvious function, no narrating the next statement in prose.
+
 ## Conventions
 
 - Repo path == home path, always. New tool config goes where it'd live under `$HOME`.
