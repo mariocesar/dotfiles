@@ -31,7 +31,7 @@ ls -l ~/.config/foo/config.toml
 # → /Users/<user>/.dotfiles/.config/foo/config.toml
 ```
 
-`Destination exists` on a path that is already a correct symlink is normal; that is the steady state for everything installed.
+`Symlink already points to ...` is the steady state for everything installed. `Destination exists` means a real file is sitting where the link should go — it needs `--force` (which deletes it) or manual removal.
 
 ## Comments
 

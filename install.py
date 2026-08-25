@@ -128,14 +128,21 @@ class Installer:
 
     def install(self, source: Path, dest: Path):
         if dest.is_symlink() or dest.exists():
-            if dest.is_symlink() and dest.resolve() != source:
+            if dest.is_symlink():
+                if dest.resolve() == source:
+                    return self.perform_action(
+                        f"Symlink already points to {source}", lambda: None
+                    )
+
                 if self.confirm(f"Update the symlink {dest} to point to {source}?"):
                     return self.perform_action(
                         f"Updating link {dest} to {source}",
                         lambda: (dest.unlink(), dest.symlink_to(source)),
                     )
 
-                return self.perform_action(f"Symlink already points to {source}", lambda: None)
+                return self.perform_action(
+                    f"Keeping {dest} pointing to {dest.readlink()}", lambda: None
+                )
 
             if self.force and self.confirm(f"Replace {dest} with a symlink to {source}?"):
                 return self.perform_action(
