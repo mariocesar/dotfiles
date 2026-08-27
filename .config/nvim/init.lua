@@ -132,47 +132,40 @@ end, {
   nargs = "?"
 })
 
-local map, opts = vim.keymap.set, {
-  noremap = true,
-  silent = true
-}
+-- Make vim.keymap.set defaults every mapping to silent.
+local function map(mode, lhs, rhs, o)
+  vim.keymap.set(mode, lhs, rhs, vim.tbl_extend('keep', o or {}, {
+    silent = true
+  }))
+end
 
 -- Normal mode
 map('n', 'Q', '<nop', {
-  desc = "Disabling exmode enter",
-  unpack(opts)
+  desc = "Disabling exmode enter"
 })
 map('n', '<leader>q', '<cmd>quit<cr>', {
-  desc = "Quit",
-  unpack(opts)
+  desc = "Quit"
 })
 map('n', '<leader>c', '<cmd>tabnew<cr>', {
-  desc = "New tab",
-  unpack(opts)
+  desc = "New tab"
 })
 map('n', '<leader>n', '<cmd>tabnext<cr>', {
-  desc = "Switch to next tab",
-  unpack(opts)
+  desc = "Switch to next tab"
 })
 map('n', '<leader>%', '<cmd>vsplit<cr>', {
-  desc = "Split vertical",
-  unpack(opts)
+  desc = "Split vertical"
 })
 map('n', '<leader>"', '<cmd>split<cr>', {
-  desc = "Split horizontal",
-  unpack(opts)
+  desc = "Split horizontal"
 })
 map('n', '<leader>s', '<cmd>write<cr>', {
-  desc = 'Save buffer on normal mode',
-  unpack(opts)
+  desc = 'Save buffer on normal mode'
 })
 map('n', '<silent> <esc><esc>', '<cmd><C-u>nohlsearch<cr><C-l>', {
-  desc = 'Cleanup search highlight and redraw',
-  unpack(opts)
+  desc = 'Cleanup search highlight and redraw'
 })
 map('n', '<leader>p', '<cmd>Clap files<cr>', {
-  desc = 'Navigate files in the current working directory',
-  unpack(opts)
+  desc = 'Navigate files in the current working directory'
 })
 
 map('n', '<C-d>', '<C-d>zz', {
@@ -186,18 +179,15 @@ map('n', '<C-u>', '<C-u>zz', {
 
 -- Insert mode
 map('i', '<silent> <esc><esc>', '<C-o>:nohlsearch<cr>', {
-  desc = 'Cleanup search highlight and redraw',
-  unpack(opts)
+  desc = 'Cleanup search highlight and redraw'
 })
 
 -- Visual mode
 map('v', '<', '<gv', {
-  desc = 'Mantain the selected blocks when indenting',
-  unpack(opts)
+  desc = 'Mantain the selected blocks when indenting'
 })
 map('v', '>', '>gv', {
-  desc = 'Mantain the selected blocks when indenting',
-  unpack(opts)
+  desc = 'Mantain the selected blocks when indenting'
 })
 
 -- Terminal mode
@@ -217,7 +207,7 @@ vim.g.clap_provider_dotfiles = {
 }
 
 map('n', '<leader>d', '<cmd>Clap dotfiles<cr>', {
-  unpack(opts)
+  desc = 'Open some dotfile'
 })
 
 -- Paste on Normal, Insert and Command-Line mode
@@ -226,21 +216,17 @@ map('v', '<C-c>', function()
   vim.api.nvim_command('normal! gvy')
   vim.notify('Copied to clipboard')
 end, {
-  desc = 'Copy to clipboard',
-  unpack(opts)
+  desc = 'Copy to clipboard'
 })
 
 map('n', '<D-v>', 'a<C-r>+<Esc>', {
-  desc = 'Paste',
-  unpack(opts)
+  desc = 'Paste'
 })
 map('i', '<D-v>', '<C-r>+', {
-  desc = 'Paste',
-  unpack(opts)
+  desc = 'Paste'
 })
 map('c', '<D-v>', '<C-r>+', {
-  desc = 'Paste',
-  unpack(opts)
+  desc = 'Paste'
 })
 
 -- Auto commands
