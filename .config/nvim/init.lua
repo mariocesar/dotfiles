@@ -140,7 +140,7 @@ local function map(mode, lhs, rhs, o)
 end
 
 -- Normal mode
-map('n', 'Q', '<nop', {
+map('n', 'Q', '<nop>', {
   desc = "Disabling exmode enter"
 })
 map('n', '<leader>q', '<cmd>quit<cr>', {
