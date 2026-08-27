@@ -236,7 +236,7 @@ local conceal = json({
   pattern = '*.json'
 })
 
-function conceal.handler() opt.conceallevel = 0 end
+function conceal.handler() vim.opt_local.conceallevel = 0 end
 
 -- briefly highlight a selection on yank
 
