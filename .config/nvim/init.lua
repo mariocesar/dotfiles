@@ -41,7 +41,7 @@ opt.mouse = 'a'
 
 opt.ignorecase = true
 opt.smartcase = true
-opt.hlsearch = false
+opt.hlsearch = true
 opt.inccommand = 'split'
 
 opt.autoindent = true
@@ -161,7 +161,7 @@ map('n', '<leader>"', '<cmd>split<cr>', {
 map('n', '<leader>s', '<cmd>write<cr>', {
   desc = 'Save buffer on normal mode'
 })
-map('n', '<silent> <esc><esc>', '<cmd><C-u>nohlsearch<cr><C-l>', {
+map('n', '<esc><esc>', '<cmd>nohlsearch<cr><C-l>', {
   desc = 'Cleanup search highlight and redraw'
 })
 map('n', '<leader>p', '<cmd>Clap files<cr>', {
@@ -174,12 +174,6 @@ map('n', '<C-d>', '<C-d>zz', {
 
 map('n', '<C-u>', '<C-u>zz', {
   desc = 'Scroll up and center',
-})
-
-
--- Insert mode
-map('i', '<silent> <esc><esc>', '<C-o>:nohlsearch<cr>', {
-  desc = 'Cleanup search highlight and redraw'
 })
 
 -- Visual mode
