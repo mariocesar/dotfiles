@@ -11,7 +11,6 @@ global.mapleader = ','
 global.maplocalleader = '\\'
 
 require("config.lazy")
-require("lazy").setup("plugins")
 -- https://github.com/m4xshen/hardtime.nvim?tab=readme-ov-file#-configuration
 -- require("hardtime").setup()
 
