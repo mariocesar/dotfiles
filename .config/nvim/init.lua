@@ -270,12 +270,12 @@ if global.neovide then
   global.neovide_refresh_rate = 60
 end
 
--- Delay the loading of syntax highlighting for large files
-vim.api.nvim_create_autocmd('BufReadPre', {
+-- Skip syntax highlighting for large files. 
+vim.api.nvim_create_autocmd('BufReadPost', {
   pattern = '*',
-  callback = function()
-    if vim.fn.getfsize(vim.fn.expand('%')) > 100 * 1024 then
-      vim.cmd('syntax off')
+  callback = function(args)
+    if vim.fn.getfsize(args.file) > 100 * 1024 then
+      vim.bo[args.buf].syntax = 'off'
     end
   end
 })
