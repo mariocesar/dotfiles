@@ -189,17 +189,6 @@ map('t', '<esc><esc>', '<C-\\><C-n>', {
   desc = 'Exit terminal mode'
 })
 
-vim.g.clap_provider_dotfiles = {
-  source = {
-    '~/.config/nvim/init.lua',
-    '~/.config/nvim/lua/plugins.lua',
-    '~/.zshrc',
-    '~/.zshrc.tango'
-  },
-  sink = 'e',
-  description = 'Open some dotfile'
-}
-
 map('n', '<leader>d', '<cmd>Clap dotfiles<cr>', {
   desc = 'Open some dotfile'
 })
