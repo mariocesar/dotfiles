@@ -231,7 +231,7 @@ function conceal.handler() vim.opt_local.conceallevel = 0 end
 
 local yank = au("user_yank")
 
-function yank.TextYankPost() vim.highlight.on_yank() end
+function yank.TextYankPost() vim.hl.on_yank() end
 
 -- Markdown preferences
 
