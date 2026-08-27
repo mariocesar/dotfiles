@@ -24,8 +24,10 @@ local term = {
     if not vim.api.nvim_buf_is_valid(self.termbuf) then
       self.termbuf = vim.api.nvim_create_buf(false, true)
       vim.api.nvim_set_current_buf(self.termbuf)
-      if args.cmd ~= false then -- false means termopen is handled externally
-        vim.fn.termopen(args.cmd or vim.o.shell)
+      if args.cmd ~= false then
+        vim.fn.jobstart(args.cmd or vim.o.shell, {
+          term = true
+        })
       end
     else
       vim.api.nvim_set_current_buf(self.termbuf)
