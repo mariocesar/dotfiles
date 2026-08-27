@@ -6,7 +6,6 @@ local term = {
     termwin = -1,
     termbuf = -1,
     height = 15,
-    augroup = vim.api.nvim_create_augroup("toggleterm", {}),
   }
 
   function term:open(args)

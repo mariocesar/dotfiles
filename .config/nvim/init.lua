@@ -1,23 +1,14 @@
-local execute = vim.api.nvim_command
-
-local fn = vim.fn
 local opt = vim.opt
 local global = vim.g
-
-local create_autocmd = vim.api.nvim_create_autocmd
-local create_augroup = vim.api.nvim_create_augroup
 
 global.mapleader = ','
 global.maplocalleader = '\\'
 
 require("config.lazy")
--- https://github.com/m4xshen/hardtime.nvim?tab=readme-ov-file#-configuration
--- require("hardtime").setup()
 
 global.have_nerd_fonts = true
 
 -- Fixes slow startup time
-global.loaded_python_provider = 0
 global.loaded_python3_provider = 0
 
 if not global.vscode then

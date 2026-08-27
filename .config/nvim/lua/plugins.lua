@@ -6,13 +6,6 @@ return {
   'tpope/vim-surround',
   'tpope/vim-repeat',
   {
-    'm4xshen/hardtime.nvim',
-    lazy = false,
-    cond = false,
-    dependencies = { 'MunifTanjim/nui.nvim' },
-    opts = {},
-  },
-  {
     'mg979/vim-visual-multi',
     cond = not vim.g.vscode,
   },
@@ -35,13 +28,6 @@ return {
   {
     'github/copilot.vim',
     cond = not vim.g.vscode,
-    config = function()
-      if vim.fn.exists('g:vscode') == 1 then
-        vim.api.nvim_create_autocmd('VimEnter', {
-          callback = function() vim.cmd('Copilot disable') end
-        })
-      end
-    end
   },
   {
     'lewis6991/gitsigns.nvim',
