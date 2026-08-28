@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+set -eu
+
+# Installs the hand-curated package lists. Native and AUR stay separate so a
+# fresh machine can get the essentials before yay itself is built.
+
+repo="${DOTFILES:-$HOME/.dotfiles}"
+native="$repo/pkglist.txt"
+aur="$repo/pkglist-aur.txt"
+
+usage() {
+    cat <<'EOF'
+pkgsync - install the packages listed in the dotfiles
+
+Usage: pkgsync [-n] [-h]
+
+  -n  list what is missing, install nothing
+EOF
+}
+
+dry=0
+while getopts ':nh' opt; do
+    case "$opt" in
+        n) dry=1 ;;
+        h) usage; exit 0 ;;
+        *) usage >&2; exit 2 ;;
+    esac
+done
+
+command -v pacman >/dev/null 2>&1 || { echo "pkgsync: needs pacman" >&2; exit 1; }
+
+# The lists are hand-written, so strip comments and blanks before use.
+read_list() {
+    [ -f "$1" ] || return 0
+    sed -e 's/#.*//' -e 's/[[:space:]]//g' -e '/^$/d' "$1"
+}
+
+missing() {
+    while IFS= read -r pkg; do
+        pacman -Qq -- "$pkg" >/dev/null 2>&1 || printf '%s\n' "$pkg"
+    done < <(read_list "$1")
+}
+
+want_native=()
+want_aur=()
+while IFS= read -r p; do want_native+=("$p"); done < <(missing "$native")
+while IFS= read -r p; do want_aur+=("$p"); done < <(missing "$aur")
+
+if [ "$dry" -eq 1 ]; then
+    printf 'native missing (%d): %s\n' "${#want_native[@]}" "${want_native[*]:-none}"
+    printf 'aur    missing (%d): %s\n' "${#want_aur[@]}" "${want_aur[*]:-none}"
+    exit 0
+fi
+
+[ "${#want_native[@]}" -gt 0 ] && sudo pacman -S --needed -- "${want_native[@]}"
+[ "${#want_aur[@]}" -gt 0 ] && yay -S --needed -- "${want_aur[@]}"
+
+exit 0

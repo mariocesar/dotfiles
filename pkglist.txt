@@ -1,0 +1,20 @@
+# Packages from the official repositories. AUR ones go in pkglist-aur.txt.
+# Hand-curated, like the Brewfile. Install with: pkgsync
+
+base-devel
+git
+zsh
+
+neovim
+tree-sitter-cli # nvim-treesitter compiles parsers with it
+nodejs          # mason installs the npm-based language servers
+npm
+python
+uv
+
+fd              # vim-clap dotfiles provider
+fzf
+ripgrep
+direnv
+mise
+starship
