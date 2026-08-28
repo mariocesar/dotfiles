@@ -33,5 +33,15 @@ return {
     'lewis6991/gitsigns.nvim',
     cond = not vim.g.vscode,
     config = function() require('gitsigns').setup() end
+  },
+  {
+    'neovim/nvim-lspconfig',
+    cond = not vim.g.vscode,
+    event = { 'BufReadPre', 'BufNewFile' },
+    dependencies = {
+      { 'mason-org/mason.nvim', build = ':MasonUpdate' },
+      'mason-org/mason-lspconfig.nvim'
+    },
+    config = function() require('lsp') end
   }
 }
