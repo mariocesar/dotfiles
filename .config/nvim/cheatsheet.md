@@ -77,6 +77,17 @@ Full message expands under the cursor line automatically, with rule code and
 Then `c` `i` `A` `~` apply everywhere; `<Esc>` exits.
 For symbols use `grn` instead — multi-cursor is for config, markup, columns.
 
+## Macros
+
+| | |
+|---|---|
+| `qa` … `q` | Record into register `a` |
+| `@a` · `@@` | Play · replay the last one |
+| `5@a` | Play 5 times |
+| `999@a` | Play until it errors — stops at end of file |
+| `:reg a` | See what you actually recorded |
+| `"ap` … `"ay$` | Paste the macro to edit it, then store it back |
+
 ## Search and replace
 
 | | |
