@@ -35,6 +35,14 @@ return {
     config = function() require('gitsigns').setup() end
   },
   {
+    'nvim-treesitter/nvim-treesitter',
+    branch = 'main',
+    cond = not vim.g.vscode,
+    lazy = false, -- upstream does not support lazy-loading
+    build = ':TSUpdate',
+    config = function() require('treesitter') end
+  },
+  {
     'neovim/nvim-lspconfig',
     cond = not vim.g.vscode,
     event = { 'BufReadPre', 'BufNewFile' },

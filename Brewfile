@@ -59,6 +59,7 @@ brew "inframap"
 brew "jq"
 brew "mysql-client"
 brew "neovim"
+brew "tree-sitter-cli" # nvim-treesitter builds parsers with it
 brew "neovide"
 brew "fnm" # Faster alternative to nvm
 brew "optipng"
