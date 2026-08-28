@@ -35,8 +35,10 @@ vim.lsp.config('ruff', {
 
 vim.lsp.enable(servers)
 
+-- Long messages truncate at the window edge, so expand them under the cursor line.
 vim.diagnostic.config {
-  virtual_text = true,
+  virtual_text = { current_line = false },
+  virtual_lines = { current_line = true },
   severity_sort = true
 }
 
