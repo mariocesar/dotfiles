@@ -113,7 +113,6 @@ def puts(message: str) -> None:
     print(formatted)
 
 
-
 class Installer:
     def __init__(self, *, force: bool, interactive: bool, fake: bool) -> None:
         self.force = force
@@ -146,9 +145,7 @@ class Installer:
         if dest.is_symlink() or dest.exists():
             if dest.is_symlink():
                 if dest.resolve() == source:
-                    return self.perform_action(
-                        f"Symlink already points to {source}", lambda: None
-                    )
+                    return self.perform_action(f"Symlink already points to {source}", lambda: None)
 
                 if self.confirm(f"Update the symlink {dest} to point to {source}?"):
                     return self.perform_action(
