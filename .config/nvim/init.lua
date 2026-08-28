@@ -113,6 +113,9 @@ cmd("Config", "edit $MYVIMRC", {
 cmd("Reload", "source $MYVIMRC", {
   desc = 'reload config file with :Reload'
 })
+cmd("Cheat", "tabnew " .. vim.fn.stdpath("config") .. "/cheatsheet.md", {
+  desc = 'open the keybinding cheat sheet'
+})
 
 -- open (new) terminal at the bottom of the current tab
 cmd("Terminal", function(tbl)
