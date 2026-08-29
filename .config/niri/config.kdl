@@ -436,3 +436,7 @@ binds {
     Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
     Mod+Shift+P { power-off-monitors; }
 }
+
+// DMS Include Configs
+include "dms/cursor.kdl"
+include "dms/layout.kdl"
