@@ -209,6 +209,7 @@ window-rule {
     open-floating false
 }
 window-rule {
+    match app-id=r#"^org\.gnome\.NautilusPreviewer$"#
     match app-id=r#"^org\.gnome\.Calculator$"#
     match app-id=r#"^gnome-calculator$"#
     match app-id=r#"^galculator$"#
