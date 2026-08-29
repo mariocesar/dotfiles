@@ -12,11 +12,13 @@ export HISTFILE="$HOME/.history"
 
 setopt APPEND_HISTORY
 setopt INC_APPEND_HISTORY
+setopt INC_APPEND_HISTORY_TIME
 setopt SHARE_HISTORY
 setopt HIST_EXPIRE_DUPS_FIRST
 setopt HIST_IGNORE_DUPS
 setopt HIST_IGNORE_ALL_DUPS
 setopt HIST_FIND_NO_DUPS
+setopt HIST_SAVE_NO_DUPS
 setopt HIST_REDUCE_BLANKS
 setopt HIST_VERIFY
 setopt EXTENDED_HISTORY
@@ -38,22 +40,6 @@ source ~/.direnvinit
 eval "$(mise activate zsh)"
 
 eval "$(starship init zsh)"
-
-eval "$(direnv hook zsh)"
-
-setopt HIST_IGNORE_ALL_DUPS
-setopt HIST_SAVE_NO_DUPS
-setopt HIST_REDUCE_BLANKS
-setopt inc_append_history
-setopt inc_append_history_time
-setopt extended_history
-setopt share_history
-
-export HISTSIZE=1000000000
-export HISTFILESIZE=1000000000
-export HISTTIMEFORMAT="%d/%m/%y %T  "
-export HISTCONTROL=ignoredups:ignorespace
-export HISTFILE="$HOME/.history"
 
 # bun completions
 [ -s "/home/mariocesar/.bun/_bun" ] && source "/home/mariocesar/.bun/_bun"
