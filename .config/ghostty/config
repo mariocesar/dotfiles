@@ -26,7 +26,7 @@ window-padding-color = extend
 window-save-state = always
 resize-overlay = never
 
-background-opacity = 0.99
+background-opacity = 0.95
 background-blur = true
 minimum-contrast = 1.1
 alpha-blending = linear-corrected
