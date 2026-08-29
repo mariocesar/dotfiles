@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -euo pipefail 
+
+
+echo "⇨ Upgrading repos and AUR"
+
+paru -Syu --skipreview
+
+
+echo "⇨ Removing orphans"
+
+orphans=$(pacman -Qtdq || true)
+if [[ -n "$orphans" ]]; then
+    sudo pacman -Rns $orphans;
+else
+    echo "No orphans found."
+fi
