@@ -1,6 +1,5 @@
 dgop-bin
-dms-shell-bin
-espanso-wayland
+espanso-wayland-git
 google-chrome
 matugen-bin
 minecraft-launcher
