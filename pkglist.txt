@@ -15,6 +15,7 @@ uv
 fd              # vim-clap dotfiles provider
 fzf
 ripgrep
+ddgr            # DuckduckGo
 direnv
 mise
 starship
