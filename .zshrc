@@ -1,14 +1,14 @@
 export PATH="$HOME/.local/bin:$PATH"
 export TREE_IGNORE="cache|log|logs|node_modules|vendor"
-export PATH="/Users/${USER}/.local/bin:${PATH}"
-
 export DOCKER_SCAN_SUGGEST=false
 export EDITOR=nvim
 
 # Better history behavior
-HISTFILE="$HOME/.zsh_history"
-HISTSIZE=200000
-SAVEHIST=200000
+export HISTSIZE=1000000000
+export HISTFILESIZE=1000000000
+export HISTTIMEFORMAT="%d/%m/%y %T  "
+export HISTCONTROL=ignoredups:ignorespace
+export HISTFILE="$HOME/.history"
 
 setopt APPEND_HISTORY
 setopt INC_APPEND_HISTORY
