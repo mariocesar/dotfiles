@@ -218,6 +218,10 @@ window-rule {
     open-floating true
 }
 window-rule {
+    match app-id=r#"^com\.danklinux\.dms$"#
+    open-floating true
+}
+window-rule {
     match app-id=r#"^steam$"# title=r#"^notificationtoasts_\d+_desktop$"#
     default-floating-position x=10 y=10 relative-to="bottom-right"
     open-focused false
