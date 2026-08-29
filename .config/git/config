@@ -7,6 +7,7 @@
   autocrlf = input
   quotepath = false
   excludesFile = ~/.config/git/gitignore
+  pager = delta
 
 [alias]
   ci = commit
@@ -29,10 +30,19 @@
   status = auto
   interactive = auto
 
+[interactive]
+  diffFilter = delta --color-only
+
+[delta]
+  navigate = true
+  dark = true
+  line-numbers = true
+
 [merge]
   summary = true
   ff = no
   commit = no
+  conflictStyle = zdiff3
 
 [diff]
   algorithm = histogram
@@ -72,6 +82,3 @@
 [rerere]
   enabled = true
 
-[pager]
-  difftool = true
-  diff = false

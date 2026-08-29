@@ -23,6 +23,7 @@ starship
 btop
 htop
 lazygit
+git-delta
 glances
 duf
 tree
