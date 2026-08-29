@@ -18,6 +18,7 @@ output "DP-1" {
 
 gestures {
     hot-corners {
+        off
     }
 }
 
@@ -178,6 +179,10 @@ animations {
         spring damping-ratio=0.85 stiffness=800 epsilon=0.0001
     }
 }
+// Needed by dms so window activation (e.g. from the launcher) focuses reliably.
+debug {
+    honor-xdg-activation-with-invalid-serial
+}
 // Window rules let you adjust behavior for individual windows.
 // Find more information on the wiki:
 // https://github.com/YaLTeR/niri/wiki/Configuration:-Window-Rules
@@ -204,13 +209,18 @@ window-rule {
     open-floating false
 }
 window-rule {
+    match app-id=r#"^org\.gnome\.Calculator$"#
     match app-id=r#"^gnome-calculator$"#
     match app-id=r#"^galculator$"#
     match app-id=r#"^blueman-manager$"#
     match app-id=r#"^org\.gnome\.Nautilus$"#
-    match app-id=r#"^steam$"#
     match app-id=r#"^xdg-desktop-portal$"#
     open-floating true
+}
+window-rule {
+    match app-id=r#"^steam$"# title=r#"^notificationtoasts_\d+_desktop$"#
+    default-floating-position x=10 y=10 relative-to="bottom-right"
+    open-focused false
 }
 window-rule {
     match app-id=r#"^org\.wezfurlong\.wezterm$"#
@@ -222,18 +232,9 @@ window-rule {
 }
 
 window-rule {
-    match is-active=false
-    opacity 1.0
-}
-
-window-rule {
     match app-id=r#"firefox$"# title="^Picture-in-Picture$"
     match app-id="zoom"
     open-floating true
-}
-window-rule {
-    geometry-corner-radius 6
-    clip-to-geometry true
 }
 binds {
     // === System & Overview ===
@@ -260,6 +261,7 @@ binds {
     }
     Mod+N hotkey-overlay-title="Notification Center" { spawn "dms" "ipc" "call" "notifications" "toggle"; }
     Mod+Shift+N hotkey-overlay-title="Notepad" { spawn "dms" "ipc" "call" "notepad" "toggle"; }
+    Mod+Y hotkey-overlay-title="Browse Wallpapers" { spawn "dms" "ipc" "call" "dankdash" "wallpaper"; }
 
     // === Security ===
     Mod+Alt+L hotkey-overlay-title="Lock Screen" {
@@ -437,6 +439,20 @@ binds {
     Mod+Shift+P { power-off-monitors; }
 }
 
+// Alt+Tab window switching (dms recent-windows), Alt+grave cycles same-app.
+recent-windows {
+    binds {
+        Alt+Tab         { next-window scope="output"; }
+        Alt+Shift+Tab   { previous-window scope="output"; }
+        Alt+grave       { next-window filter="app-id"; }
+        Alt+Shift+grave { previous-window filter="app-id"; }
+    }
+}
+
 // DMS Include Configs
-include "dms/cursor.kdl"
-include "dms/layout.kdl"
+// colors.kdl and binds.kdl intentionally omitted: gray border/ring style
+// above overrides dms colors, and dms binds are inlined in binds {} here.
+include optional=true "dms/layout.kdl"
+include optional=true "dms/alttab.kdl"
+include optional=true "dms/outputs.kdl"
+include optional=true "dms/cursor.kdl"

@@ -17,6 +17,7 @@ adjust-cell-height = 8%
 # ── Window ───────────────────────────────────────────────────────────
 window-decoration = true
 gtk-titlebar = false
+gtk-single-instance = true
 macos-titlebar-style = transparent
 macos-non-native-fullscreen = false
 window-padding-x = 12
@@ -81,5 +82,6 @@ keybind = ctrl+alt+shift+arrow_left=resize_split:left,10
 keybind = ctrl+alt+shift+arrow_right=resize_split:right,10
 
 # ── Theme ────────────────────────────────────────────────────────────
-# `ghostty +list-themes` to browse a built-in theme instead.
-config-file = ./config-dankcolors
+# dms generates this into ~/.config/ghostty/themes/ on wallpaper change;
+# on a machine without dms it just falls back to defaults with a warning.
+theme = dankcolors
