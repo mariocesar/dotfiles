@@ -34,8 +34,7 @@ load_if_exists ~/.fzf.zsh
 load_if_exists ~/.iterm2_shell_integration.zsh
 load_if_exists ~/.cargo/env
 
-[ ! -f ~/.direnvinit ] && direnv hook zsh >~/.direnvinit
-source ~/.direnvinit
+eval "$(direnv hook zsh)"
 
 eval "$(mise activate zsh)"
 
