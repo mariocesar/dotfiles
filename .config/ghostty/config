@@ -2,8 +2,8 @@
 # macOS · tuned for long agent sessions (Claude Code, Codex, etc.)
 
 # ── Font ─────────────────────────────────────────────────────────────
-font-family = "FiraCode Nerd Font Mono"
-font-size = 10
+font-family = "Fira Code"
+font-size = 8
 font-thicken = true
 
 # Ligatures are nice in an editor, confusing in agent diff output.
@@ -16,6 +16,7 @@ adjust-cell-height = 8%
 
 # ── Window ───────────────────────────────────────────────────────────
 window-decoration = true
+gtk-titlebar = false
 macos-titlebar-style = transparent
 macos-non-native-fullscreen = false
 window-padding-x = 12
@@ -25,9 +26,7 @@ window-padding-color = extend
 window-save-state = always
 resize-overlay = never
 
-# 0.90 + heavy blur looks great and hurts when you're reading a diff
-# at 11pm. 0.96 keeps the effect without eating contrast.
-background-opacity = 0.96
+background-opacity = 0.99
 background-blur = true
 minimum-contrast = 1.1
 alpha-blending = linear-corrected
@@ -54,8 +53,8 @@ confirm-close-surface = always
 app-notifications = no-clipboard-copy,no-config-reload
 
 # Splits
-unfocused-split-opacity = 0.8
-unfocused-split-fill = #000000
+unfocused-split-opacity = 0.7
+unfocused-split-fill = #44464f
 
 # ── Shell integration ────────────────────────────────────────────────
 shell-integration = detect
@@ -64,17 +63,23 @@ shell-integration-features = cursor,sudo,title
 # ── Keybindings ──────────────────────────────────────────────────────
 # macOS defaults already cover cmd+t / cmd+n / cmd+d / cmd+shift+d /
 # cmd+plus / cmd+minus / cmd+0. Don't shadow ctrl+* — TUIs need it.
+# On Linux, `cmd+` maps to `super+`, which niri (the WM) claims heavily —
+# an app-level super+ bind never reaches Ghostty if niri already owns
+# that chord. Prefer ctrl+alt/ctrl+shift combos for anything Linux needs.
 
 # Multiline input in Claude Code and friends.
 keybind = shift+enter=text:\n
 
-# Handy for agent work: clear the scrollback without clearing state.
-keybind = cmd+k=clear_screen
+keybind = ctrl+shift+k=clear_screen
+
+# Default resize_split chord (super+ctrl+shift+arrow) collides with
+# niri's Mod+Ctrl+Shift+arrow (move-column-to-monitor-*) — niri eats it
+# before Ghostty sees it. Add a niri-safe alternate that still resizes.
+keybind = ctrl+alt+shift+arrow_up=resize_split:up,10
+keybind = ctrl+alt+shift+arrow_down=resize_split:down,10
+keybind = ctrl+alt+shift+arrow_left=resize_split:left,10
+keybind = ctrl+alt+shift+arrow_right=resize_split:right,10
 
 # ── Theme ────────────────────────────────────────────────────────────
-# `ghostty +list-themes` to browse. Auto-switch example:
-# theme = dark:catppuccin-mocha,light:catppuccin-latte
-theme = Adwaita Dark
-
-# Loaded last so it wins over anything above.
-config-file = ?autho/theme.ghostty
+# `ghostty +list-themes` to browse a built-in theme instead.
+config-file = ./config-dankcolors
