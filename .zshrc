@@ -41,9 +41,6 @@ eval "$(mise activate zsh)"
 
 eval "$(starship init zsh)"
 
-# bun completions
-[ -s "/home/mariocesar/.bun/_bun" ] && source "/home/mariocesar/.bun/_bun"
-
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
