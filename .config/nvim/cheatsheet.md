@@ -110,15 +110,6 @@ Case-insensitive until you type a capital. `:%s` previews live in a split.
 | `:Terminal` | Shell pane, persistent buffer |
 | `:Run` · `:Config` · `:Reload` | Run file · edit init.lua · source it |
 
-## Copilot (insert mode)
-
-| | |
-|---|---|
-| `<Tab>` | Accept |
-| `<M-Right>` · `<M-C-Right>` | Accept word · line |
-| `<M-]>` `<M-[>` | Cycle alternatives |
-| `<M-\>` · `<C-]>` | Request · dismiss |
-
 ## Clipboard
 
 `y` and `p` use the system clipboard. `<C-c>` copies a selection, `<D-v>` pastes.
