@@ -5,9 +5,7 @@ export EDITOR=nvim
 
 # Better history behavior
 export HISTSIZE=1000000000
-export HISTFILESIZE=1000000000
-export HISTTIMEFORMAT="%d/%m/%y %T  "
-export HISTCONTROL=ignoredups:ignorespace
+export SAVEHIST=$HISTSIZE
 export HISTFILE="$HOME/.history"
 
 setopt APPEND_HISTORY
