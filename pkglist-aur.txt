@@ -12,3 +12,4 @@ visual-studio-code-bin
 woff2-material-symbols-variable-git
 zoom
 rapidraw  # RAW image editor
+lazydocker
