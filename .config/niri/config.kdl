@@ -131,8 +131,6 @@ overview {
 // See the binds section below for more spawn examples.
 // This line starts waybar, a commonly used bar for Wayland compositors.
 spawn-at-startup "bash" "-c" "wl-paste --watch cliphist store &"
-spawn-at-startup "dms" "run"
-spawn-at-startup "/usr/lib/mate-polkit/polkit-mate-authentication-agent-1"
 
 environment {
   XDG_CURRENT_DESKTOP "niri"
@@ -461,3 +459,4 @@ include optional=true "dms/layout.kdl"
 include optional=true "dms/alttab.kdl"
 include optional=true "dms/outputs.kdl"
 include optional=true "dms/cursor.kdl"
+include "dms/windowrules.kdl"
