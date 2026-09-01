@@ -5,16 +5,12 @@ autoload -U up-line-or-beginning-search down-line-or-beginning-search
 zle -N up-line-or-beginning-search
 zle -N down-line-or-beginning-search
 
-# Search command history with Ctrl+Up and Ctrl+Down
-bindkey "^[[1;5A" up-line-or-beginning-search
-bindkey "^[[1;5B" down-line-or-beginning-search
-
 # History search
 bindkey "^R" history-incremental-search-backward
-bindkey "\e[A" history-beginning-search-backward
-bindkey "\e[B" history-beginning-search-forward
-bindkey "\eOA" history-beginning-search-backward
-bindkey "\eOB" history-beginning-search-forward
+bindkey "\e[A" up-line-or-beginning-search
+bindkey "\e[B" down-line-or-beginning-search
+bindkey "\eOA" up-line-or-beginning-search
+bindkey "\eOB" down-line-or-beginning-search
 
 bindkey "\e[1~" beginning-of-line
 bindkey "\e[2~" quoted-insert
@@ -29,17 +25,15 @@ bindkey "\e[F" end-of-line
 bindkey "\eOH" beginning-of-line
 bindkey "\eOF" end-of-line
 
-# Tab to menucomplete, Shift + Tab to do it backward
-
-bindkey "\e[Z" menu-complete
+# Shift+Tab cycles completions backward
+bindkey "\e[Z" reverse-menu-complete
 
 # Search and open in Vim
 
 search-and-edit() {
   local file
   file=$(fd --type f --strip-cwd-prefix | fzf --select-1 --prompt="Edit> ")
-  nvim "$file"
-  zle newline-and-history
+  [[ -n $file ]] && nvim "$file"
   zle reset-prompt
 }
 
@@ -52,8 +46,7 @@ bindkey "^P" search-and-edit
 search-directory-and-cd() {
   local dir
   dir=$(fd --type d | fzf --select-1 --exit-0 --prompt="Dir> ")
-  cd "$dir"
-  zle newline-and-history
+  [[ -n $dir ]] && cd "$dir"
   zle reset-prompt
 }
 
