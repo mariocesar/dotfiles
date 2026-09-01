@@ -1,0 +1,6 @@
+
+#tabbrowser-tabs[orient="vertical"] .tab-close-button {
+  display: none !important;
+  visibility: collapse !important;
+}
+

@@ -24,6 +24,8 @@ python3.13 install.py --help     # all options
 
 Non-interactive by default: it auto-confirms and links without prompting.
 
+After linking it runs every executable in `postinstall.d/` in name order (`10-firefox-chrome.py`). Hooks are for anything a symlink can't express — resolving a per-machine path, for example. They must be idempotent, exit non-zero on failure, and are skipped under `--fake`. `.py` hooks run with the same interpreter as `install.py`.
+
 Confirm a new link landed — the arrow must point into `.dotfiles`:
 
 ```

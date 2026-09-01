@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+import os
 import re
 import sys
 import argparse
+import subprocess
 from collections.abc import Callable, Generator
 from functools import partial
 from pathlib import Path
@@ -10,6 +12,7 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).parent.resolve()
 HOME_DIR = Path.home()
+HOOKS_DIR = ROOT_DIR / "postinstall.d"
 
 
 class DotfileMapper:
@@ -36,6 +39,7 @@ class DotfileMapper:
             r"^LICENSE$",
             r"^install\.py$",
             r"^pkglist",
+            r"^postinstall\.d$",
         )
     ]
 
@@ -110,7 +114,7 @@ def puts(message: str) -> None:
     formatted = re.sub(r"((?:/|~/)[^\s]*)", apply_path_format, formatted)
     formatted = re.sub(r"\[(.*?)\]", apply_event_format, formatted)
 
-    print(formatted)
+    print(formatted, flush=True)
 
 
 class Installer:
@@ -120,10 +124,40 @@ class Installer:
         self.confirm = partial(confirm, interactive=interactive)
         self._created_dirs = set()
 
-    def run(self) -> None:
+    def run(self) -> int:
         for source, dest in list_dotfiles():
             self.create_directory_if_not_exists(dest.parent)
             self.install(source, dest)
+
+        return self.run_hooks()
+
+    def run_hooks(self) -> int:
+        """Run every executable in postinstall.d in name order; returns the failure count."""
+        failed = 0
+
+        for hook in sorted(HOOKS_DIR.glob("*")):
+            if not os.access(hook, os.X_OK):
+                continue
+
+            puts(f"-- Running {hook.relative_to(ROOT_DIR)} --")
+
+            if self.fake:
+                puts(f"[FAKE] Would run {hook}")
+                continue
+
+            # .py hooks reuse this interpreter so they don't depend on the system python3 version.
+            command = [sys.executable, str(hook)] if hook.suffix == ".py" else [str(hook)]
+            result = subprocess.run(
+                command,
+                cwd=ROOT_DIR,
+                env={**os.environ, "DOTFILES_ROOT": str(ROOT_DIR)},
+            )
+
+            if result.returncode:
+                puts(f"[FAILED] {hook} exited with {result.returncode}")
+                failed += 1
+
+        return failed
 
     def handle_file_removal(self, dest: Path):
         if self.confirm(f"Delete {dest} before installing? (Y/n)"):
@@ -205,7 +239,7 @@ if __name__ == "__main__":
     puts("-- Starting dotfiles installation --")
 
     try:
-        Installer(
+        failed = Installer(
             force=options.force,
             interactive=options.interactive,
             fake=options.fake,
@@ -214,5 +248,5 @@ if __name__ == "__main__":
         puts("\n\n-- Stop --")
         sys.exit(1)
     else:
-        puts("-- Finished --")
-        sys.exit(0)
+        puts("-- Finished --" if not failed else f"-- Finished, {failed} hook(s) failed --")
+        sys.exit(1 if failed else 0)
