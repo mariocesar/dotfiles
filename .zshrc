@@ -9,8 +9,6 @@ export SAVEHIST=$HISTSIZE
 export HISTFILE="$HOME/.history"
 
 setopt APPEND_HISTORY
-setopt INC_APPEND_HISTORY
-setopt INC_APPEND_HISTORY_TIME
 setopt SHARE_HISTORY
 setopt HIST_EXPIRE_DUPS_FIRST
 setopt HIST_IGNORE_DUPS
@@ -23,6 +21,8 @@ setopt EXTENDED_HISTORY
 
 # Load Zsh bindkeys
 source ~/.config/zsh/zshbindkeys.zsh
+
+autoload -Uz compinit && compinit
 
 function load_if_exists() { if [ -f "$1" ]; then source "$1"; fi; }
 
