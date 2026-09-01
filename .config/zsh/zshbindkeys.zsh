@@ -1,3 +1,6 @@
+# EDITOR=nvim makes zsh default to viins; these bindings are all emacs-style
+bindkey -e
+
 autoload -U up-line-or-beginning-search down-line-or-beginning-search
 zle -N up-line-or-beginning-search
 zle -N down-line-or-beginning-search
