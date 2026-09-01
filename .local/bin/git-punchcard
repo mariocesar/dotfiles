@@ -1,99 +1,251 @@
 #!/usr/bin/env python3
-"""
-A Git custom command to display commit activity as a punchcard.
-"""
-
 import argparse
-from collections import defaultdict
 import datetime
+import os
+import shutil
 import subprocess
-from subprocess import Popen
+import sys
+
+DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+GLYPHS = [" ", "·", "○", "◍", "●"]
+# heat ramp: deep indigo → magenta → orange → yellow
+RAMP = [(45, 20, 90), (120, 30, 130), (200, 40, 110), (245, 110, 60), (255, 200, 60)]
+SPARK = "▁▂▃▄▅▆▇█"
+CELL = 3
+
+RESET = "\033[0m"
+BOLD = "\033[1m"
+DIM = "\033[2m"
+ITALIC = "\033[3m"
+ACCENT = "\033[38;2;255;170;60m"
 
 
-def get_commit_counts(start_date, end_date):
+def git_dates(start_date, end_date, date_fmt, extra_args):
+    # %ad not %cd: committer date is rewritten by rebase/amend
     cmd = [
         "git",
         "log",
         f"--since={start_date.isoformat()}",
         f"--until={end_date.isoformat()}",
-        "--format=%cd",
-        "--date=format:%w-%H",  # Format: day of week (0-6) - hour (00-23)
+        "--format=%ad",
+        f"--date=format:{date_fmt}",
+        *extra_args,
     ]
+    proc = subprocess.run(cmd, capture_output=True, text=True)
+    if proc.returncode != 0:
+        sys.stderr.write(proc.stderr)
+        sys.exit(proc.returncode)
+    return [line for line in proc.stdout.splitlines() if line]
 
-    counts = defaultdict(lambda: defaultdict(int))
 
-    with Popen(  # noqa: S603, Command is validated
-        cmd,
-        stdout=subprocess.PIPE,
-        text=True,
-    ) as proc:
-        output, _ = proc.communicate()
-
-        if output is None:
-            raise RuntimeError("Failed to get commit counts")
-
-        for _line in output.splitlines():
-            line = _line.strip()
-
-            if not line:
-                continue
-
-            day, hour = line.split("-")
-            counts[int(day)][int(hour)] += 1
-            counts[int(day)]["total"] += 1
-
+def hour_counts(start_date, end_date, extra_args):
+    counts = [[0] * 24 for _ in range(7)]
+    for line in git_dates(start_date, end_date, "%w %H", extra_args):
+        day, hour = line.split()
+        counts[int(day)][int(hour)] += 1
     return counts
 
 
-header = """
-    0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23
-    -------------------------------------------------------------------------
-""".rstrip()
+def day_counts(start_date, end_date, extra_args):
+    counts = {}
+    for line in git_dates(start_date, end_date, "%Y-%m-%d", extra_args):
+        d = datetime.date.fromisoformat(line)
+        counts[d] = counts.get(d, 0) + 1
+    return counts
 
 
-def print_horizontal_punchcard(counts):
-    days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-    print(header)
+def heat(t):
+    t = max(0.0, min(1.0, t)) * (len(RAMP) - 1)
+    i = min(int(t), len(RAMP) - 2)
+    f = t - i
+    return tuple(round(a + (b - a) * f) for a, b in zip(RAMP[i], RAMP[i + 1]))
+
+
+def bg(rgb):
+    r, g, b = rgb
+    # dark text on bright cells, light on dark ones
+    fg = "0;0;0" if 0.299 * r + 0.587 * g + 0.114 * b > 150 else "255;255;255"
+    return f"\033[48;2;{r};{g};{b}m\033[38;2;{fg}m"
+
+
+def fg(rgb):
+    return "\033[38;2;{};{};{}m".format(*rgb)
+
+
+def print_color(counts, title):
+    peak = max(max(row) for row in counts)
+    day_totals = [sum(row) for row in counts]
+    hour_totals = [sum(counts[d][h] for d in range(7)) for h in range(24)]
+    scale = max(peak, 1)
+
+    print(f"{BOLD}{ACCENT}◆ punchcard{RESET}  {DIM}{title}{RESET}\n")
+    header = "".join(f"{h:^{CELL}}" for h in range(24))
+    print(f"    {DIM}{header}{RESET}")
 
     for day in range(7):
-        row = ""
+        cells = ""
         for hour in range(24):
-            count = counts[day][hour]
-            if count == 0:
-                row += "   "
-            elif count < 5:
-                row += " ◌ "
-            elif count < 10:
-                row += " ○ "
-            elif count < 20:
-                row += " ◍ "
+            n = counts[day][hour]
+            if n == 0:
+                cells += f"{DIM}{'·':^{CELL}}{RESET}"
             else:
-                row += " ● "
+                style = bg(heat(n / scale)) + (BOLD if n == peak else "")
+                cells += f"{style}{n:^{CELL}}{RESET}"
+        total = day_totals[day]
+        bar_len = round(total / max(max(day_totals), 1) * 12)
+        bar = fg(heat(total / max(max(day_totals), 1))) + "▇" * bar_len + RESET
+        label = f"{BOLD}{DAYS[day]}{RESET}" if total == max(day_totals) else DAYS[day]
+        print(f"{label} {cells} {DIM}│{RESET}{total:5d} {bar}")
 
-        print(f"{days[day]:3s} {row} | {counts[day]['total']:3d}")
+    spark = ""
+    for t in hour_totals:
+        if t == 0:
+            spark += f"{DIM}{' ':^{CELL}}{RESET}"
+        else:
+            frac = t / max(max(hour_totals), 1)
+            ch = SPARK[min(len(SPARK) - 1, int(frac * len(SPARK)))]
+            spark += f"{fg(heat(frac))}{ch * 2:^{CELL}}{RESET}"
+    print(f"    {spark} {DIM}│{RESET}{sum(hour_totals):5d} {DIM}commits{RESET}")
 
-    print("\nLegend: ◌ (1-4), ○ (5-9), ◍ (10-19), ● (20+)")
+    strip = "".join(f"{bg(heat(i / 15))} {RESET}" for i in range(16))
+    print(f"\n    {DIM}1{RESET} {strip} {DIM}{peak} per hour{RESET}")
+
+
+def print_plain(counts, title):
+    peak = max(max(row) for row in counts)
+    hour_totals = [sum(counts[d][h] for d in range(7)) for h in range(24)]
+    width = 24 * CELL
+
+    def level(n):
+        return 0 if n == 0 else min(4, 1 + (n - 1) * 4 // max(peak, 1))
+
+    print(f"{title}\n")
+    print("    " + "".join(f"{h:^{CELL}}" for h in range(24)))
+    print("    " + "─" * width)
+    for day in range(7):
+        cells = "".join(f"{GLYPHS[level(n)]:^{CELL}}" for n in counts[day])
+        print(f"{DAYS[day]} {cells} │ {sum(counts[day]):4d}")
+    print("    " + "─" * width)
+    footer = "".join(f"{t if t else '':^{CELL}}" for t in hour_totals)
+    print(f"    {footer} │ {sum(hour_totals):4d}")
+
+    step = max(peak, 1) / 4
+    ranges = []
+    for i in range(1, 5):
+        lo, hi = int((i - 1) * step) + 1, int(i * step)
+        ranges.append(f"{GLYPHS[i]} {lo}" + (f"-{hi}" if hi > lo else ""))
+    print(f"\n    {'   '.join(ranges)}")
+
+
+def calendar_stats(counts, start_date, end_date):
+    active = sorted(counts)
+    best = max(active, key=counts.get) if active else None
+    streak = longest = 0
+    day = start_date
+    while day <= end_date:
+        streak = streak + 1 if counts.get(day) else 0
+        longest = max(longest, streak)
+        day += datetime.timedelta(days=1)
+    return sum(counts.values()), len(active), longest, best, streak
+
+
+def print_calendar(counts, start_date, end_date, title, color):
+    # columns are weeks starting on Sunday, like github
+    first = start_date - datetime.timedelta(days=(start_date.weekday() + 1) % 7)
+    weeks = (end_date - first).days // 7 + 1
+    if color:
+        fit = (shutil.get_terminal_size().columns - 5) // 2
+        if weeks > fit:
+            weeks = fit
+            first = end_date - datetime.timedelta(days=(end_date.weekday() + 1) % 7 + 7 * (weeks - 1))
+    peak = max(counts.values(), default=0)
+
+    def level(n):
+        return 0 if n == 0 else min(4, 1 + (n - 1) * 4 // max(peak, 1))
+
+    if color:
+        print(f"{BOLD}{ACCENT}◆ punchcard{RESET}  {DIM}{title}{RESET}\n")
+    else:
+        print(f"{title}\n")
+
+    months = ""
+    prev = None
+    for w in range(weeks):
+        day = max(first + datetime.timedelta(weeks=w), start_date)
+        if day.month != prev and len(months) <= 2 * w:
+            months = months.ljust(2 * w) + day.strftime("%b")
+        prev = day.month
+    print(f"    {DIM if color else ''}{months}{RESET if color else ''}")
+
+    for dow in range(7):
+        row = ""
+        for w in range(weeks):
+            day = first + datetime.timedelta(weeks=w, days=dow)
+            if day < start_date or day > end_date:
+                row += "  "
+                continue
+            n = counts.get(day, 0)
+            if n == 0:
+                row += f"{DIM}· {RESET}" if color else "· "
+            elif color:
+                style = fg(heat(n / max(peak, 1))) + (BOLD if n == peak else "")
+                row += f"{style}■ {RESET}"
+            else:
+                row += f"{GLYPHS[level(n)]} "
+        print(f"{DAYS[dow]} {row}".rstrip())
+
+    total, active, longest, best, current = calendar_stats(counts, start_date, end_date)
+    if color:
+        strip = "".join(f"{fg(heat(i / 4))}■ {RESET}" for i in range(5))
+        print(f"\n    {DIM}less{RESET} {DIM}· {RESET}{strip}{DIM}more{RESET}")
+        sep = f" {DIM}·{RESET} "
+        stats = [
+            f"{BOLD}{total}{RESET} commits",
+            f"{BOLD}{active}{RESET} active days",
+            f"{BOLD}{longest}{RESET} day longest streak",
+            f"{BOLD}{current}{RESET} day current streak",
+        ]
+        if best:
+            stats.append(f"best {BOLD}{best}{RESET} ({counts[best]})")
+        print(f"    {sep.join(stats)}")
+    else:
+        step = max(peak, 1) / 4
+        ranges = []
+        for i in range(1, 5):
+            lo, hi = int((i - 1) * step) + 1, int(i * step)
+            ranges.append(f"{GLYPHS[i]} {lo}" + (f"-{hi}" if hi > lo else ""))
+        print(f"\n    {'   '.join(ranges)}")
+        line = f"{total} commits · {active} active days · {longest} day longest streak · {current} day current streak"
+        if best:
+            line += f" · best {best} ({counts[best]})"
+        print(f"    {line}")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate a git commit punchcard.",
+        description="Commit punchcard by weekday and hour. Extra args go to git log.",
+        usage="git punchcard [--days N] [--calendar] [--no-color] [<git log args>...]",
     )
-
+    parser.add_argument("--days", type=int, default=365, help="days to look back (default: 365)")
+    parser.add_argument("--no-color", action="store_true")
     parser.add_argument(
-        "--days",
-        type=int,
-        default=365,
-        help="Number of days to analyze (default: 365)",
+        "-c", "--calendar", action="store_true", help="github-style calendar: one cell per day"
     )
-    args = parser.parse_args()
+    args, extra = parser.parse_known_args()
 
+    color = not args.no_color and sys.stdout.isatty() and not os.environ.get("NO_COLOR")
     end_date = datetime.date.today()
     start_date = end_date - datetime.timedelta(days=args.days)
-    counts = get_commit_counts(start_date, end_date)
+    title = f"{start_date} → {end_date}"
+    if extra:
+        title += f"  {ITALIC if color else ''}{' '.join(extra)}"
 
-    print(f"Commit Punchcard ({start_date.isoformat()} to {end_date.isoformat()}):")
-    print_horizontal_punchcard(counts)
+    if args.calendar:
+        counts = day_counts(start_date, end_date, extra)
+        print_calendar(counts, start_date, end_date, title, color)
+    else:
+        counts = hour_counts(start_date, end_date, extra)
+        (print_color if color else print_plain)(counts, title)
 
 
 if __name__ == "__main__":
