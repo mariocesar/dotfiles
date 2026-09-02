@@ -289,6 +289,9 @@ binds {
     XF86AudioMicMute allow-when-locked=true {
         spawn "dms" "ipc" "call" "audio" "micmute";
     }
+    Mod+Shift+A hotkey-overlay-title="AirPods: Music/Call" {
+        spawn "sh" "-c" "exec $HOME/.local/bin/airpods toggle";
+    }
 
     XF86KbdBrightnessUp allow-when-locked=true {
         spawn "kbdbrite.sh" "up";

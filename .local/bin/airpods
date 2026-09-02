@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+# Switch AirPods between music (A2DP, stereo) and call (HFP, mic) profiles.
+set -euo pipefail
+
+A2DP_SINK_UUID=0000110b-0000-1000-8000-00805f9b34fb
+NOTIFY_ID=20831
+
+usage() {
+    cat <<USAGE
+usage: airpods <music|call|toggle|status|reconnect>
+
+  music      A2DP stereo, no mic. Repairs a missing A2DP link.
+  call       HFP mono with mic, and makes the mic the default source.
+  toggle     music <-> call
+  status     current profile and available ones
+  reconnect  drop and re-establish the Bluetooth connection
+
+Override auto-detection with AIRPODS_MAC=XX:XX:XX:XX:XX:XX.
+USAGE
+}
+
+die() { notify "$1"; exit 1; }
+
+notify() {
+    echo "$1"
+    notify-send -a airpods -r "$NOTIFY_ID" -i audio-headphones AirPods "$1" 2>/dev/null || true
+}
+
+find_mac() {
+    if [ -n "${AIRPODS_MAC:-}" ]; then echo "$AIRPODS_MAC"; return; fi
+    local m
+    m=$(pw-dump 2>/dev/null | jq -r '.[] | select(.type=="PipeWire:Interface:Device" and .info.props["device.api"]=="bluez5") | .info.props["api.bluez5.address"]' | head -1)
+    [ -n "$m" ] || m=$(bluetoothctl devices | awk 'tolower($0) ~ /airpods/ {print $2; exit}')
+    [ -n "$m" ] || die "No AirPods paired"
+    echo "$m"
+}
+
+dev_path() { busctl --system tree org.bluez | grep -o "/org/bluez/hci[0-9]*/dev_${MAC//:/_}$" | head -1; }
+
+dev_id() {
+    pw-dump 2>/dev/null | jq -r --arg mac "$MAC" \
+        '.[] | select(.type=="PipeWire:Interface:Device" and .info.props["api.bluez5.address"]==$mac) | .id' | head -1
+}
+
+profiles() { pw-dump "$1" 2>/dev/null | jq -r '.[0].info.params.EnumProfile[] | "\(.index) \(.name)"'; }
+active() { pw-dump "$1" 2>/dev/null | jq -r '.[0].info.params.Profile[0].name // "off"'; }
+codec() { pw-dump "$1" 2>/dev/null | jq -r '.[0].info.params.Profile[0].description // ""' | sed -n 's/.*codec \([A-Za-z0-9_-]*\).*/\1/p'; }
+profile_index() { profiles "$1" | awk -v n="$2" '$2 == n {print $1; exit}'; }
+has_a2dp() { profiles "$1" | grep -q ' a2dp-sink$'; }
+
+wait_for_a2dp() {
+    local id
+    for _ in $(seq 24); do
+        sleep 0.5
+        id=$(dev_id)
+        if [ -n "$id" ] && has_a2dp "$id"; then echo "$id"; return 0; fi
+    done
+    return 1
+}
+
+mic_source() {
+    pw-dump 2>/dev/null | jq -r --arg p "bluez_input.${MAC//:/_}" \
+        '.[] | select(.type=="PipeWire:Interface:Node" and .info.props["media.class"]=="Audio/Source" and (.info.props["node.name"]|startswith($p))) | .id' | head -1
+}
+
+reconnect() {
+    bluetoothctl disconnect "$MAC" >/dev/null 2>&1 || true
+    sleep 2
+    bluetoothctl connect "$MAC" >/dev/null 2>&1 || true
+}
+
+cmd_music() {
+    local id
+    id=$(dev_id)
+    if [ -z "$id" ]; then
+        bluetoothctl connect "$MAC" >/dev/null 2>&1 || true
+        id=$(wait_for_a2dp) || die "AirPods did not connect"
+    elif ! has_a2dp "$id"; then
+        # AirPods refuse A2DP while a SCO voice link is up; profile off tears it down.
+        wpctl set-profile "$id" 0
+        sleep 1
+        busctl --system call org.bluez "$(dev_path)" org.bluez.Device1 ConnectProfile s "$A2DP_SINK_UUID" >/dev/null 2>&1 || true
+        id=$(wait_for_a2dp) || { reconnect; id=$(wait_for_a2dp) || die "A2DP still unavailable, try again"; }
+    fi
+    # a2dp-sink is "auto": picks the best negotiated codec (AAC on AirPods)
+    wpctl set-profile "$id" "$(profile_index "$id" a2dp-sink)"
+    for _ in $(seq 6); do sleep 0.5; [ "$(active "$id")" = a2dp-sink ] && break; done
+    notify "Music · $(codec "$id")"
+}
+
+cmd_call() {
+    local id src
+    id=$(dev_id)
+    [ -n "$id" ] || die "AirPods not connected"
+    wpctl set-profile "$id" "$(profile_index "$id" headset-head-unit)"
+    for _ in $(seq 10); do
+        sleep 0.5
+        src=$(mic_source)
+        [ -z "$src" ] || break
+    done
+    [ -z "$src" ] || wpctl set-default "$src"
+    notify "Call · mic on (HFP, mono)"
+}
+
+cmd_toggle() {
+    local id
+    id=$(dev_id)
+    case "$( [ -n "$id" ] && active "$id" || echo off )" in
+        a2dp*) cmd_call ;;
+        *) cmd_music ;;
+    esac
+}
+
+cmd_status() {
+    local id
+    id=$(dev_id)
+    [ -n "$id" ] || die "AirPods not connected"
+    echo "device   $MAC (pw id $id)"
+    echo "profile  $(active "$id") ($(codec "$id"))"
+    echo "available:"
+    profiles "$id" | awk '{print "  " $2}'
+}
+
+cmd_reconnect() {
+    local id
+    reconnect
+    id=$(wait_for_a2dp) || die "Reconnected without A2DP"
+    wpctl set-profile "$id" "$(profile_index "$id" a2dp-sink)"
+    sleep 1
+    notify "Reconnected · $(codec "$id")"
+}
+
+case "${1:-}" in
+    music|call|toggle|status|reconnect) MAC=$(find_mac); "cmd_$1" ;;
+    *) usage; exit 2 ;;
+esac

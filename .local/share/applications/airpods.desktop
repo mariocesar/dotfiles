@@ -1,0 +1,24 @@
+[Desktop Entry]
+Type=Application
+Name=AirPods
+Comment=Toggle AirPods between music (stereo) and call (mic) mode
+Icon=audio-headphones
+# ~/.local/bin is only on PATH for interactive shells, not the niri session.
+Exec=sh -c "exec \\$HOME/.local/bin/airpods toggle"
+Terminal=false
+NoDisplay=false
+Categories=AudioVideo;Audio;
+Keywords=airpods;bluetooth;headset;mic;microphone;a2dp;hfp;call;music;
+Actions=music;call;reconnect;
+
+[Desktop Action music]
+Name=Music (stereo, no mic)
+Exec=sh -c "exec \\$HOME/.local/bin/airpods music"
+
+[Desktop Action call]
+Name=Call (mic on, mono)
+Exec=sh -c "exec \\$HOME/.local/bin/airpods call"
+
+[Desktop Action reconnect]
+Name=Reconnect
+Exec=sh -c "exec \\$HOME/.local/bin/airpods reconnect"
