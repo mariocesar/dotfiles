@@ -55,7 +55,7 @@ app-notifications = no-clipboard-copy,no-config-reload
 
 # Splits
 unfocused-split-opacity = 0.7
-unfocused-split-fill = #44464f
+unfocused-split-fill = #414868
 
 # ── Shell integration ────────────────────────────────────────────────
 shell-integration = detect
@@ -82,6 +82,6 @@ keybind = ctrl+alt+shift+arrow_left=resize_split:left,10
 keybind = ctrl+alt+shift+arrow_right=resize_split:right,10
 
 # ── Theme ────────────────────────────────────────────────────────────
-# dms generates this into ~/.config/ghostty/themes/ on wallpaper change;
-# on a machine without dms it just falls back to defaults with a warning.
-theme = dankcolors
+# Matches neovim's tokyonight-night — same palette, same hexes.
+# Fixed, so dms's wallpaper-generated `dankcolors` no longer applies here.
+theme = TokyoNight Night
