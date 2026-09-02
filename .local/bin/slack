@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+
+# Pinned to the profile this is already signed in to, rather than the shared
+# webapp one. Drop the override to move Slack in with the rest.
+WEBAPP_PROFILE="${XDG_DATA_HOME:-$HOME/.local/share}/slack-chrome" \
+    exec "$(dirname "$0")/webapp" https://app.slack.com/client "$@"

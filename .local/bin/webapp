@@ -1,0 +1,65 @@
+#!/bin/sh
+set -eu
+
+# Launch a URL as a Chrome app window, or focus the one already open.
+#
+#   webapp <url> [chrome args...]
+#   webapp --app-id <url>      print the window app-id, for StartupWMClass
+#
+# Slack, and others, refuse to support Firefox, so webapps run in Chrome while
+# Firefox stays the default browser. One shared profile means a single Google
+# sign-in covers all of them; WEBAPP_PROFILE overrides it per app.
+
+usage() {
+    echo "usage: webapp [--app-id] <url> [chrome args...]" >&2
+    exit 2
+}
+
+print_id=false
+if [ "${1:-}" = "--app-id" ]; then
+    print_id=true
+    shift
+fi
+
+[ $# -ge 1 ] || usage
+url=$1
+shift
+
+profile=${WEBAPP_PROFILE:-${XDG_DATA_HOME:-$HOME/.local/share}/chrome-webapps}
+
+# Chrome ignores --class on Wayland and derives the app-id from the URL as
+# host + "_" + path, with every "/" becoming "_". Query and fragment are not
+# part of it. Verified against slack/chatgpt/claude/gmail.
+app_id=$(printf 'chrome-%s-Default' "$(printf '%s' "$url" | sed \
+    -e 's|^[a-zA-Z][a-zA-Z0-9+.-]*://||' \
+    -e 's|[?#].*$||' \
+    -e 's|^\([^/]*\)$|\1/|' \
+    -e 's|^\([^/]*\)/|\1_/|' \
+    -e 's|/|_|g')")
+
+if $print_id; then
+    printf '%s\n' "$app_id"
+    exit 0
+fi
+
+focus_existing() {
+    id=$(niri msg --json windows 2>/dev/null |
+        jq -r --arg a "$app_id" \
+            '[.[] | select(.app_id == $a)] | (max_by(.focus_timestamp.secs) | .id) // empty')
+    [ -n "$id" ] || return 1
+    niri msg action focus-window --id "$id"
+}
+
+if [ $# -eq 0 ] && focus_existing; then
+    exit 0
+fi
+
+# Without setsid Chrome keeps the launching terminal as its controlling tty and
+# dies when that terminal closes.
+exec setsid google-chrome-stable \
+    --app="$url" \
+    --user-data-dir="$profile" \
+    --no-first-run \
+    --no-default-browser-check \
+    --ozone-platform-hint=auto \
+    "$@"
