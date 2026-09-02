@@ -33,6 +33,7 @@ reflector
 pkgfile
 yay
 paru
+sshx          # Replace tmate
 
 entr
 just
