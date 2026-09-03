@@ -42,9 +42,11 @@ dev_id() {
         '.[] | select(.type=="PipeWire:Interface:Device" and .info.props["api.bluez5.address"]==$mac) | .id' | head -1
 }
 
-profiles() { pw-dump "$1" 2>/dev/null | jq -r '.[0].info.params.EnumProfile[] | "\(.index) \(.name)"'; }
-active() { pw-dump "$1" 2>/dev/null | jq -r '.[0].info.params.Profile[0].name // "off"'; }
-codec() { pw-dump "$1" 2>/dev/null | jq -r '.[0].info.params.Profile[0].description // ""' | sed -n 's/.*codec \([A-Za-z0-9_-]*\).*/\1/p'; }
+# pw-dump <id> also returns any object whose object.serial equals <id>.
+obj() { pw-dump "$1" 2>/dev/null | jq --argjson id "$1" '.[] | select(.id == $id)'; }
+profiles() { obj "$1" | jq -r '.info.params.EnumProfile[] | "\(.index) \(.name)"'; }
+active() { obj "$1" | jq -r '.info.params.Profile[0].name // "off"'; }
+codec() { obj "$1" | jq -r '.info.params.Profile[0].description // ""' | sed -n 's/.*codec \([A-Za-z0-9_-]*\).*/\1/p'; }
 profile_index() { profiles "$1" | awk -v n="$2" '$2 == n {print $1; exit}'; }
 has_a2dp() { profiles "$1" | grep -q ' a2dp-sink$'; }
 
