@@ -132,6 +132,8 @@ overview {
 // This line starts waybar, a commonly used bar for Wayland compositors.
 spawn-at-startup "bash" "-c" "wl-paste --watch cliphist store &"
 spawn-at-startup "librepods"
+// Slack huddles are Chrome popups; see niri-float-popups for why a window-rule can't.
+spawn-at-startup "sh" "-c" "exec $HOME/.local/bin/niri-float-popups chrome-app.slack.com__client-Default"
 
 environment {
   XDG_CURRENT_DESKTOP "niri"

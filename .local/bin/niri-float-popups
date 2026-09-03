@@ -1,0 +1,37 @@
+#!/bin/sh
+set -eu
+
+# Float every window an app opens while it already has a tiled one.
+#
+#   niri-float-popups <app-id>...
+#
+# Chrome popups (Slack huddles, Meet pop-outs) share the parent's app-id and
+# map with a placeholder title, so a window-rule can't single them out.
+
+[ $# -ge 1 ] || { echo "usage: niri-float-popups <app-id>..." >&2; exit 2; }
+
+niri msg --json event-stream |
+    jq -n --unbuffered -r --args '
+        $ARGS.positional as $apps
+        | def track: select(.app_id | IN($apps[])) | {key: (.id | tostring), value: {app: .app_id, floating: .is_floating}};
+        foreach inputs as $ev ({w: {}, emit: null};
+            .emit = null
+            | ($ev.WindowOpenedOrChanged.window // null) as $win
+            | if $ev.WindowsChanged then
+                .w = ([$ev.WindowsChanged.windows[] | track] | from_entries)
+              elif $ev.WindowClosed then
+                del(.w[$ev.WindowClosed.id | tostring])
+              elif $win == null or ($win.app_id | IN($apps[]) | not) then
+                .
+              else
+                ($win | track) as $t
+                | if (.w | has($t.key) | not)
+                     and ($win.is_floating | not)
+                     and any(.w[]; .app == $win.app_id and (.floating | not))
+                  then .emit = $win.id else . end
+                | .w[$t.key] = $t.value
+              end;
+            .emit // empty)' "$@" |
+    while read -r id; do
+        niri msg action toggle-window-floating --id "$id"
+    done
