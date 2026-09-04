@@ -44,6 +44,7 @@ alias suggest="gh copilot suggest"
 alias explain="gh copilot explain"
 
 # Git CLI
+alias gw="git worktree"
 alias git-short="git log --pretty=format:%h -1 HEAD"
 alias git-hash="git log --pretty=format:%H -1 HEAD"
 
