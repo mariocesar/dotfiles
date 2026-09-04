@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# Recover a bonded BLE mouse that can't re-attach because a bluez discovery
+# scan is running (LibrePods with the AirPods away, a forgotten scan).
+# Runs from bt-mouse-guard.timer; `--now` skips the waiting.
+set -euo pipefail
+
+STATE=${XDG_RUNTIME_DIR:-/tmp}/bt-mouse-guard.state
+KILL_AFTER=60       # s without the mouse, scan running, before stopping librepods
+CYCLE_AFTER=120     # s before power-cycling the adapter (drops the AirPods too)
+CYCLE_BACKOFF=1800  # s between power cycles
+
+notify() {
+    echo "$2"
+    notify-send -a bt-mouse-guard -u "$1" -i input-mouse "Bluetooth mouse" "$2" 2>/dev/null || true
+}
+
+trusted_mice() {
+    local d
+    for d in $(bluetoothctl devices Trusted 2>/dev/null | awk '{print $2}'); do
+        bluetoothctl info "$d" 2>/dev/null | grep -q 'Icon: input-mouse' && echo "$d"
+    done
+    return 0
+}
+
+connected() { bluetoothctl info "$1" 2>/dev/null | grep -q 'Connected: yes'; }
+discovering() { bluetoothctl show 2>/dev/null | grep -q 'Discovering: yes'; }
+airpods_connected() { bluetoothctl devices Connected 2>/dev/null | grep -qi airpods; }
+librepods_running() { pgrep -x librepods >/dev/null; }
+
+try_connect() {
+    timeout 20 bluetoothctl connect "$1" >/dev/null 2>&1 || true
+    connected "$1"
+}
+
+stop_librepods() {
+    pkill -x librepods || true
+    notify normal "Stopped LibrePods: its scan was keeping the mouse from reconnecting"
+}
+
+power_cycle() {
+    notify critical "Power-cycling the Bluetooth adapter to recover the mouse"
+    bluetoothctl power off >/dev/null 2>&1 || true
+    sleep 2
+    bluetoothctl power on >/dev/null 2>&1 || true
+    sleep 2
+}
+
+since=0 cycled=0
+[ ! -f "$STATE" ] || . "$STATE"
+save() { printf 'since=%s\ncycled=%s\n' "$since" "$cycled" > "$STATE"; }
+
+now=$(date +%s)
+missing=""
+for m in $(trusted_mice); do connected "$m" || { missing=$m; break; }; done
+
+if [ "${1:-}" = --now ]; then
+    [ -n "$missing" ] || { notify normal "The mouse is connected"; exit 0; }
+    if librepods_running && ! airpods_connected; then stop_librepods; fi
+    if try_connect "$missing"; then notify normal "Mouse reconnected"; exit 0; fi
+    power_cycle; cycled=$now; save
+    if try_connect "$missing"; then notify normal "Mouse reconnected after the adapter reset"
+    else notify critical "Mouse still missing: move or click it, then try again"; fi
+    exit 0
+fi
+
+# Only a scan in the way is a fault; a sleeping or switched-off mouse is not.
+if [ -z "$missing" ] || ! discovering; then
+    since=0; save; exit 0
+fi
+
+[ "$since" -gt 0 ] || since=$now
+elapsed=$((now - since))
+
+if [ "$elapsed" -ge "$KILL_AFTER" ] && librepods_running && ! airpods_connected; then
+    stop_librepods
+    if try_connect "$missing"; then notify normal "Mouse reconnected"; since=0; save; exit 0; fi
+fi
+
+if [ "$elapsed" -ge "$CYCLE_AFTER" ] && [ $((now - cycled)) -ge "$CYCLE_BACKOFF" ]; then
+    power_cycle; cycled=$now
+    if try_connect "$missing"; then notify normal "Mouse reconnected after the adapter reset"; since=0; fi
+fi
+save

@@ -1,0 +1,6 @@
+[Unit]
+Description=Recover a Bluetooth mouse stranded by a discovery scan
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/bt-mouse-guard

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Fix Bluetooth mouse
+Comment=Reconnect a Bluetooth mouse that is stuck, resetting the adapter if needed
+Icon=input-mouse
+# ~/.local/bin is only on PATH for interactive shells, not the niri session.
+Exec=sh -c "exec \\$HOME/.local/bin/bt-mouse-guard --now"
+Terminal=false
+Categories=Utility;
+Keywords=bluetooth;mouse;reconnect;rescue;fix;

@@ -1,0 +1,12 @@
+[Unit]
+Description=Run LibrePods only while the AirPods are connected
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+ExecStart=%h/.local/bin/librepods-watch
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
