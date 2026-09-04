@@ -243,13 +243,11 @@ window-rule {
 }
 binds {
     // === System & Overview ===
-    Mod+D { spawn "niri" "msg" "action" "toggle-overview"; }
     Mod+O repeat=false { toggle-overview; }
     Mod+Shift+Slash { show-hotkey-overlay; }
 
     // === Application Launchers ===
     Mod+Return hotkey-overlay-title="Open Terminal" { spawn "ghostty"; }
-
     Mod+B hotkey-overlay-title="Open Firefox" { spawn "firefox" "--new-window"; }
 
     Mod+Space hotkey-overlay-title="Application Launcher" {

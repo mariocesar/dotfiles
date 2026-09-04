@@ -3,29 +3,51 @@ set -eu
 
 # Launch a URL as a Chrome app window, or focus the one already open.
 #
-#   webapp <url> [chrome args...]
+#   webapp [--profile NAME] [--force-dark-mode|--force-light-mode] <url> [chrome args...]
 #   webapp --app-id <url>      print the window app-id, for StartupWMClass
 #
 # Slack, and others, refuse to support Firefox, so webapps run in Chrome while
 # Firefox stays the default browser. One shared profile means a single Google
-# sign-in covers all of them; WEBAPP_PROFILE overrides it per app.
+# sign-in covers all of them; --profile NAME keeps an app in its own
+# $XDG_DATA_HOME/chrome-webapps-NAME instead.
 
 usage() {
-    echo "usage: webapp [--app-id] <url> [chrome args...]" >&2
+    echo "usage: webapp [--profile NAME] [--force-dark-mode|--force-light-mode] <url> [chrome args...]" >&2
+    echo "       webapp --app-id <url>" >&2
     exit 2
 }
 
+data_home=${XDG_DATA_HOME:-$HOME/.local/share}
+profile=$data_home/chrome-webapps
+own_profile=false
+scheme=0   # Chrome's Appearance > Mode: 0 device, 1 light, 2 dark
 print_id=false
-if [ "${1:-}" = "--app-id" ]; then
-    print_id=true
+while [ $# -gt 0 ]; do
+    case $1 in
+        --app-id) print_id=true ;;
+        --profile)
+            [ $# -ge 2 ] || usage
+            profile=$data_home/chrome-webapps-$2
+            own_profile=true
+            shift
+            ;;
+        --force-dark-mode) scheme=2 ;;
+        --force-light-mode) scheme=1 ;;
+        -*) usage ;;
+        *) break ;;
+    esac
     shift
-fi
+done
 
 [ $# -ge 1 ] || usage
+# The mode is a profile setting; forcing it on the shared profile would drag
+# every other app along.
+if [ "$scheme" -ne 0 ] && ! $own_profile; then
+    echo "webapp: --force-*-mode needs --profile" >&2
+    usage
+fi
 url=$1
 shift
-
-profile=${WEBAPP_PROFILE:-${XDG_DATA_HOME:-$HOME/.local/share}/chrome-webapps}
 
 # Chrome ignores --class on Wayland and derives the app-id from the URL as
 # host + "_" + path, with every "/" becoming "_". Query and fragment are not
@@ -53,6 +75,30 @@ focus_existing() {
 if [ $# -eq 0 ] && focus_existing; then
     exit 0
 fi
+
+# Chrome has --force-dark-mode but nothing for light, so both go through the
+# profile's Appearance > Mode pref, which also makes the choice stick.
+set_color_scheme() {
+    lock=$(readlink "$profile/SingletonLock" 2>/dev/null || true)
+    # Chrome rewrites Preferences on exit; a live instance would undo the edit.
+    if [ -n "$lock" ] && kill -0 "${lock##*-}" 2>/dev/null; then
+        return 0
+    fi
+    prefs=$profile/Default/Preferences
+    mkdir -p "$profile/Default"
+    tmp=$(mktemp "$prefs.XXXXXX")
+    # color_scheme is the pre-migration key; set both so a fresh profile's
+    # migration cannot copy a stale value over color_scheme2.
+    if { cat "$prefs" 2>/dev/null || echo '{}'; } | jq -c --argjson s "$scheme" \
+        '.browser.theme.color_scheme2 = $s | .browser.theme.color_scheme = $s' > "$tmp"
+    then
+        mv "$tmp" "$prefs"
+    else
+        rm -f "$tmp"
+        echo "webapp: could not set the color scheme in $prefs" >&2
+    fi
+}
+set_color_scheme
 
 # Without setsid Chrome keeps the launching terminal as its controlling tty and
 # dies when that terminal closes.

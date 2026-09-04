@@ -4,7 +4,7 @@ Name=ChatGPT
 Comment=ChatGPT in a Chrome app window
 Icon=chatgpt
 # ~/.local/bin is only on PATH for interactive shells, not the niri session.
-Exec=sh -c "exec \\$HOME/.local/bin/webapp https://chatgpt.com"
+Exec=sh -c "exec \\$HOME/.local/bin/webapp --profile chatgpt --force-light-mode https://chatgpt.com"
 Terminal=false
 # Chrome ignores --class on Wayland; from: webapp --app-id https://chatgpt.com
 StartupWMClass=chrome-chatgpt.com__-Default

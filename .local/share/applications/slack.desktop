@@ -4,7 +4,7 @@ Name=Slack
 Comment=Slack web client in a Chrome app window
 Icon=slack
 # ~/.local/bin is only on PATH for interactive shells, not the niri session.
-Exec=sh -c "exec \\$HOME/.local/bin/slack"
+Exec=sh -c "exec \\$HOME/.local/bin/webapp https://app.slack.com/client"
 Terminal=false
 # Chrome ignores --class on Wayland; this is the app-id it picks for --app.
 StartupWMClass=chrome-app.slack.com__client-Default
