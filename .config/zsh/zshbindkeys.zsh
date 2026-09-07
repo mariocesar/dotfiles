@@ -60,3 +60,5 @@ bindkey "^G" search-directory-and-cd
 # Ctrl + U to delete from the cursor to the beginning of the line
 bindkey "^U" backward-kill-line
 
+# '/' out of WORDCHARS so ^W kills one path segment, not the whole path
+WORDCHARS='*?_-.[]~=&;!#$%^(){}<>'
