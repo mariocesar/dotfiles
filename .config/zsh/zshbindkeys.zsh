@@ -28,11 +28,22 @@ bindkey "\eOF" end-of-line
 # Shift+Tab cycles completions backward
 bindkey "\e[Z" reverse-menu-complete
 
+fd_picker_opts=(--hidden --exclude .git --exclude .venv --exclude '.cache_*' --exclude node_modules)
+
+# Alt+A inside the picker flips to everything (no excludes, no .gitignore); the prompt text is the toggle state
+fzf-picker() {
+  local prompt=$1 type=$2
+  local some="fd --type $type ${(@q)fd_picker_opts} --strip-cwd-prefix"
+  local all="fd --type $type --hidden --no-ignore --strip-cwd-prefix"
+  local toggle="[[ \$FZF_PROMPT == '$prompt' ]] && echo 'change-prompt(All> )+reload($all)' || echo 'change-prompt($prompt)+reload($some)'"
+  eval "$some" | fzf --select-1 --exit-0 --prompt="$prompt" --bind "alt-a:transform:$toggle"
+}
+
 # Search and open in Vim
 
 search-and-edit() {
   local file
-  file=$(fd --type f --strip-cwd-prefix | fzf --select-1 --prompt="Edit> ")
+  file=$(fzf-picker 'Edit> ' f)
   [[ -n $file ]] && nvim "$file"
   zle reset-prompt
 }
@@ -45,7 +56,7 @@ bindkey "^P" search-and-edit
 
 search-directory-and-cd() {
   local dir
-  dir=$(fd --type d | fzf --select-1 --exit-0 --prompt="Dir> ")
+  dir=$(fzf-picker 'Dir> ' d)
   [[ -n $dir ]] && cd "$dir"
   zle reset-prompt
 }
