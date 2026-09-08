@@ -58,7 +58,6 @@ pref acPostLockMonitorTimeout 300
 
 # Appearance
 pref currentThemeName blue
-pref customThemeFile "$HOME/.config/DankMaterialShell/themes/tokyoNightDark/theme.json"
 pref widgetBackgroundColor sth
 pref cornerRadius 12
 pref textRenderType 1
