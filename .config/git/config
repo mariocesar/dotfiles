@@ -16,6 +16,7 @@
   s = status --short --branch
   l = log -M --stat --abbrev-commit --graph
   lg = log --pretty=oneline -n 20 --graph --abbrev-commit
+  tree = log --graph --all --decorate --oneline --date-order
   remotes = remote --verbose
   tags = tag -l
   branches = branch --all
