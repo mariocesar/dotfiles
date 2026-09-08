@@ -34,23 +34,31 @@ command -v dms >/dev/null 2>&1 || { echo "update-preferences: needs dms" >&2; ex
 }
 
 # Only booleans, numbers and strings can be set this way; DMS rejects lists.
+checked=0
+changed=0
 pref() {
     local key=$1 want=$2 have reply
+    checked=$((checked + 1))
     have=$(dms ipc call -- settings get "$key")
     if [ "$have" = undefined ]; then
         echo "update-preferences: $key: unknown setting" >&2
         exit 1
     fi
     # get replies in JSON, so strings come back quoted.
-    if [ "$have" = "$want" ] || [ "$have" = "\"$want\"" ]; then
+    have=${have#\"}
+    have=${have%\"}
+    if [ "$have" = "$want" ]; then
+        printf '%-6s %s %s\n' ok "$key" "$want"
         return 0
     fi
-    echo "$key: $have -> $want"
+    changed=$((changed + 1))
     if [ "$dry" -eq 1 ]; then
+        printf '%-6s %s %s -> %s\n' drift "$key" "$have" "$want"
         return 0
     fi
     reply=$(dms ipc call -- settings set "$key" "$want")
     [ "$reply" = SETTINGS_SET_SUCCESS ] || { echo "update-preferences: $key: $reply" >&2; exit 1; }
+    printf '%-6s %s %s -> %s\n' set "$key" "$have" "$want"
 }
 
 # Monitors off 5 min after locking; seconds.
@@ -104,3 +112,9 @@ pref weatherEnabled false
 pref useSystemSoundTheme true
 pref osdPowerProfileEnabled true
 pref maxFprintTries 3
+
+if [ "$dry" -eq 1 ]; then
+    echo "$checked settings, $changed would change"
+else
+    echo "$checked settings, $changed changed"
+fi
