@@ -51,7 +51,7 @@ meld
 
 firefox         # default browser in mimeapps.list; 10-firefox-chrome.py links its profile
 
-# The niri + DMS desktop. dms-shell ships only in the cachyos repo; elsewhere it is AUR.
+# The niri + DMS desktop
 niri
 dms-shell
 nautilus                # dockTrashFileManager in update-preferences
