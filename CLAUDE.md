@@ -10,6 +10,12 @@ Personal dotfiles (macOS + Linux/niri). No build/lint/test pipeline — verify b
 - Adding config for a tool that has none yet? Create the file **here**, at the path it would occupy under `$HOME`: `~/.config/foo/config.toml` → `.config/foo/config.toml`. Make the intermediate dirs in the repo; `install.py` creates the matching real dirs under `$HOME`.
 - Then run `install.py` so the symlink actually exists, and verify it. A new file is the only case that needs a run.
 
+## Scope of a change
+
+Fix things where their cause lives. A quirk of one file gets a file-local fix — a modeline, a shebang, a `# noqa`. A rule that holds for a class of files belongs in that tool's config. Both directions fail: a global setting added to fix one file changes what was never diagnosed, and the same local patch written twice should have been the config rule.
+
+Breadth needs evidence, not anticipation. Diagnose before widening — including why an existing attempt failed, rather than reaching past it.
+
 ## install.py
 
 Symlinks every non-excluded file to the same relative path under `$HOME` (`.config/nvim/init.lua` → `~/.config/nvim/init.lua`). It walks per-file, so new files and new dirs are picked up automatically. Exclusions live in `DotfileMapper.EXCLUDE_PATTERNS`; add repo-management files there, not new config.
