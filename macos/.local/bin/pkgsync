@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+set -eu
+
+# Installs the hand-curated Brewfile. Counterpart to linux/.local/bin/pkgsync,
+# same flags, so `pkgsync -n` means the same thing on either machine.
+
+brewfile="${XDG_CONFIG_HOME:-$HOME/.config}/homebrew/Brewfile"
+
+usage() {
+    cat <<'USAGE'
+pkgsync - install the packages listed in the dotfiles
+
+Usage: pkgsync [-n] [-h]
+
+  -n  list what is missing, install nothing
+USAGE
+}
+
+dry=0
+while getopts ':nh' opt; do
+    case "$opt" in
+        n) dry=1 ;;
+        h) usage; exit 0 ;;
+        *) usage >&2; exit 2 ;;
+    esac
+done
+
+command -v brew >/dev/null 2>&1 || { echo "pkgsync: needs brew" >&2; exit 1; }
+[ -f "$brewfile" ] || { echo "pkgsync: no Brewfile at $brewfile" >&2; exit 1; }
+
+if [ "$dry" -eq 1 ]; then
+    # check exits non-zero when anything is missing; here that is the report, not a failure.
+    brew bundle check --verbose --file="$brewfile" || true
+    exit 0
+fi
+
+brew bundle install --file="$brewfile"

@@ -12,59 +12,43 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).parent.resolve()
 HOME_DIR = Path.home()
-HOOKS_DIR = ROOT_DIR / "postinstall.d"
+HOOKS_DIRNAME = "postinstall.d"
+SHARED_BUCKET = "common"
+PLATFORM_BUCKETS = ("linux", "macos")
+PLATFORM = "macos" if sys.platform == "darwin" else "linux"
+# Shared first, platform second: a path in both is deliberately won by the platform.
+ACTIVE_BUCKETS = (SHARED_BUCKET, PLATFORM)
 
 
 class DotfileMapper:
-    EXCLUDE_PATTERNS: list[re.Pattern] = [
-        re.compile(pattern)
-        for pattern in (
-            r".*\.DS_Store$",
-            r"^.+\.py[co]$",
-            r"^.+\~$",
-            r"^\.git$",
-            r"^\.vscode$",
-            r"^\..*_cache$",
-            r"^Brewfile$",
-            r"^Brewfile\.lock\.json$",
-            r"^\.gitignore$",
-            r"^ruff\.toml$",
-            r"^pyproject\.toml$",
-            r"^uv\.lock$",
-            r"^\.python-version$",
-            r"^\.envrc$",
-            r"^\.venv$",
-            r"^README\.md$",
-            r"^CLAUDE\.md$",
-            r"^LICENSE$",
-            r"^install\.py$",
-            r"^pkglist",
-            r"^postinstall\.d$",
-        )
-    ]
+    # Only junk that can appear anywhere inside a bucket. Repo files sit outside every
+    # bucket and are never walked, so none of them needs an entry here.
+    EXCLUDE_PATTERNS = (
+        r".*\.DS_Store$",
+        r"^.+\.py[co]$",
+        r"^.+\~$",
+    )
 
     def __init__(self, workdir: Path, target: Path):
         self.workdir = workdir
         self.target = target
-        self.exclude_pattern = re.compile(
-            r"|".join(pattern.pattern for pattern in self.EXCLUDE_PATTERNS)
-        )
+        self.hooks_dir = workdir / HOOKS_DIRNAME
+        self.exclude = re.compile("|".join(self.EXCLUDE_PATTERNS))
 
     def __call__(self) -> Generator[tuple[Path, Path], None, None]:
-        """Generate a list of dotfiles to be installed, skipping excluded ones."""
+        """Yield (source, dest) for every installable file in this bucket."""
         for item in self.walk():
-            rel_path = item.relative_to(self.workdir)
-            source = self.workdir / rel_path
-            dest = self.target / rel_path
-            yield source, dest
+            yield item, self.target / item.relative_to(self.workdir)
 
     def walk(self, basedir: Path | None = None) -> Generator[Path, None, None]:
         basedir = basedir or self.workdir
 
         for item in basedir.glob("*"):
-            rel_path = str(Path(item).relative_to(self.workdir))
+            # postinstall.d is part of a bucket's shape: it gets run, never linked.
+            if item == self.hooks_dir:
+                continue
 
-            if self.exclude_pattern.match(rel_path):
+            if self.exclude.match(str(item.relative_to(self.workdir))):
                 continue
 
             if item.is_dir():
@@ -73,7 +57,12 @@ class DotfileMapper:
                 yield item
 
 
-list_dotfiles = DotfileMapper(ROOT_DIR, HOME_DIR)
+# Every bucket is walked identically; only which ones are active differs per machine.
+BUCKETS = {
+    name: DotfileMapper(ROOT_DIR / name, HOME_DIR) for name in (SHARED_BUCKET, *PLATFORM_BUCKETS)
+}
+ACTIVE = {name: BUCKETS[name] for name in ACTIVE_BUCKETS}
+FOREIGN = {name: BUCKETS[name] for name in PLATFORM_BUCKETS if name != PLATFORM}
 
 
 def confirm(prompt: str, *, default: bool = True, interactive: bool = True) -> bool:
@@ -118,24 +107,87 @@ def puts(message: str) -> None:
 
 
 class Installer:
-    def __init__(self, *, force: bool, interactive: bool, fake: bool) -> None:
+    def __init__(self, *, force: bool, interactive: bool, fake: bool, prune: bool) -> None:
         self.force = force
         self.fake = fake
+        self.prune = prune
         self.confirm = partial(confirm, interactive=interactive)
         self._created_dirs = set()
 
     def run(self) -> int:
-        for source, dest in list_dotfiles():
-            self.create_directory_if_not_exists(dest.parent)
-            self.install(source, dest)
+        installed = self.install_buckets()
+        self.handle_foreign(installed)
 
         return self.run_hooks()
+
+    def install_buckets(self) -> dict[Path, str]:
+        """Link every active bucket; returns which bucket owns each dest."""
+        owner: dict[Path, str] = {}
+
+        for name, mapper in ACTIVE.items():
+            for source, dest in mapper():
+                # Shared runs first, so reaching a dest twice means the platform is winning.
+                if dest in owner:
+                    puts(f"-- {dest} from {owner[dest]} overridden by {name} --")
+
+                owner[dest] = name
+                self.create_directory_if_not_exists(dest.parent)
+                self.install(source, dest)
+
+        return owner
+
+    def handle_foreign(self, installed: dict[Path, str]) -> None:
+        """Buckets for the other OS: never linked here, and unlinked entirely under --prune."""
+        for owner, mapper in FOREIGN.items():
+            count = 0
+
+            for _, dest in mapper():
+                # A name shared across platform buckets (pkgsync) is installed, not foreign.
+                if dest in installed:
+                    continue
+
+                count += 1
+
+                if self.fake:
+                    puts(f"Skipping {owner}-only {dest}")
+                if self.prune:
+                    self.prune_link(dest)
+
+            if count:
+                puts(f"-- Skipped {count} {owner}-only files, this is {PLATFORM} --")
+
+    def prune_link(self, dest: Path) -> None:
+        """Unlink what a platform-blind install left behind. Real files are left alone."""
+        # resolve() follows the link even when it dangles, which a moved file's old link does.
+        if not dest.is_symlink() or not dest.resolve().is_relative_to(ROOT_DIR):
+            return
+
+        self.perform_action(f"Pruning {dest}", dest.unlink)
+        self.remove_empty_parents(dest.parent)
+
+    def remove_empty_parents(self, directory: Path) -> None:
+        """Pruning ~/.config/niri/config.kdl leaves the directory; walk up while they are empty."""
+        if self.fake:  # nothing was unlinked, so emptiness cannot be judged
+            return
+
+        while directory != HOME_DIR and directory.is_relative_to(HOME_DIR):
+            if not directory.is_dir() or any(directory.iterdir()):
+                return
+
+            self.perform_action(f"Removing empty {directory}", directory.rmdir)
+            directory = directory.parent
 
     def run_hooks(self) -> int:
         """Run every executable in postinstall.d in name order; returns the failure count."""
         failed = 0
 
-        for hook in sorted(HOOKS_DIR.glob("*")):
+        # Keyed by name so a platform hook replaces a same-named common one, like the links;
+        # sorted by name so hooks from both buckets interleave by their number prefix.
+        hooks = {
+            hook.name: hook for name in ACTIVE_BUCKETS for hook in BUCKETS[name].hooks_dir.glob("*")
+        }
+
+        for _, hook in sorted(hooks.items()):
             if not os.access(hook, os.X_OK):
                 continue
 
@@ -158,10 +210,6 @@ class Installer:
                 failed += 1
 
         return failed
-
-    def handle_file_removal(self, dest: Path):
-        if self.confirm(f"Delete {dest} before installing? (Y/n)"):
-            self.perform_action(f"Removing {dest}", lambda: dest.unlink())
 
     def create_directory_if_not_exists(self, directory: Path):
         if str(directory) in self._created_dirs:
@@ -233,6 +281,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Simulate actions without making changes",
     )
+    parser.add_argument(
+        "--prune",
+        action="store_true",
+        help="Also remove links for config belonging to the other OS",
+    )
 
     options = parser.parse_args()
 
@@ -243,6 +296,7 @@ if __name__ == "__main__":
             force=options.force,
             interactive=options.interactive,
             fake=options.fake,
+            prune=options.prune,
         ).run()
     except KeyboardInterrupt:
         puts("\n\n-- Stop --")

@@ -111,6 +111,7 @@ cask "slack"
 cask "1password"
 cask "wezterm"
 cask "ghostty"
+cask "claude-code" # .local/bin/ask calls it
 cask "appcleaner"
 cask "barrier"
 cask "dbeaver-community"

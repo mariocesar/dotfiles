@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+echo "⇨ Refreshing formulae"
+
+brew update
+
+echo "⇨ Upgrading formulae and casks"
+
+# Casks that update themselves are left alone; --greedy would fight them.
+brew upgrade
+
+echo "⇨ Removing stale versions and cached downloads"
+
+brew cleanup --prune=all

@@ -49,6 +49,8 @@ cmake
 ninja
 meld
 
+firefox         # default browser in mimeapps.list; 10-firefox-chrome.py links its profile
+
 docker
 docker-compose
 aws-cli

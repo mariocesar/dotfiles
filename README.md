@@ -6,32 +6,44 @@ When facing a hard task and feeling stuck, managing my dotfiles acts as a produc
 
 ## How to Use
 
-My goal is to keep things simple, just make sure Python 3.11 or higher is installed. After that, all you need to do is clone the repo and run `python install.py`.
+My goal is to keep things simple, just make sure Python 3.10 or higher is installed. After that, all you need to do is clone the repo and run `install.py`.
 
 ```bash
 git clone https://github.com/mariocesar/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
-python install.py
+python3 install.py
 ```
 
-The command `python install.py` creates symlinks for all files in the repository, mirroring its structure in your home directory.
+Config is split into three buckets, and where a file sits decides which machine gets it:
 
-For example to see the installation "Plan" you can run:
+```
+common/   installed everywhere
+linux/    Arch only
+macos/    macOS only
+```
+
+Each mirrors your home directory, so `common/.config/nvim/init.lua` is symlinked to
+`~/.config/nvim/init.lua`. `install.py` links `common/` plus the bucket for the OS it is
+running on, then runs the `postinstall.d/` hooks those buckets carry. Anything outside a
+bucket — this file, the installer itself — is never linked.
+
+To see the plan without touching anything:
 
 ```bash
-python install.py --fake --noinput
+python3 install.py --fake
 ```
 
-For additional options, run: `python install.py --help`
+For additional options, run: `python3 install.py --help`
 
 ```
-usage: install.py [-h] [--noinput] [--force] [--fake]
+usage: install.py [-h] [--interactive] [--force] [--fake] [--prune]
 
 Install dotfiles
 
 options:
-  -h, --help  show this help message and exit
-  --noinput   Don't ask to confirm every action
-  --force     Replace target files if they already exist
-  --fake      Perform a dry-run without making actual changes
+  -h, --help     show this help message and exit
+  --interactive  Run with interactive prompts
+  --force        Replace existing files, keeping the original as .bak
+  --fake         Simulate actions without making changes
+  --prune        Also remove links for config belonging to the other OS
 ```
