@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Asserts the DMS settings chosen in the dotfiles through its IPC, counterpart
+# to macos/.local/bin/update-preferences and `defaults write`. DMS owns
+# settings.json; only the keys listed here are pinned, the rest stay UI-managed.
+
+usage() {
+    cat <<'USAGE'
+update-preferences - apply the DMS settings chosen in the dotfiles
+
+Usage: update-preferences [-n] [-h]
+
+  -n  list what differs, change nothing
+USAGE
+}
+
+dry=0
+while getopts ':nh' opt; do
+    case "$opt" in
+        n) dry=1 ;;
+        h) usage; exit 0 ;;
+        *) usage >&2; exit 2 ;;
+    esac
+done
+
+command -v dms >/dev/null 2>&1 || { echo "update-preferences: needs dms" >&2; exit 1; }
+# dms ipc exits 0 whether or not the shell is up; only the reply tells.
+# The -- keeps negative values like -100 from being read as flags.
+[[ $(dms ipc call -- settings get settingsConfigVersion) =~ ^[0-9]+$ ]] || {
+    echo "update-preferences: DMS is not running" >&2
+    exit 1
+}
+
+# Only booleans, numbers and strings can be set this way; DMS rejects lists.
+pref() {
+    local key=$1 want=$2 have reply
+    have=$(dms ipc call -- settings get "$key")
+    if [ "$have" = undefined ]; then
+        echo "update-preferences: $key: unknown setting" >&2
+        exit 1
+    fi
+    # get replies in JSON, so strings come back quoted.
+    if [ "$have" = "$want" ] || [ "$have" = "\"$want\"" ]; then
+        return 0
+    fi
+    echo "$key: $have -> $want"
+    if [ "$dry" -eq 1 ]; then
+        return 0
+    fi
+    reply=$(dms ipc call -- settings set "$key" "$want")
+    [ "$reply" = SETTINGS_SET_SUCCESS ] || { echo "update-preferences: $key: $reply" >&2; exit 1; }
+}
+
+# Monitors off 5 min after locking; seconds.
+pref acPostLockMonitorTimeout 300
+
+# Appearance
+pref currentThemeName blue
+pref customThemeFile "$HOME/.config/DankMaterialShell/themes/tokyoNightDark/theme.json"
+pref widgetBackgroundColor sth
+pref cornerRadius 12
+pref textRenderType 1
+pref animationSpeed 2
+pref animationVariant 2
+pref motionEffect 2
+pref blurBorderEnabled false
+pref barElevationEnabled false
+
+# Bar and window frame
+pref frameBarSize 26
+pref frameBarInsetPadding 7
+pref frameThickness 7
+pref frameRounding 10
+pref frameShowOnOverview true
+
+# Dock
+pref showDock true
+pref dockPosition 2
+pref dockIconSize 24
+pref dockMargin 5
+pref dockBottomGap -100
+pref dockOpenOnOverview true
+pref dockUseOverlayLayer true
+pref dockShowTrash true
+pref dockTrashFileManager nautilus
+pref appsDockColorizeActive true
+pref appsDockHideIndicators true
+pref runningAppsCurrentWorkspace false
+
+# Launcher
+pref appLauncherViewMode grid
+pref launcherUseOverlayLayer true
+pref spotlightBarShowModeChips true
+
+# niri layout overrides
+pref niriLayoutBorderSize 1
+pref niriLayoutGapsOverride 4
+pref niriLayoutRadiusOverride 6
+
+# Misc
+pref clockFormat 24h
+pref weatherEnabled false
+pref useSystemSoundTheme true
+pref osdPowerProfileEnabled true
+pref maxFprintTries 3

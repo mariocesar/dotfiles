@@ -25,7 +25,7 @@ Everything installable lives in one of three buckets, and where a file sits *is*
 ```
 common/.config/nvim/init.lua           ->  ~/.config/nvim/init.lua        both
 linux/.config/niri/config.kdl          ->  ~/.config/niri/config.kdl      Arch only
-macos/.local/bin/default-preferences   ->  ~/.local/bin/default-preferences
+macos/.local/bin/update-preferences    ->  ~/.local/bin/update-preferences
 ```
 
 `common/` is installed everywhere; `linux/` and `macos/` add what only that OS can use. Put a file in the wrong bucket and it lands on the wrong machine — but there is no list to forget to update.
