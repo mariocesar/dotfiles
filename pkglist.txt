@@ -46,3 +46,7 @@ docker-compose
 aws-cli
 terraform
 hugo
+
+# gtk-theme=adw-gtk3-dark and icon-theme=Papirus-Dark are configured; missing, GTK3 falls back to stock Adwaita and icons to hicolor
+adw-gtk-theme
+papirus-icon-theme

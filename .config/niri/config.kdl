@@ -94,8 +94,9 @@ environment {
   ELECTRON_OZONE_PLATFORM_HINT "auto"
 
   QT_QPA_PLATFORM "wayland"
-  QT_QPA_PLATFORMTHEME "gtk3"
-  QT_QPA_PLATFORMTHEME_QT6 "gtk3"
+  // KDE apps are the bulk of the Qt ones; the gtk3 theme drew them in Fusion.
+  QT_QPA_PLATFORMTHEME "kde"
+  QT_QPA_PLATFORMTHEME_QT6 "kde"
 
   TERMINAL "ghostty"
   EDITOR "nvim"
