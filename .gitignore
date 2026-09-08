@@ -3,4 +3,3 @@ __pycache__
 .vscode
 .DS_Store
 
-.config/espanso/match/local.yml
