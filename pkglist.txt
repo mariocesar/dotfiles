@@ -15,6 +15,8 @@ uv
 fd              # vim-clap dotfiles provider
 fzf
 ripgrep
+eza             # the `ls` alias, and fzf-tab dir previews
+bat             # fzf-tab file previews
 ddgr            # DuckduckGo
 direnv
 mise
@@ -24,6 +26,8 @@ btop
 htop
 lazygit
 git-delta
+difftastic      # git difftool
+github-cli
 glances
 duf
 tree
@@ -34,9 +38,13 @@ pkgfile
 yay
 paru
 sshx          # Replace tmate
+tmux
 
 entr
 just
+jq
+pwgen           # the `makepassword` alias
+wl-clipboard    # the `copy` alias on Wayland
 cmake
 ninja
 meld
