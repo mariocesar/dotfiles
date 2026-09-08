@@ -51,6 +51,13 @@ meld
 
 firefox         # default browser in mimeapps.list; 10-firefox-chrome.py links its profile
 
+# The niri + DMS desktop. dms-shell ships only in the cachyos repo; elsewhere it is AUR.
+niri
+dms-shell
+nautilus                # dockTrashFileManager in update-preferences
+sound-theme-freedesktop # useSystemSoundTheme in update-preferences
+power-profiles-daemon   # osdPowerProfileEnabled in update-preferences
+
 docker
 docker-compose
 aws-cli
