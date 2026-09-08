@@ -5,21 +5,20 @@ set -eu
 #
 #   lightmode [--gtk3] <command> [args...]
 #   lightmode --app <desktop-id>    write a light launcher to ~/.local/share/applications
+#   lightmode --kde <app>           pin a KDE app via its own <app>rc (dolphin, kate, konsole…)
 #
 # Launch-time env only: nothing can retheme a window that is already open.
 
 usage() {
     echo "usage: lightmode [--gtk3] <command> [args...]" >&2
     echo "       lightmode --app <desktop-id>" >&2
+    echo "       lightmode --kde <app>" >&2
     exit 2
 }
 
 # libadwaita: the debug var only seeds the value; the portal's next change signal
 # flips it back to dark unless the portal is off. 1.9 dropped force-light.
-# Qt: KDE_COLOR_SCHEME_PATH is read by the kde platform theme only, so pin that too.
-light_env="ADW_DISABLE_PORTAL=1 ADW_DEBUG_COLOR_SCHEME=prefer-light
-QT_QPA_PLATFORMTHEME=kde QT_QPA_PLATFORMTHEME_QT6=kde
-KDE_COLOR_SCHEME_PATH=/usr/share/color-schemes/BreezeLight.colors"
+light_env="ADW_DISABLE_PORTAL=1 ADW_DEBUG_COLOR_SCHEME=prefer-light"
 
 app_override() {
     id=$1
@@ -51,12 +50,24 @@ app_override() {
     echo "$dst"
 }
 
+# No env can override kdeglobals for KDE apps (KDE_COLOR_SCHEME_PATH does not);
+# the per-app scheme is what Settings > Color Scheme writes.
+kde_override() {
+    kwriteconfig6 --file "${1}rc" --group UiSettings --key ColorScheme BreezeLight
+    echo "${XDG_CONFIG_HOME:-$HOME/.config}/${1}rc: [UiSettings] ColorScheme=BreezeLight"
+}
+
 gtk3=false
 while [ $# -gt 0 ]; do
     case $1 in
         --app)
             [ $# -eq 2 ] || usage
             app_override "$2"
+            exit 0
+            ;;
+        --kde)
+            [ $# -eq 2 ] || usage
+            kde_override "$2"
             exit 0
             ;;
         # GTK_THEME is the only GTK3 knob, but it strips libadwaita's stylesheet.
