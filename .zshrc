@@ -35,11 +35,10 @@ load_if_exists ~/.fzf.zsh
 load_if_exists ~/.iterm2_shell_integration.zsh
 load_if_exists ~/.cargo/env
 
-eval "$(direnv hook zsh)"
-
-eval "$(mise activate zsh)"
-
-eval "$(starship init zsh)"
+# Guarded: a machine missing one of these should still get a working shell
+command -v direnv >/dev/null && eval "$(direnv hook zsh)"
+command -v mise >/dev/null && eval "$(mise activate zsh)"
+command -v starship >/dev/null && eval "$(starship init zsh)"
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
