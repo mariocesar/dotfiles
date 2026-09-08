@@ -216,6 +216,7 @@ binds {
     // === Application Launchers ===
     Mod+Return hotkey-overlay-title="Open Terminal" { spawn "ghostty"; }
     Mod+B hotkey-overlay-title="Open Firefox" { spawn "firefox" "--new-window"; }
+    Mod+E hotkey-overlay-title="Open Files" { spawn "sh" "-c" "exec $HOME/.local/bin/lightmode nautilus --new-window"; }
 
     Mod+Space hotkey-overlay-title="Application Launcher" {
         spawn "dms" "ipc" "call" "spotlight" "toggle";
