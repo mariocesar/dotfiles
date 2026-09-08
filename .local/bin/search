@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-exec ddgr \
-  --noprompt \
-  --num 5 \
-  --expand \
-  "$@"
