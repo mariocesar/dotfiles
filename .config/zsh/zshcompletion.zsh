@@ -4,14 +4,14 @@ setopt COMPLETE_IN_WORD   # complete from the cursor instead of jumping to the w
 setopt ALWAYS_TO_END      # ...then move to the end once a match is inserted
 setopt AUTO_PARAM_SLASH
 setopt PATH_DIRS          # `bin/foo<TAB>` also searches $PATH entries
-unsetopt MENU_COMPLETE    # show the menu, never silently insert the first match
+unsetopt MENU_COMPLETE    # show the picker, never silently insert the first match
 
-zstyle ':completion:*' menu select
+zstyle ':completion:*' menu no   # fzf-tab needs zsh's own menu out of the way
 zstyle ':completion:*' group-name ''   # keeps git's commands/branches/tags in separate blocks
 zstyle ':completion:*' verbose yes
 zstyle ':completion:*' special-dirs true
 
-zstyle ':completion:*:descriptions' format '%F{yellow}%B%d%b%f'
+zstyle ':completion:*:descriptions' format '[%d]'   # plain: fzf-tab drops escape sequences here
 zstyle ':completion:*:messages'     format '%F{magenta}%d%f'
 zstyle ':completion:*:warnings'     format '%F{red}no matches for %d%f'
 zstyle ':completion:*:corrections'  format '%F{yellow}%d %F{red}(errors: %e)%f'
