@@ -17,9 +17,6 @@ bindkey "\e[F" end-of-line
 bindkey "\eOH" beginning-of-line
 bindkey "\eOF" end-of-line
 
-# Shift+Tab cycles completions backward
-bindkey "\e[Z" reverse-menu-complete
-
 fd_picker_opts=(--hidden --exclude .git --exclude .venv --exclude '.cache_*' --exclude node_modules)
 
 # Alt+A inside the picker flips to everything (no excludes, no .gitignore); the prompt text is the toggle state
