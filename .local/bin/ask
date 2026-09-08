@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+if (( $# == 0 )) && [[ -t 0 ]]; then
+  echo "usage: ask <question>" >&2
+  exit 2
+fi
+
+claude -p \
+  --model haiku \
+  --effort low \
+  --tools "WebSearch,WebFetch" \
+  --no-session-persistence \
+  --system-prompt 'You answer short questions.
+Respond in the same language as the user'\''s question.
+Prioritize correctness over completeness.
+Give the direct answer first.
+Include exact commands or code when useful.
+Mention only caveats that can materially change the answer.
+Never invent commands, flags, APIs, or facts; if uncertain, say so.
+Do not restate the question or add filler.
+Keep the answer concise unless more detail is necessary.' \
+  "$*"
+
