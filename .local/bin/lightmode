@@ -1,0 +1,75 @@
+#!/bin/sh
+set -eu
+
+# Run a program pinned to a light theme while the session stays dark.
+#
+#   lightmode [--gtk3] <command> [args...]
+#   lightmode --app <desktop-id>    write a light launcher to ~/.local/share/applications
+#
+# Launch-time env only: nothing can retheme a window that is already open.
+
+usage() {
+    echo "usage: lightmode [--gtk3] <command> [args...]" >&2
+    echo "       lightmode --app <desktop-id>" >&2
+    exit 2
+}
+
+# libadwaita: the debug var only seeds the value; the portal's next change signal
+# flips it back to dark unless the portal is off. 1.9 dropped force-light.
+# Qt: KDE_COLOR_SCHEME_PATH is read by the kde platform theme only, so pin that too.
+light_env="ADW_DISABLE_PORTAL=1 ADW_DEBUG_COLOR_SCHEME=prefer-light
+QT_QPA_PLATFORMTHEME=kde QT_QPA_PLATFORMTHEME_QT6=kde
+KDE_COLOR_SCHEME_PATH=/usr/share/color-schemes/BreezeLight.colors"
+
+app_override() {
+    id=$1
+    src=
+    old_ifs=$IFS
+    IFS=:
+    for dir in ${XDG_DATA_DIRS:-/usr/local/share:/usr/share}; do
+        if [ -f "$dir/applications/$id.desktop" ]; then
+            src=$dir/applications/$id.desktop
+            break
+        fi
+    done
+    IFS=$old_ifs
+    [ -n "$src" ] || { echo "lightmode: no $id.desktop in XDG_DATA_DIRS" >&2; exit 1; }
+
+    dst=${XDG_DATA_HOME:-$HOME/.local/share}/applications/$id.desktop
+    [ ! -e "$dst" ] || { echo "lightmode: $dst exists" >&2; exit 1; }
+
+    # ~/.local/bin is off the session PATH, and "$@" keeps %U/%F as real argv.
+    # DBusActivatable=true would make launchers skip Exec= entirely.
+    sed -E \
+        -e '/^[A-Za-z0-9-]+\[[^]]+\]=/d' \
+        -e '/^#/d' \
+        -e '/^\[Desktop Entry\]$/a\
+# Overrides /usr/share: the same entry, launched through lightmode.' \
+        -e 's|^Exec=|Exec=sh -c "exec \\\\$HOME/.local/bin/lightmode \\\\"\\\\$@\\\\"" lightmode |' \
+        -e 's/^DBusActivatable=true$/DBusActivatable=false/' \
+        "$src" > "$dst"
+    echo "$dst"
+}
+
+gtk3=false
+while [ $# -gt 0 ]; do
+    case $1 in
+        --app)
+            [ $# -eq 2 ] || usage
+            app_override "$2"
+            exit 0
+            ;;
+        # GTK_THEME is the only GTK3 knob, but it strips libadwaita's stylesheet.
+        --gtk3) gtk3=true ;;
+        -*) usage ;;
+        *) break ;;
+    esac
+    shift
+done
+[ $# -gt 0 ] || usage
+
+if $gtk3; then
+    light_env="$light_env GTK_THEME=Adwaita"
+fi
+# shellcheck disable=SC2086  # word-split on purpose, no value contains spaces
+exec env $light_env "$@"

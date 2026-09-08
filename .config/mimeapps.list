@@ -4,6 +4,7 @@ application/x-extension-html=firefox.desktop
 application/x-extension-shtml=firefox.desktop
 application/x-extension-xht=firefox.desktop
 application/x-extension-xhtml=firefox.desktop
+application/x-shellscript=nvim-ghostty.desktop
 application/xhtml+xml=firefox.desktop
 image/avif=org.gnome.Loupe.desktop
 image/bmp=org.gnome.Loupe.desktop
@@ -14,13 +15,12 @@ image/svg+xml=org.gnome.Loupe.desktop
 image/webp=org.gnome.Loupe.desktop
 inode/directory=org.gnome.Nautilus.desktop
 text/html=firefox.desktop
+text/plain=nvim-ghostty.desktop
 x-scheme-handler/chrome=firefox.desktop
 x-scheme-handler/claude-cli=claude-code-url-handler.desktop
 x-scheme-handler/file=org.gnome.Nautilus.desktop
 x-scheme-handler/http=firefox.desktop
 x-scheme-handler/https=firefox.desktop
-application/x-shellscript=nvim-ghostty.desktop
-text/plain=nvim-ghostty.desktop
 
 [Added Associations]
 application/x-extension-htm=firefox.desktop;
@@ -28,6 +28,7 @@ application/x-extension-html=firefox.desktop;
 application/x-extension-shtml=firefox.desktop;
 application/x-extension-xht=firefox.desktop;
 application/x-extension-xhtml=firefox.desktop;
+application/x-shellscript=nvim-ghostty.desktop;
 application/xhtml+xml=firefox.desktop;
 image/avif=org.gnome.Loupe.desktop;
 image/bmp=org.gnome.Loupe.desktop;
@@ -36,14 +37,13 @@ image/jpeg=org.gnome.Loupe.desktop;
 image/png=org.gnome.Loupe.desktop;
 image/svg+xml=org.gnome.Loupe.desktop;
 image/webp=org.gnome.Loupe.desktop;
-inode/directory=org.gnome.Nautilus.desktop;
+inode/directory=org.gnome.Nautilus.desktop;dms-open.desktop;
 text/html=firefox.desktop;
+text/plain=nvim-ghostty.desktop;
 x-scheme-handler/chrome=firefox.desktop;
-x-scheme-handler/file=org.gnome.Nautilus.desktop;
+x-scheme-handler/file=org.gnome.Nautilus.desktop;dms-open.desktop;
 x-scheme-handler/http=firefox.desktop;
 x-scheme-handler/https=firefox.desktop;
-application/x-shellscript=nvim-ghostty.desktop;
-text/plain=nvim-ghostty.desktop;
 
 [Removed Associations]
 

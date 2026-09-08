@@ -1,0 +1,4 @@
+# Overrides /usr/share: D-Bus activation must go through lightmode too, not just Exec=.
+[D-BUS Service]
+Name=org.freedesktop.FileManager1
+Exec=/bin/sh -c "exec $HOME/.local/bin/lightmode /usr/bin/nautilus --gapplication-service"
