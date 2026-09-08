@@ -33,11 +33,24 @@ command -v dms >/dev/null 2>&1 || { echo "update-preferences: needs dms" >&2; ex
     exit 1
 }
 
-# Only booleans, numbers and strings can be set this way; DMS rejects lists.
+# Every line is the command that enforces a setting, tagged with what happened to it.
 checked=0
 changed=0
-pref() {
+show() {
+    local tag=$1 note=$2
+    shift 2
+    printf '%-6s' "$tag"
+    printf ' %q' "$@"
+    if [ -n "$note" ]; then
+        printf '  # %s' "$note"
+    fi
+    printf '\n'
+}
+
+# Only booleans, numbers and strings can be set this way; DMS rejects lists.
+dms_pref() {
     local key=$1 want=$2 have reply
+    local -a cmd=(dms ipc call -- settings set "$key" "$want")
     checked=$((checked + 1))
     have=$(dms ipc call -- settings get "$key")
     if [ "$have" = undefined ]; then
@@ -48,70 +61,70 @@ pref() {
     have=${have#\"}
     have=${have%\"}
     if [ "$have" = "$want" ]; then
-        printf '%-6s %s %s\n' ok "$key" "$want"
+        show ok "" "${cmd[@]}"
         return 0
     fi
     changed=$((changed + 1))
     if [ "$dry" -eq 1 ]; then
-        printf '%-6s %s %s -> %s\n' drift "$key" "$have" "$want"
+        show drift "is $have" "${cmd[@]}"
         return 0
     fi
-    reply=$(dms ipc call -- settings set "$key" "$want")
+    reply=$("${cmd[@]}")
     [ "$reply" = SETTINGS_SET_SUCCESS ] || { echo "update-preferences: $key: $reply" >&2; exit 1; }
-    printf '%-6s %s %s -> %s\n' set "$key" "$have" "$want"
+    show set "was $have" "${cmd[@]}"
 }
 
 # Monitors off 5 min after locking; seconds.
-pref acPostLockMonitorTimeout 300
+dms_pref acPostLockMonitorTimeout 300
 
 # Appearance
-pref currentThemeName blue
-pref widgetBackgroundColor sth
-pref cornerRadius 12
-pref textRenderType 1
-pref animationSpeed 2
-pref animationVariant 2
-pref motionEffect 2
-pref blurBorderEnabled false
-pref barElevationEnabled false
+dms_pref currentThemeName blue
+dms_pref widgetBackgroundColor sth
+dms_pref cornerRadius 12
+dms_pref textRenderType 1
+dms_pref animationSpeed 2
+dms_pref animationVariant 2
+dms_pref motionEffect 2
+dms_pref blurBorderEnabled false
+dms_pref barElevationEnabled false
 
 # Bar and window frame
-pref frameBarSize 26
-pref frameBarInsetPadding 7
-pref frameThickness 7
-pref frameRounding 10
-pref frameShowOnOverview true
+dms_pref frameBarSize 26
+dms_pref frameBarInsetPadding 7
+dms_pref frameThickness 7
+dms_pref frameRounding 10
+dms_pref frameShowOnOverview true
 
 # Dock
-pref showDock true
-pref dockPosition 2
-pref dockIconSize 24
-pref dockMargin 5
-pref dockBottomGap -100
-pref dockOpenOnOverview true
-pref dockUseOverlayLayer true
-pref dockShowTrash true
-pref dockTrashFileManager nautilus
-pref appsDockColorizeActive true
-pref appsDockHideIndicators true
-pref runningAppsCurrentWorkspace false
+dms_pref showDock true
+dms_pref dockPosition 2
+dms_pref dockIconSize 24
+dms_pref dockMargin 5
+dms_pref dockBottomGap -100
+dms_pref dockOpenOnOverview true
+dms_pref dockUseOverlayLayer true
+dms_pref dockShowTrash true
+dms_pref dockTrashFileManager nautilus
+dms_pref appsDockColorizeActive true
+dms_pref appsDockHideIndicators true
+dms_pref runningAppsCurrentWorkspace false
 
 # Launcher
-pref appLauncherViewMode grid
-pref launcherUseOverlayLayer true
-pref spotlightBarShowModeChips true
+dms_pref appLauncherViewMode grid
+dms_pref launcherUseOverlayLayer true
+dms_pref spotlightBarShowModeChips true
 
 # niri layout overrides
-pref niriLayoutBorderSize 1
-pref niriLayoutGapsOverride 4
-pref niriLayoutRadiusOverride 6
+dms_pref niriLayoutBorderSize 1
+dms_pref niriLayoutGapsOverride 4
+dms_pref niriLayoutRadiusOverride 6
 
 # Misc
-pref clockFormat 24h
-pref weatherEnabled false
-pref useSystemSoundTheme true
-pref osdPowerProfileEnabled true
-pref maxFprintTries 3
+dms_pref clockFormat 24h
+dms_pref weatherEnabled false
+dms_pref useSystemSoundTheme true
+dms_pref osdPowerProfileEnabled true
+dms_pref maxFprintTries 3
 
 if [ "$dry" -eq 1 ]; then
     echo "$checked settings, $changed would change"
