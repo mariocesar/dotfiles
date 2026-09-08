@@ -1,3 +1,5 @@
+# vim: set filetype=zsh :
+
 alias vim=nvim
 
 alias vimrc="vim ~/.config/nvim/init.lua --cmd 'cd ~/.config/nvim'"
