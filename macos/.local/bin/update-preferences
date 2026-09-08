@@ -2,11 +2,11 @@
 
 set -eux
 
-# Disable press-and-hold for keys in some appss
+# Disable press-and-hold for keys in some apps
 defaults write com.microsoft.VSCode   ApplePressAndHoldEnabled -bool false
 defaults write com.github.wez.wezterm ApplePressAndHoldEnabled -bool false
 
-# Useful for typing fast when coding 
+# Units are 15 ms ticks: 225 ms delay, 45 ms interval; nearest to niri's 225 ms and 25/s.
 defaults write -g InitialKeyRepeat -int 15
-defaults write -g KeyRepeat -int 4
+defaults write -g KeyRepeat -int 3
 

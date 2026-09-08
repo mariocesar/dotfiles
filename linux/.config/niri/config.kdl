@@ -21,6 +21,9 @@ input {
             options "grp:alt_space_toggle"
         }
         numlock
+
+        repeat-delay 225
+        repeat-rate 25
     }
 
     touchpad { }
