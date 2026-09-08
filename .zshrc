@@ -24,6 +24,10 @@ source ~/.config/zsh/zshbindkeys.zsh
 
 autoload -Uz compinit && compinit
 
+# Completion styling; must come after compinit
+source ~/.config/zsh/zshcompletion.zsh
+source ~/.config/zsh/zshfzftab.zsh
+
 function load_if_exists() { if [ -f "$1" ]; then source "$1"; fi; }
 
 load_if_exists ~/.zshrc.$(hostname)
