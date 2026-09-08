@@ -1,7 +1,13 @@
 # fzf-tab replaces the completion menu with an fzf picker.
 # Must load after compinit, and before any widget-wrapping plugin
 # (zsh-autosuggestions, zsh-syntax-highlighting) if those ever get added.
-source /usr/share/zsh/plugins/fzf-tab/fzf-tab.plugin.zsh
+# Arch (AUR) and Homebrew disagree on both the directory and the file name.
+for _fzf_tab in /usr/share/zsh/plugins/fzf-tab/fzf-tab.plugin.zsh \
+                /opt/homebrew/share/fzf-tab/fzf-tab.zsh \
+                /usr/local/share/fzf-tab/fzf-tab.zsh; do
+  if [[ -r $_fzf_tab ]]; then source $_fzf_tab; break; fi
+done
+unset _fzf_tab
 
 # TokyoNight Night, to match ghostty; bg:-1 preserves the window transparency
 zstyle ':fzf-tab:*' fzf-flags \
@@ -32,6 +38,6 @@ zstyle ':fzf-tab:complete:systemctl-*:*' fzf-preview \
   'SYSTEMD_COLORS=1 systemctl status --no-pager $word 2>&1'
 
 zstyle ':fzf-tab:complete:(kill|ps):argument-rest' fzf-preview \
-  'ps -p $word -o pid,ppid,user,%cpu,%mem,etime,cmd 2>/dev/null'
+  'ps -p $word -o pid,ppid,user,%cpu,%mem,etime,command 2>/dev/null'
 
 zstyle ':fzf-tab:complete:man:*' fzf-preview 'whatis $word 2>/dev/null'
