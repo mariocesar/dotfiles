@@ -1,5 +1,4 @@
 export PATH="$HOME/.local/bin:$PATH"
-export TREE_IGNORE="cache|log|logs|node_modules|vendor"
 export DOCKER_SCAN_SUGGEST=false
 export EDITOR=nvim
 

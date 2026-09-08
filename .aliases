@@ -7,6 +7,10 @@ alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 
+# tree reads no config file; TREE_IGNORE is ours, not its
+TREE_IGNORE="cache|log|logs|node_modules|vendor|__pycache__|.pytest_cache|.mypy_cache|.ruff_cache|.venv|venv|.tox|.git|target|dist|build|.next|.terraform"
+alias tree='tree -I "$TREE_IGNORE"'
+
 alias ls='eza --group-directories-first'
 alias l='ls -1'
 alias ll='ls -l'
