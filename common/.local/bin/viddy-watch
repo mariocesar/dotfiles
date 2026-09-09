@@ -1,0 +1,30 @@
+#!/bin/sh
+# viddy-watch [-n <secs>] [viddy options] <command...>: viddy at 1s, with the
+# command in a pty so it still prints in colour.
+set -eu
+
+interval=1
+opts=
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -n) interval=$2; shift 2 ;;
+        --) shift; break ;;
+        -?*) opts="$opts $1"; shift ;;
+        *) break ;;
+    esac
+done
+
+# script -c takes a string, so re-quote every word instead of joining them.
+cmd=
+for a in "$@"; do
+    cmd="$cmd '$(printf %s "$a" | sed "s/'/'\\\\''/g")'"
+done
+
+# viddy hands the child a pipe, and colour-aware tools turn colour off on one;
+# script gives it a pty instead. That pty is 80x24 until stty resizes it to the
+# pane, and being a tty is also what makes git & co. reach for a pager.
+exec viddy -n "$interval" $opts -x script -qec \
+    'stty cols "$COLUMNS" rows "$LINES" 2>/dev/null
+     export PAGER=cat GIT_PAGER=cat
+    '"$cmd" /dev/null
