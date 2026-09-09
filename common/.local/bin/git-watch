@@ -1,0 +1,10 @@
+#!/bin/sh
+# git watch [<git diff args>]: live `git diff` you can scroll, rendered by delta.
+set -eu
+
+# -x keeps "$@" quoted; without it viddy joins the words into one sh -c string.
+# delta sizes to 80 columns on a pipe; viddy exports COLUMNS to the child.
+exec viddy \
+    -n 1 \
+    -x sh \
+    -c 'git diff "$@" | delta -w "$COLUMNS"' _ "$@"

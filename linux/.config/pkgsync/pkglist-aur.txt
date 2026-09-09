@@ -14,3 +14,4 @@ zoom
 rapidraw  # RAW image editor
 lazydocker
 fzf-tab
+viddy     # Better watch

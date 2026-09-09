@@ -18,6 +18,7 @@ brew "ripgrep"
 brew "fd" # zshbindkeys.zsh ctrl+p / ctrl+g pickers
 brew "pwgen"
 brew "watch"
+brew "viddy" # git-watch
 
 brew "yt-dlp"
 brew "xz"
