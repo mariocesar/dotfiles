@@ -188,6 +188,7 @@ window-rule {
     match app-id=r#"^com\.mitchellh\.ghostty\.floating$"#
     match app-id=r#"^org\.kde\.dolphin$"#
     match app-id=r#"^xdg-desktop-portal$"#
+    match app-id=r#"^1password$"#
     open-floating true
 }
 window-rule {
