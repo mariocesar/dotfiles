@@ -57,6 +57,7 @@ dms-shell
 nautilus                # dockTrashFileManager in update-preferences
 sound-theme-freedesktop # useSystemSoundTheme in update-preferences
 power-profiles-daemon   # osdPowerProfileEnabled in update-preferences
+keyd                    # 40-keyd.sh links /etc/keyd/default.conf and enables the service
 
 docker
 docker-compose
