@@ -48,6 +48,8 @@ scrollback-limit = 100000000
 
 # ── Behaviour ────────────────────────────────────────────────────────
 mouse-hide-while-typing = true
+# macOS has no selection clipboard, so `true` there would clobber the system
+# clipboard on every drag. Linux overrides this in linux.conf.
 copy-on-select = false
 # `always`, not `true`: cmd+w should confirm on an idle tab too.
 confirm-close-surface = always
@@ -85,3 +87,6 @@ keybind = ctrl+alt+shift+arrow_right=resize_split:right,10
 # Matches neovim's tokyonight-night — same palette, same hexes.
 # Fixed, so dms's wallpaper-generated `dankcolors` no longer applies here.
 theme = TokyoNight Night
+
+# Linux-only overrides; absent on macOS, hence the ? (optional include).
+config-file = ?linux.conf
