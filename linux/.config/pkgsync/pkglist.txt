@@ -61,7 +61,7 @@ keyd                    # 40-keyd.sh links /etc/keyd/default.conf and enables th
 
 docker
 docker-compose
-aws-cli
+aws-cli-v2
 terraform
 hugo
 
