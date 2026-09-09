@@ -1,23 +1,85 @@
 #!/usr/bin/env bash
+set -eu
 
-if (( $# == 0 )) && [[ -t 0 ]]; then
-  echo "usage: ask <question>" >&2
+read_stdin() {
+  if [[ -t 0 ]]; then
+    printf 'ask: type the question; Enter, then Ctrl-D to send\n' >&2
+  fi
+  cat
+}
+
+# stdin is only read on request (-) or with no question: `ask <words>` must never stall on it
+context=
+if [[ ${1-} == - ]]; then
+  shift
+  context=$(read_stdin)
+fi
+
+question=$*
+
+if [[ -z $question ]]; then
+  question=${context:-$(read_stdin)}
+  context=
+fi
+
+if [[ -z ${question//[[:space:]]/} ]]; then
+  echo "usage: ask <question>   |   ask   |   cmd | ask - <question>" >&2
   exit 2
 fi
 
-claude -p \
-  --model haiku \
-  --effort low \
-  --tools "WebSearch,WebFetch" \
-  --no-session-persistence \
-  --system-prompt 'You answer short questions.
-Respond in the same language as the user'\''s question.
+if [[ -n $context ]]; then
+  question=$(printf '%s\n\n```\n%s\n```' "$question" "$context")
+fi
+
+if [[ -r /etc/os-release ]]; then
+  . /etc/os-release
+  os="${PRETTY_NAME:-$OSTYPE}${ID_LIKE:+ (${ID_LIKE}-based)}"
+elif [[ $OSTYPE == darwin* ]]; then
+  os="macOS ($OSTYPE)"
+else
+  os=$OSTYPE
+fi
+
+# printf %()T needs bash 4.2; macOS's 3.2 would print the format string literally
+now=
+if (( BASH_VERSINFO[0] > 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] >= 2) )); then
+  printf -v now '%(%Y-%m-%d %H:%M %Z)T' -1
+fi
+
+environment="os: $os
+arch: ${MACHTYPE%%-*}
+shell: ${SHELL+${SHELL##*/}}${XDG_CURRENT_DESKTOP:+
+desktop: $XDG_CURRENT_DESKTOP${XDG_SESSION_TYPE:+ ($XDG_SESSION_TYPE)}}
+user: ${USER-} on ${HOSTNAME-}
+cwd: $PWD${now:+
+now: $now}"
+
+system_prompt=$(cat <<'PROMPT'
+You answer short questions.
+Respond in the same language as the user's question.
 Prioritize correctness over completeness.
 Give the direct answer first.
 Include exact commands or code when useful.
 Mention only caveats that can materially change the answer.
 Never invent commands, flags, APIs, or facts; if uncertain, say so.
 Do not restate the question or add filler.
-Keep the answer concise unless more detail is necessary.' \
-  "$*"
+Keep the answer concise unless more detail is necessary.
+PROMPT
+)
 
+system_prompt="$system_prompt
+
+Environment — the machine the user is asking from.
+Use it only when it changes the answer; ignore it otherwise.
+Prefer this OS's package manager and tooling in command answers.
+
+$environment"
+
+# stdin was consumed above; left open, claude -p waits 3s on it
+claude -p \
+  --model haiku \
+  --effort low \
+  --tools "WebSearch,WebFetch" \
+  --no-session-persistence \
+  --system-prompt "$system_prompt" \
+  "$question" </dev/null

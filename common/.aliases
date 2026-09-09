@@ -196,3 +196,6 @@ function suggest-commit-message() {
 
   git commit --edit -m "$commit_message"
 }
+
+# noglob so `ask how do I use tar?` doesn't die on the ?
+alias ask='noglob ask'
