@@ -39,6 +39,7 @@ yay
 paru
 sshx          # Replace tmate
 tmux
+glab          # Gitlab CLI
 
 entr
 just
