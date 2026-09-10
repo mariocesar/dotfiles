@@ -22,10 +22,10 @@ see why:
 journalctl --user -fu dms.service -o cat | grep PluginService
 ```
 
-Reload after a change: `dms ipc call plugin-scan reload airpods`, or Settings →
-Plugins → the reload control. The `plugins` IPC target only opens and closes
-that settings panel; `plugin-scan` carries `scan`, `rescan`, `reload`, `list`
-and `status`.
+Reload after a change: `dms ipc call plugins reload airpods`, or Settings →
+Plugins → the reload control. `plugins reload` also loads an unloaded plugin;
+`plugin-scan scan` only discovers new manifests and loads nothing it already
+knows.
 
 Confirm state from the system, never by reading the QML back:
 
