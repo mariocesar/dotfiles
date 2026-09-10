@@ -7,17 +7,15 @@ in `CLAUDE.md`.
 Target:
 
 ```
-bar:   [ …  🎧  ⌨  🔔  ⚙ ]
-
-click ->
-   ┌────────────────────────┐
-   │ AirPods Pro            │
-   │ ────────────────────── │
-   │ 🎧  Music      AAC   ● │
-   │ 🎙  Call       HFP     │
-   │ ────────────────────── │
-   │ ↻   Reconnect          │
-   └────────────────────────┘
+bar 2 (left)        click ->
+  ┌────┐              ┌────────────────────────┐
+  │ …  │              │ AirPods Pro            │
+  │ 🎧 │              │ ────────────────────── │
+  │ ⌨  │              │ 🎧  Music      AAC   ● │
+  │ 🔔 │              │ 🎙  Call       HFP     │
+  │ ⚙  │              │ ────────────────────── │
+  └────┘              │ ↻   Reconnect          │
+                      └────────────────────────┘
 ```
 
 Settled decisions — do not relitigate these while building:
@@ -28,6 +26,9 @@ Settled decisions — do not relitigate these while building:
   up.
 - **Icon only, no battery %.** Tested and unavailable — see step 0.
 - **The `airpods` script does the switching.** This widget is a front end.
+- **It lives on bar 2, a left vertical bar**, in the slot `librepods` held.
+  `verticalBarPill` is the live path from item A on; the horizontal pill is
+  secondary.
 
 ## How to work
 
@@ -39,12 +40,35 @@ Settled decisions — do not relitigate these while building:
 - **Do not refactor beyond the item.** No service singletons, no settings panel,
   no variants, no abstraction over the one device. This is one widget.
 - **Read `CLAUDE.md` first** — this directory's, and the repo root's.
+- **Items B–D need the AirPods connected.** `pactl list cards short | grep
+  bluez` confirms silently — `airpods status` notifies through `die` when they
+  are off. Without them there is no bluez card, no node, and nothing to check.
 
-Setup: nothing to do. `install.py` has already symlinked this directory into
-place, so edits are live. Keep this running in a terminal to see load errors:
+Setup: done on 2026-09-10 — `~/.local/bin` is on the session PATH. It was not:
+GDM spawns the session through a non-interactive zsh login shell, `niri-session`
+then imports that shell's environment into the user manager, and the only
+`PATH` export lived in `.zshrc`, which login shells never read. So `dms.service`
+could not find `airpods` (`Proc.runCommand` runs its array with no shell), and
+niri worked around it three times with `$HOME/.local/bin/…`. The export now
+lives in `common/.zprofile`. An `environment.d` entry was tried first and is
+dead here: `import-environment` wins over environment generators.
+
+For the current session the user manager's PATH was set by hand; a re-login
+makes it permanent. niri's three workarounds can drop the prefix after that,
+outside this plan.
+
+**Check:** after `systemctl --user restart dms.service` (the whole shell, bar
+included), the running shell's PATH starts with `.local/bin`:
 
 ```bash
-qs -v -p ~/.config/quickshell/dms/shell.qml
+tr '\0' '\n' < /proc/$(pgrep -f 'qs -p /usr/share/quickshell/dms')/environ | grep ^PATH
+```
+
+The shell runs from `/usr/share/quickshell/dms` under `dms.service` — never
+start a second `qs`. Keep this running in a terminal to see load errors:
+
+```bash
+journalctl --user -fu dms.service -o cat | grep PluginService
 ```
 
 ## Step 0 — battery: settled, the answer is no
@@ -83,12 +107,26 @@ Reopen only if PipeWire gains AAP support upstream. Do not reinstall LibrePods �
 
 ## A. A pill that appears
 
-`plugin.json` is written. Add `AirpodsWidget.qml` rooted at `PluginComponent`
-with a hardcoded `DankIcon { name: "earbuds" }` in both `horizontalBarPill` and
-`verticalBarPill`. No logic yet.
+`plugin.json` is written; rename its `requires` key to `dependencies` — the
+schema marks `requires` a deprecated alias. Registry metadata only: PluginService
+reads neither key, so no dependency check runs. Add `AirpodsWidget.qml` rooted at
+`PluginComponent` with a hardcoded `DankIcon { name: "earbuds" }` in both
+`horizontalBarPill` and `verticalBarPill`. No logic yet.
 
 This is a new file, so it needs one `python3.13 install.py` run before the shell
 can see it. Everything after this item is live-on-save.
+
+Then enable and seat it by hand — this is item G, which lands here because the
+widget takes the `librepods` slot. Settings window closed, since DMS rewrites
+both files on any settings change:
+
+- `plugin_settings.json`: rename the `"librepods"` key to `"airpods"`.
+- `settings.json`: in `barConfigs[1].rightWidgets`, change the `librepods`
+  widget id to `airpods`. Bar slots reference plugins by bare id, so the rename
+  is enough.
+- `dms ipc call plugin-scan scan`. DMS watches `plugin_settings.json` but a hand
+  edit loads nothing on its own; the scan reads the enabled flag and loads the
+  plugin. `settings.json` is watched too, and the bar re-renders by itself.
 
 Imports needed across the whole widget:
 
@@ -96,8 +134,8 @@ Imports needed across the whole widget:
 import QtQuick
 import Quickshell
 import Quickshell.Services.Pipewire
-import qs.Common      // Theme, Proc, I18n
-import qs.Services    // BluetoothService, ToastService
+import qs.Common      // Theme, Proc
+import qs.Services    // BluetoothService
 import qs.Widgets     // DankIcon, StyledText, StyledRect
 import qs.Modules.Plugins
 ```
@@ -105,22 +143,29 @@ import qs.Modules.Plugins
 Size from the inherited readonly `iconSize`, never a literal.
 
 **Check:** `ls -l ~/.config/DankMaterialShell/plugins/airpods/AirpodsWidget.qml`
-points into `.dotfiles`. Settings → Plugins lists *AirPods*; enabling it and
-dragging it onto a bar puts a visible earbuds glyph there, with no
-`PluginService:` error in `qs -v`.
+points into `.dotfiles`. An earbuds glyph sits on the left bar,
+`grep -c librepods ~/.config/DankMaterialShell/*.json` returns 0, and there is
+no `PluginService:` error in the journal.
 
 ## B. Find the device, hide when it is gone
 
-Do **not** hardcode the MAC. The bluez PipeWire sink node carries the address,
-and it is the same node item C needs:
+Do **not** hardcode the MAC. Presence comes from Bluetooth, profile from
+PipeWire — never presence from PipeWire: every profile switch destroys and
+recreates the node, `airpods music` holds the card at profile `off` for seconds
+while it repairs A2DP, and a card left at `off` has no node at all. bluez
+reports `audio-headphones` for the AirPods and `input-mouse` for the MX Master,
+and Quickshell's `BluetoothDevice` exposes that as `icon`:
 
 ```qml
-readonly property var node: Pipewire.nodes.values.find(n =>
-    n.isSink && n.properties?.["api.bluez5.address"] !== undefined)
-readonly property string mac: node?.properties?.["api.bluez5.address"] ?? ""
-readonly property var dev: mac ? (BluetoothService.adapter?.devices?.values
-    ?.find(d => (d.address || "").toUpperCase() === mac.toUpperCase()) ?? null) : null
+readonly property var dev: BluetoothService.devices?.values
+    ?.find(d => d.connected && (d.icon ?? "").startsWith("audio-")) ?? null
+readonly property bool connected: dev !== null
+readonly property var node: dev ? (Pipewire.nodes.values.find(n =>
+    n.isSink && n.properties?.["api.bluez5.address"] === dev.address) ?? null) : null
 ```
+
+Only `connected` drives visibility. `connected && !node` is a real state — card
+`off`, or mid-switch — not "gone"; item C gives it a look.
 
 Keep a tracker alive or `properties` stays empty:
 
@@ -128,14 +173,18 @@ Keep a tracker alive or `properties` stays empty:
 PwObjectTracker { objects: Pipewire.nodes.values.filter(n => n.audio && !n.isStream) }
 ```
 
-Guard everything on `dev?.connected`. Null-guard `BluetoothService.adapter` — it
-is `Bluetooth.defaultAdapter` and is null briefly at startup.
+`BluetoothService.devices` is null until `Bluetooth.defaultAdapter` appears at
+startup; the `?.` chain covers it.
 
-Hide via `visible:` on the pill contents; reach for `PluginComponent`'s
-`visibilityCommand` only if that proves insufficient.
+Hide with `PluginComponent`'s `setVisibilityOverride(connected)`, called from
+`onConnectedChanged` and once in `Component.onCompleted`. It is the only
+mechanism that collapses the pill to zero width: `visible: false` on the
+contents leaves a padding-only stub about 24 px wide, and `visibilityCommand`
+polls a shell command on a timer. `setVisibilityOverride` is not in the README
+and DMS's IPC widget show/hide shares it; both are acceptable here.
 
 **Check:** `bluetoothctl disconnect 6C:12:70:3C:5F:0D` → the pill disappears and
-the widgets beside it close up. Reconnect → it returns. `qs -v` clean across
+the widgets beside it close up. Reconnect → it returns. Journal clean across
 both transitions.
 
 ## C. Live profile, reflected in the icon
@@ -146,15 +195,29 @@ readonly property string codec: node?.properties?.["api.bluez5.codec"] ?? ""
 readonly property bool hfp: profile.startsWith("headset")
 ```
 
-Icon becomes `hfp ? "headset_mic" : "earbuds"`. Both names are confirmed present
-in the Material Symbols codepoints DMS ships; verify any other name against
-`/usr/share/quickshell/dms/assets/fonts/material-design-icons/` before using it.
+Icon becomes `hfp ? "headset_mic" : "earbuds"`. While `connected && !node` the
+profile string is empty, so the icon falls to `earbuds`; colour it
+`Theme.surfaceVariantText` in that state so a card stuck at `off` is visible
+and a switch in progress reads as one. Both names are confirmed present
+(`earbuds` f003, `headset_mic` e311); verify any other name against the
+codepoints file DMS ships:
+
+```
+/usr/share/quickshell/dms/assets/fonts/material-design-icons/variablefont/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].codepoints
+```
 
 No timer, no polling — these are notifying properties.
 
 **Check:** run `airpods call` in a terminal; the bar icon flips within a second
-with no interaction. `airpods music`; it flips back. Cross-check against
-`pactl list cards | grep -A1 bluez_card`.
+with no interaction. `airpods music`; it flips back. Cross-check against:
+
+```bash
+pactl list cards | grep -E 'Name: bluez_card|Active Profile'
+```
+
+In music the node's `api.bluez5.profile` reads `a2dp-sink` and the codec `aac`
+— lowercase. In call it reads `headset-head-unit` and a `bluez_input.*` source
+appears in `pactl list sources short`.
 
 ## D. The menu
 
@@ -164,17 +227,41 @@ header and close button, then a `Column` of three rows built from `StyledRect` +
 `MouseArea`, following `grimblast/Grimblast.qml:177-316`.
 
 Rows: **Music** (`airpods music`), **Call** (`airpods call`), **Reconnect**
-(`airpods reconnect`). Show the live codec next to the active row and mark it;
-derive "active" from `hfp`, not from what was last clicked.
+(`airpods reconnect`). Show the live codec next to the active row, as
+`codec.toUpperCase()` since PipeWire reports `aac`, and mark it; derive
+"active" from `hfp`, not from what was last clicked.
 
 ```qml
-Proc.runCommand("airpods.action", ["airpods", "call"], (out, code) => {
-    if (code !== 0) ToastService.showError("AirPods switch failed", out)
-}, 0)
+property bool busy: false
+
+function run(action) {
+    busy = true
+    Proc.runCommand("airpods.action", ["airpods", action], () => {
+        busy = false
+    }, 0, Proc.noTimeout)
+}
 ```
 
+No toast. The script `notify-send`s every outcome, failures included via
+`die`, and DMS is the notification server — a `ToastService` call here would
+show the same failure twice, and the script is the side that knows why.
+
+`Proc.noTimeout` is not optional. The default is 10 s, and on timeout Proc
+kills the process and reports code 124. `airpods music` from a live call can
+legitimately take ~30 s (profile off, `ConnectProfile`, up to 12 s wait, then a
+reconnect and another 12 s), and `reconnect` ~15 s. With the default the script
+dies mid-switch, the card is left at `off`, and no notification ever fires.
+Disable the rows while `busy` so two scripts never fight over `wpctl`.
+
+`busy` resets only in the callback, and that is enough: every wait in the
+script is a bounded loop, so it always returns. `Mod+Shift+A` runs the script
+outside the widget and bypasses `busy`; that collision is the same as two
+terminals and is out of this widget's scope.
+
 Call the injected `closePopout()` after acting. `PluginPopout` already handles
-Escape and click-outside.
+Escape and click-outside. Do not set `popoutHeight` or copy Grimblast's
+hardcoded `baseHeight` — `PluginPopout` rebinds its height to the content's
+`implicitHeight` once loaded.
 
 **Check:** clicking the pill opens the menu; Music/Call change `Active Profile`
 and the icon follows. Escape and click-outside both dismiss. **Run Music while a
@@ -188,31 +275,27 @@ other items keep their labels. Nothing to build.
 
 ## F. Polish
 
-Vertical pill layout (`Column` instead of `Row`) for a side bar; hover state on
-the menu rows; `DankIcon.filled` on the active row. Confirm the pill still looks
-right with the bar's `noBackground: true` and `squareCorners: true`, which is
-how bar 2 is configured.
+The vertical `Column` pill is what items A–D already render, so this is the
+horizontal `Row` layout for a top bar; hover state on the menu rows;
+`DankIcon.filled` on the active row. Both bars use `noBackground: true` and
+`squareCorners: true`, so that is the only look to confirm.
 
-**Check:** temporarily move the widget to a vertical bar, confirm it renders,
-move it back.
+**Check:** temporarily add `{"id": "airpods", "enabled": true}` to Main Bar's
+`rightWidgets`, confirm the pill renders, remove it.
 
-## G. Clean up the LibrePods leftovers
+## G. Clean up the LibrePods leftovers — folded into A
 
 Not this directory — DMS's own state, which is untracked.
-
 `barConfigs[1].rightWidgets` in `~/.config/DankMaterialShell/settings.json`
-still holds `{"id": "librepods", "enabled": true}`, and `plugin_settings.json`
-still holds `"librepods": {"enabled": true}`. Both are dead entries from
-`083b800 Simpler airpod flow`. Remove them when adding this widget to the bar —
-it takes the same slot.
-
-**Check:** `grep -c librepods ~/.config/DankMaterialShell/*.json` returns 0, and
-the bar renders unchanged apart from the new widget.
+held `{"id": "librepods", "enabled": true}` and `plugin_settings.json` held
+`"librepods": {"enabled": true}`, both dead since `083b800 Simpler airpod
+flow`. Item A renames them to `airpods` rather than removing them, because the
+widget takes the slot. Nothing further; left as a lettered slot like E.
 
 ## Done when
 
 - The pill appears only with AirPods connected, and its icon always matches
-  `pactl list cards`.
+  `pactl list cards | grep -E 'Name: bluez_card|Active Profile'`.
 - The menu switches both directions reliably, including music-while-on-a-call.
-- A failed switch surfaces as a toast rather than silence.
-- `qs -v` is clean across connect, disconnect and both switches.
+- A failed switch surfaces as the script's notification rather than silence.
+- The journal is clean across connect, disconnect and both switches.
