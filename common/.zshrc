@@ -1,4 +1,3 @@
-export PATH="$HOME/.local/bin:$PATH"
 export DOCKER_SCAN_SUGGEST=false
 export EDITOR=nvim
 
