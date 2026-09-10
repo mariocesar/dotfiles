@@ -1,0 +1,430 @@
+#!/usr/bin/env python3
+# Current or next meeting from the dcal daemon, plus today's agenda. Backend for bar widgets.
+import re
+import sys
+import argparse
+import dataclasses
+import datetime as dt
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import tomllib
+from typing import NoReturn
+
+
+PROG = "agenda"
+LOOKAHEAD_DAYS = 7
+BUSY = "(busy)"
+
+RESET = "\033[0m"
+BOLD = "\033[1m"
+DIM = "\033[2m"
+ITALIC = "\033[3m"
+STRIKE = "\033[9m"
+STYLE = {"**": BOLD, "~~": STRIKE, "_": DIM, "*": DIM + ITALIC}
+MARK = re.compile(r"^(\*\*|~~|_|\*)(.*)\1$")
+
+CONFIG_DEFAULTS = {"exclude_calendars": [], "exclude_titles": [], "emails": [], "all_day": True}
+CONFIG_EXAMPLE = """\
+config: $XDG_CONFIG_HOME/agenda/config.toml (not tracked in the dotfiles)
+
+  exclude_calendars = ["917fe121-7f27-423b-af52-a507ac2fba7e"]  # ids from `agenda calendars`
+  exclude_titles = ["^Almorzar", "Desconectar"]                # re.search, case-insensitive
+  emails = ["me@other-domain.com"]                             # extra addresses that count as me
+  all_day = true                                               # false == --no-all-day
+"""
+
+
+@dataclasses.dataclass
+class Event:
+    uid: str
+    title: str
+    all_day: bool
+    start: dt.datetime | dt.date
+    end: dt.datetime | dt.date
+    calendar_id: str
+    calendar: str
+    rsvp: str | None
+    meeting_url: str
+    url: str
+
+
+@dataclasses.dataclass
+class Selection:
+    current: Event | None
+    next: Event | None
+    today: list[Event]
+    later_day: dt.date | None  # the headline's day when it is not today
+    later: list[Event]
+
+
+def die(msg: str, code: int = 1) -> NoReturn:
+    print(f"{PROG}: {msg}", file=sys.stderr)
+    sys.exit(code)
+
+
+def dcal(method, **params):
+    if not shutil.which("dcal"):
+        die("dcal not found")
+    cmd = ["dcal", "ipc", method, *(f"{k}={v}" for k, v in params.items())]
+    proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    if proc.returncode != 0:
+        first = (proc.stderr.strip().splitlines() or ["dcal failed"])[0]
+        die(first.removeprefix("Error: "))
+    try:
+        return json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        die(f"{method}: unexpected output from dcal")
+
+
+def regex(value):
+    try:
+        return re.compile(value, re.IGNORECASE)
+    except re.error as e:
+        raise argparse.ArgumentTypeError(f"{value!r}: {e}") from e
+
+
+def config_path():
+    base = os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config"
+    return Path(base) / PROG / "config.toml"
+
+
+def load_config(path):
+    cfg = dict(CONFIG_DEFAULTS)
+    if not path.exists():
+        return cfg
+    try:
+        data = tomllib.loads(path.read_text())
+    except (OSError, tomllib.TOMLDecodeError) as e:
+        die(f"{path}: {e}")
+    for key, value in data.items():
+        if key not in cfg:
+            die(f"{path}: unknown key {key!r}")
+        want = type(cfg[key])
+        strings = want is list and all(isinstance(v, str) for v in value)
+        if not isinstance(value, want) or (want is list and not strings):
+            die(f"{path}: {key} must be a {'list of strings' if want is list else 'bool'}")
+        cfg[key] = value
+    try:
+        cfg["exclude_titles"] = [re.compile(t, re.IGNORECASE) for t in cfg["exclude_titles"]]
+    except re.error as e:
+        die(f"{path}: bad regex {e.pattern!r}: {e}")
+    return cfg
+
+
+def merge_config(cfg, args):
+    cfg["exclude_calendars"] = cfg["exclude_calendars"] + args.exclude_calendar
+    cfg["exclude_titles"] = cfg["exclude_titles"] + args.exclude_title
+    if args.no_all_day:
+        cfg["all_day"] = False
+    return cfg
+
+
+def fetch_calendars():
+    return {c["id"]: c for c in dcal("calendars.list")}
+
+
+def my_emails(calendars, extra):
+    accounts = {c.get("accountId", "").lower() for c in calendars.values()} - {""}
+    local_parts = {a.split("@")[0] for a in accounts}
+    # a remoteId is me only as an alias of an account (same local part); a calendar shared
+    # with me keeps its owner's address and must not count
+    aliases = {
+        c["remoteId"].lower()
+        for c in calendars.values()
+        if "@" in c.get("remoteId", "") and c["remoteId"].lower().split("@")[0] in local_parts
+    }
+    return accounts | aliases | {e.lower() for e in extra}
+
+
+def rfc3339_utc(when):
+    # dcal drops numeric offsets and reads the wall clock as UTC; only Z is safe
+    return when.astimezone(dt.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def local_midnight(day):
+    return dt.datetime.combine(day, dt.time()).astimezone()
+
+
+def fetch_events(since, until):
+    data = dcal("events.list", **{"from": rfc3339_utc(since), "to": rfc3339_utc(until)})
+    events = data.get("events") or []
+    total = data.get("total", len(events))
+    if total != len(events):
+        print(f"{PROG}: dcal returned {len(events)} of {total} events", file=sys.stderr)
+    return events
+
+
+def parse_when(value, *, all_day):
+    if all_day:
+        return dt.date.fromisoformat(value[:10])
+    return dt.datetime.fromisoformat(value).astimezone()
+
+
+def parse_event(raw, calendars, emails):
+    all_day = bool(raw.get("allDay"))
+    attendees = raw.get("attendees") or []
+    mine = next((a for a in attendees if a.get("email", "").lower() in emails), None)
+    return Event(
+        uid=raw.get("uid") or raw.get("id", ""),
+        title=" ".join((raw.get("summary") or "").split()) or BUSY,
+        all_day=all_day,
+        start=parse_when(raw["start"], all_day=all_day),
+        end=parse_when(raw.get("end") or raw["start"], all_day=all_day),
+        calendar_id=raw.get("calendarId", ""),
+        calendar=calendars.get(raw.get("calendarId"), {}).get("name", "?"),
+        rsvp=(mine.get("status") or "needsAction") if mine else None,
+        meeting_url=raw.get("meetingUrl") or "",
+        url=raw.get("url") or "",
+    )
+
+
+def visible(ev, cfg, calendars):
+    if calendars.get(ev.calendar_id, {}).get("hidden"):
+        return False
+    if ev.calendar_id in cfg["exclude_calendars"]:
+        return False
+    if ev.all_day and not cfg["all_day"]:
+        return False
+    return not any(p.search(ev.title) for p in cfg["exclude_titles"])
+
+
+def dedupe(events):
+    # the same occurrence lives in the primary and in group calendars; keep the copy with my RSVP
+    kept = {}
+    for ev in events:
+        key = (ev.uid, ev.start)
+        if key not in kept or (kept[key].rsvp is None and ev.rsvp is not None):
+            kept[key] = ev
+    return list(kept.values())
+
+
+def on_day(events, day):
+    start, end = local_midnight(day), local_midnight(day + dt.timedelta(days=1))
+    found = [e for e in events if not e.all_day and e.start < end and e.end > start]
+    found += [e for e in events if e.all_day and e.start <= day < e.end]
+    found.sort(key=lambda e: (not e.all_day, e.start.isoformat(), e.title))
+    return found
+
+
+def select(events, now, horizon):
+    today = on_day(events, now.date())
+    live = [e for e in today if not e.all_day and e.rsvp != "declined" and e.start <= now < e.end]
+    upcoming = [
+        e for e in events if not e.all_day and e.rsvp != "declined" and now < e.start < horizon
+    ]
+    current = max(live, key=lambda e: e.start, default=None)
+    nxt = min(upcoming, key=lambda e: e.start, default=None)
+    head = current or nxt
+    later_day = head.start.date() if head and head.start.date() != now.date() else None
+    later = on_day(events, later_day) if later_day else []
+    return Selection(current, nxt, today, later_day, later)
+
+
+def headline(sel):
+    return sel.current or sel.next
+
+
+def humanize(delta):
+    minutes = int(delta.total_seconds() // 60)
+    if minutes < 1:
+        return "now"
+    days, rest = divmod(minutes, 1440)
+    hours, mins = divmod(rest, 60)
+    if days:
+        return f"{days}d {hours}h"
+    if hours:
+        return f"{hours}h {mins:02d}m"
+    return f"{mins}m"
+
+
+def headline_line(sel, now):
+    if sel.current:
+        left = humanize(sel.current.end - now)
+        return f"{sel.current.title} ends {'now' if left == 'now' else 'in ' + left}"
+    ev = sel.next
+    if ev is None:
+        return f"No meetings in the next {LOOKAHEAD_DAYS} days"
+    until = humanize(ev.start - now)
+    line = f"{ev.title} {'starts now' if until == 'now' else 'in ' + until}"
+    if ev.start.date() != now.date():
+        tomorrow = ev.start.date() == now.date() + dt.timedelta(days=1)
+        when = "tomorrow" if tomorrow else ev.start.strftime("%a %-d %b")
+        line += f" ({when} {ev.start:%H:%M})"
+    return line
+
+
+def day_label(day, today):
+    if day == today:
+        return f"Today ({day:%a, %-d %b})"
+    if day == today + dt.timedelta(days=1):
+        return f"Tomorrow ({day:%a, %-d %b})"
+    return f"{day:%a, %-d %b}"
+
+
+def section(label, events, head, now, *, verbose):
+    lines = [f"*{label}*", "---"]
+    for ev in events:
+        when = "All day" if ev.all_day else f"{ev.start:%H:%M}"
+        text = f"{when:<9}{ev.title}"
+        if verbose:
+            text += f" · {ev.calendar}"
+        if ev.rsvp == "declined":
+            text = f"~~{text}~~"
+        elif ev is head:
+            text = f"**{text}**"
+        elif not ev.all_day and ev.end <= now:
+            text = f"_{text}_"
+        lines.append(text)
+    if not events:
+        lines.append("_No events_")
+    return lines
+
+
+def render_lines(sel, now, *, verbose):
+    today = now.date()
+    head = headline(sel)
+    lines = [headline_line(sel, now)]
+    lines += section(day_label(today, today), sel.today, head, now, verbose=verbose)
+    if sel.later_day:
+        lines.append("")
+        lines += section(day_label(sel.later_day, today), sel.later, head, now, verbose=verbose)
+    return lines
+
+
+def to_ansi(lines):
+    out = []
+    for line in lines:
+        m = MARK.match(line)
+        if line == "---":
+            out.append(f"{DIM}{'─' * 40}{RESET}")
+        elif m:
+            out.append(f"{STYLE[m[1]]}{m[2]}{RESET}")
+        else:
+            out.append(line)
+    return out
+
+
+def to_plain(lines):
+    out = []
+    for line in lines:
+        m = MARK.match(line)
+        out.append(m[2] + (" (declined)" if m[1] == "~~" else "") if m else line)
+    return out
+
+
+def render_json(sel, now):
+    def enc(ev):
+        if ev is None:
+            return None
+        d = dataclasses.asdict(ev)
+        d["start"], d["end"] = ev.start.isoformat(), ev.end.isoformat()
+        return d
+
+    doc = {
+        "now": now.isoformat(),
+        "current": enc(sel.current),
+        "next": enc(sel.next),
+        "today": [enc(e) for e in sel.today],
+    }
+    return json.dumps(doc, ensure_ascii=False, indent=2)
+
+
+def render_calendars(calendars):
+    rows = sorted(calendars.values(), key=lambda c: (c.get("accountId", ""), c.get("name", "")))
+    lines = []
+    for c in rows:
+        flags = ",".join(
+            f for f, on in (("hidden", c.get("hidden")), ("ro", c.get("readOnly"))) if on
+        )
+        lines.append(f"{c['id']}  {flags:<9} {c.get('accountId', ''):<26} {c.get('name', '')}")
+    return "\n".join(lines)
+
+
+def do_join(sel):
+    ev = headline(sel)
+    if ev is None:
+        die("nothing to join")
+    if not ev.meeting_url:
+        die(f"{ev.title} has no meeting link")
+    if not shutil.which("xdg-open"):
+        die("xdg-open not found")
+    subprocess.Popen(
+        ["xdg-open", ev.meeting_url],
+        start_new_session=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    print(ev.meeting_url)
+
+
+def parse_args():
+    p = argparse.ArgumentParser(
+        prog=PROG,
+        description="Current or next meeting and today's agenda, from the dcal daemon.",
+        epilog=CONFIG_EXAMPLE,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    p.add_argument(
+        "command",
+        nargs="?",
+        choices=["calendars", "join"],
+        help="calendars: list calendar ids; join: open the headline meeting link",
+    )
+    p.add_argument(
+        "--format",
+        choices=["ansi", "plain", "markdown", "json"],
+        help="default: ansi on a TTY, plain otherwise",
+    )
+    p.add_argument("-1", "--one-line", action="store_true", help="only the headline line")
+    p.add_argument("-v", "--verbose", action="store_true", help="append the calendar name")
+    p.add_argument("-x", "--exclude-calendar", action="append", default=[], metavar="ID")
+    p.add_argument(
+        "-e", "--exclude-title", action="append", default=[], metavar="REGEX", type=regex
+    )
+    p.add_argument("--no-all-day", action="store_true", help="drop all-day events")
+    args = p.parse_args()
+    if args.one_line and args.format == "json":
+        p.error("-1 cannot be combined with --format json")
+    return args
+
+
+def main():
+    args = parse_args()
+    cfg = merge_config(load_config(config_path()), args)
+    tty = sys.stdout.isatty() and not os.environ.get("NO_COLOR")
+    fmt = args.format or ("ansi" if tty else "plain")
+
+    calendars = fetch_calendars()
+    if args.command == "calendars":
+        print(render_calendars(calendars))
+        return
+
+    now = dt.datetime.now().astimezone()
+    day_start = local_midnight(now.date())
+    horizon = local_midnight(now.date() + dt.timedelta(days=1 + LOOKAHEAD_DAYS))
+    emails = my_emails(calendars, cfg["emails"])
+    raw = fetch_events(day_start - dt.timedelta(days=1), horizon)
+    usable = (r for r in raw if r.get("start") and r.get("status") != "cancelled")
+    parsed = (parse_event(r, calendars, emails) for r in usable)
+    events = dedupe(e for e in parsed if visible(e, cfg, calendars))
+    sel = select(events, now, horizon)
+
+    if args.command == "join":
+        do_join(sel)
+        return
+    if fmt == "json":
+        print(render_json(sel, now))
+        return
+    lines = render_lines(sel, now, verbose=args.verbose)
+    if args.one_line:
+        lines = lines[:1] if headline(sel) else []
+    convert = {"ansi": to_ansi, "plain": to_plain, "markdown": list}[fmt]
+    if lines:
+        print("\n".join(convert(lines)))
+
+
+if __name__ == "__main__":
+    main()
