@@ -116,18 +116,20 @@ reads neither key, so no dependency check runs. Add `AirpodsWidget.qml` rooted a
 This is a new file, so it needs one `python3.13 install.py` run before the shell
 can see it. Everything after this item is live-on-save.
 
-Then enable and seat it by hand — this is item G, which lands here because the
-widget takes the `librepods` slot. Settings window closed, since DMS rewrites
-both files on any settings change:
+Then seat and enable it — the `settings.json` half of item G lands here because
+the widget takes the `librepods` slot. Settings window closed, since DMS
+rewrites the file on any settings change:
 
-- `plugin_settings.json`: rename the `"librepods"` key to `"airpods"`.
 - `settings.json`: in `barConfigs[1].rightWidgets`, change the `librepods`
   widget id to `airpods`. Bar slots reference plugins by bare id, so the rename
-  is enough.
-- `dms ipc call plugins enable airpods`. DMS watches `plugin_settings.json` but
-  a hand edit loads nothing on its own, and `plugin-scan scan` only loads
-  manifests it has not seen before. `settings.json` is watched too, and the bar
-  re-renders by itself.
+  is enough, and DMS re-reads this file on change.
+- `dms ipc call plugins enable airpods`. This creates the `airpods` entry in
+  `plugin_settings.json` itself; `plugin-scan scan` only loads manifests it has
+  not seen before.
+
+Do not hand-edit `plugin_settings.json`: DMS reads it once at startup and
+rewrites it from memory on every plugin setting change, so the edit is undone
+by the next write. The dead `librepods` key there is G.
 
 Imports needed across the whole widget:
 
@@ -145,8 +147,8 @@ Size from the inherited readonly `iconSize`, never a literal.
 
 **Check:** `ls -l ~/.config/DankMaterialShell/plugins/airpods/AirpodsWidget.qml`
 points into `.dotfiles`. An earbuds glyph sits on the left bar,
-`grep -c librepods ~/.config/DankMaterialShell/*.json` returns 0, and there is
-no `PluginService:` error in the journal.
+`grep -c librepods ~/.config/DankMaterialShell/settings.json` returns 0, and
+there is no `PluginService:` error in the journal.
 
 ## B. Find the device, hide when it is gone
 
@@ -284,14 +286,23 @@ horizontal `Row` layout for a top bar; hover state on the menu rows;
 **Check:** temporarily add `{"id": "airpods", "enabled": true}` to Main Bar's
 `rightWidgets`, confirm the pill renders, remove it.
 
-## G. Clean up the LibrePods leftovers — folded into A
+## G. Clean up the LibrePods leftovers
 
-Not this directory — DMS's own state, which is untracked.
-`barConfigs[1].rightWidgets` in `~/.config/DankMaterialShell/settings.json`
-held `{"id": "librepods", "enabled": true}` and `plugin_settings.json` held
-`"librepods": {"enabled": true}`, both dead since `083b800 Simpler airpod
-flow`. Item A renames them to `airpods` rather than removing them, because the
-widget takes the slot. Nothing further; left as a lettered slot like E.
+Not this directory — DMS's own state, which is untracked. The `settings.json`
+half is done in A. `plugin_settings.json` still holds `"librepods":
+{"enabled": true}`, dead since `083b800 Simpler airpod flow`, and DMS puts it
+back on every write because it only reads the file at startup. Remove the key
+and restart the shell in one go, at a quiet moment:
+
+```bash
+jq 'del(.librepods)' ~/.config/DankMaterialShell/plugin_settings.json > /tmp/ps.json \
+  && mv /tmp/ps.json ~/.config/DankMaterialShell/plugin_settings.json \
+  && systemctl --user restart dms.service
+```
+
+**Check:** `grep -c librepods ~/.config/DankMaterialShell/*.json` returns 0 and
+stays 0 after `dms ipc call plugins disable airpods` then `enable`, which
+forces a DMS write.
 
 ## Done when
 
