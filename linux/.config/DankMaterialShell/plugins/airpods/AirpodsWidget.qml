@@ -15,6 +15,10 @@ PluginComponent {
     readonly property var node: dev ? (Pipewire.nodes.values.find(n =>
         n.isSink && n.properties?.["api.bluez5.address"] === dev.address) ?? null) : null
 
+    readonly property string profile: node?.properties?.["api.bluez5.profile"] ?? ""
+    readonly property string codec: node?.properties?.["api.bluez5.codec"] ?? ""
+    readonly property bool hfp: profile.startsWith("headset")
+
     // properties stay empty on a node nothing has bound
     PwObjectTracker {
         objects: Pipewire.nodes.values.filter(n => n.audio && !n.isStream)
@@ -23,19 +27,18 @@ PluginComponent {
     onConnectedChanged: setVisibilityOverride(connected)
     Component.onCompleted: setVisibilityOverride(connected)
 
+    component Glyph: DankIcon {
+        name: widget.hfp ? "headset_mic" : "earbuds"
+        // no node: card at off, or a switch in progress
+        color: widget.node ? Theme.surfaceText : Theme.surfaceVariantText
+        size: widget.iconSize
+    }
+
     horizontalBarPill: Component {
-        DankIcon {
-            name: "earbuds"
-            color: Theme.surfaceText
-            size: widget.iconSize
-        }
+        Glyph {}
     }
 
     verticalBarPill: Component {
-        DankIcon {
-            name: "earbuds"
-            color: Theme.surfaceText
-            size: widget.iconSize
-        }
+        Glyph {}
     }
 }
