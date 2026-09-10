@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import textwrap
 import tomllib
 from typing import NoReturn
 
@@ -89,6 +90,12 @@ def regex(value):
 def config_path():
     base = os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config"
     return Path(base) / PROG / "config.toml"
+
+
+def config_template():
+    # the --help example with every line commented out, so the file parses as empty TOML
+    body = textwrap.dedent(CONFIG_EXAMPLE.split("\n\n", 1)[1])
+    return "".join(f"# {line}\n" for line in body.splitlines())
 
 
 def load_config(path):
@@ -324,7 +331,9 @@ def render_json(sel, now):
         return d
 
     doc = {
-        "now": now.isoformat(),
+        "now": now.replace(microsecond=0).isoformat(),
+        "headline": headline_line(sel, now),
+        "today_label": day_label(now.date(), now.date()),
         "current": enc(sel.current),
         "next": enc(sel.next),
         "today": [enc(e) for e in sel.today],
@@ -343,21 +352,33 @@ def render_calendars(calendars):
     return "\n".join(lines)
 
 
+def xdg_open(target):
+    if not shutil.which("xdg-open"):
+        die("xdg-open not found")
+    subprocess.Popen(
+        ["xdg-open", target],
+        start_new_session=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    print(target)
+
+
 def do_join(sel):
     ev = headline(sel)
     if ev is None:
         die("nothing to join")
     if not ev.meeting_url:
         die(f"{ev.title} has no meeting link")
-    if not shutil.which("xdg-open"):
-        die("xdg-open not found")
-    subprocess.Popen(
-        ["xdg-open", ev.meeting_url],
-        start_new_session=True,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-    print(ev.meeting_url)
+    xdg_open(ev.meeting_url)
+
+
+def do_config():
+    path = config_path()
+    if not path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(config_template())
+    xdg_open(str(path))
 
 
 def parse_args():
@@ -370,8 +391,9 @@ def parse_args():
     p.add_argument(
         "command",
         nargs="?",
-        choices=["calendars", "join"],
-        help="calendars: list calendar ids; join: open the headline meeting link",
+        choices=["calendars", "join", "config"],
+        help="calendars: list calendar ids; join: open the headline meeting link; "
+        "config: create the config file if missing and open it",
     )
     p.add_argument(
         "--format",
@@ -393,6 +415,9 @@ def parse_args():
 
 def main():
     args = parse_args()
+    if args.command == "config":
+        do_config()
+        return
     cfg = merge_config(load_config(config_path()), args)
     tty = sys.stdout.isatty() and not os.environ.get("NO_COLOR")
     fmt = args.format or ("ansi" if tty else "plain")
