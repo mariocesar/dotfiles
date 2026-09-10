@@ -58,7 +58,7 @@ PluginComponent {
         width: parent.width
         height: 44
         radius: Theme.cornerRadius
-        color: Theme.surfaceContainerHigh
+        color: area.containsMouse ? Theme.surfaceContainerHighest : Theme.surfaceContainerHigh
         opacity: widget.busy ? 0.5 : 1
 
         RowLayout {
@@ -69,6 +69,7 @@ PluginComponent {
 
             DankIcon {
                 name: row.icon
+                filled: row.active
                 color: row.active ? Theme.primary : Theme.surfaceText
                 size: Theme.iconSize
             }
@@ -97,8 +98,11 @@ PluginComponent {
         }
 
         MouseArea {
+            id: area
+
             anchors.fill: parent
             enabled: !widget.busy
+            hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: row.clicked()
         }
