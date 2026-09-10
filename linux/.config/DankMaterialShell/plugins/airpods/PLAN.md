@@ -124,9 +124,10 @@ both files on any settings change:
 - `settings.json`: in `barConfigs[1].rightWidgets`, change the `librepods`
   widget id to `airpods`. Bar slots reference plugins by bare id, so the rename
   is enough.
-- `dms ipc call plugin-scan scan`. DMS watches `plugin_settings.json` but a hand
-  edit loads nothing on its own; the scan reads the enabled flag and loads the
-  plugin. `settings.json` is watched too, and the bar re-renders by itself.
+- `dms ipc call plugins enable airpods`. DMS watches `plugin_settings.json` but
+  a hand edit loads nothing on its own, and `plugin-scan scan` only loads
+  manifests it has not seen before. `settings.json` is watched too, and the bar
+  re-renders by itself.
 
 Imports needed across the whole widget:
 
