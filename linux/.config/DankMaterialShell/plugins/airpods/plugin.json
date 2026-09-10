@@ -1,0 +1,14 @@
+{
+  "id": "airpods",
+  "name": "AirPods",
+  "description": "AirPods profile indicator and music/call switcher",
+  "version": "0.1.0",
+  "author": "Mario-César",
+  "type": "widget",
+  "capabilities": ["dankbar-widget"],
+  "component": "./AirpodsWidget.qml",
+  "icon": "earbuds",
+  "requires": ["airpods"],
+  "requires_dms": ">=1.5.0",
+  "permissions": ["process"]
+}
