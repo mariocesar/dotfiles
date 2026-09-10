@@ -1,0 +1,14 @@
+{
+  "id": "agenda",
+  "name": "Agenda",
+  "description": "Current or next meeting and today's agenda, from dcal",
+  "version": "0.1.0",
+  "author": "Mario-César",
+  "type": "widget",
+  "capabilities": ["dankbar-widget"],
+  "component": "./AgendaWidget.qml",
+  "icon": "event",
+  "dependencies": ["agenda", "dcal"],
+  "requires_dms": ">=1.5.0",
+  "permissions": ["process"]
+}
