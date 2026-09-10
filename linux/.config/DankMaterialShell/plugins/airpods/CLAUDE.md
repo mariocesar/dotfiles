@@ -14,19 +14,23 @@ looking at `pactl`.
 `~/.config/DankMaterialShell/plugins/airpods`, so edits here are already live.
 Only a **new file** needs an `install.py` run — `AirpodsWidget.qml` will, once.
 
-QML failures are silent; the widget just doesn't appear. To see why:
+QML failures are silent; the widget just doesn't appear. The shell runs from
+`/usr/share/quickshell/dms` under `dms.service` — never start a second `qs`. To
+see why:
 
 ```bash
-qs -v -p ~/.config/quickshell/dms/shell.qml   # watch for PluginService: lines
+journalctl --user -fu dms.service -o cat | grep PluginService
 ```
 
-Reload after a change: `dms ipc call plugins reload airpods`, or Settings →
-Plugins → the reload control.
+Reload after a change: `dms ipc call plugin-scan reload airpods`, or Settings →
+Plugins → the reload control. The `plugins` IPC target only opens and closes
+that settings panel; `plugin-scan` carries `scan`, `rescan`, `reload`, `list`
+and `status`.
 
 Confirm state from the system, never by reading the QML back:
 
 ```bash
-pactl list cards | grep -A1 bluez_card    # Active Profile
+pactl list cards | grep -E 'Name: bluez_card|Active Profile'
 pactl list sources short                  # bluez_input.* exists only in HFP
 ```
 
@@ -52,18 +56,26 @@ voice link is up is refused by these AirPods — that is the whole reason
 falls back to a full reconnect, and sets the default source in call mode. DMS's
 own `BluetoothService.switchCodec()` is a thin `pactl set-card-profile` wrapper
 and hits exactly that failure. Use
-`Proc.runCommand("airpods.action", ["airpods", "call"], cb)`.
+`Proc.runCommand("airpods.action", ["airpods", "call"], cb, 0, Proc.noTimeout)` —
+the default 10 s timeout kills the script mid-switch.
 
 Because the script lives in this same repo, a change to its output format and
 the widget that parses it belong in one commit. That is why this is not a
 separate repo.
+
+**The session PATH comes from a zsh login shell, not `.zshrc`.** GDM spawns the
+session through a non-interactive login shell and `niri-session` imports its
+environment into the user manager, which is what `dms.service` and every niri
+spawn inherit. `PATH` is therefore exported in `common/.zprofile`; without it a
+bare `["airpods", …]` in `Proc.runCommand` fails with not found.
+`environment.d` cannot do this job: `import-environment` overrides generators.
 
 **Read the active profile from PipeWire node properties, not by polling.** The
 bluez node carries it:
 
 ```qml
 readonly property var node: Pipewire.nodes.values.find(n =>
-    n.properties?.["api.bluez5.address"] === mac && n.isSink)
+    n.properties?.["api.bluez5.address"] === dev.address && n.isSink)
 readonly property bool hfp: (node?.properties?.["api.bluez5.profile"] ?? "").startsWith("headset")
 ```
 
@@ -103,4 +115,5 @@ no reason to scan — pair elsewhere.
 - Hide optional pill elements with `visible:`, not by zeroing width. A hidden
   child leaves the `Row` layout and the pill shrinks on its own.
 - Prefer a property binding over a timer. Most state here is reactive already.
-- Report failures with `ToastService.showError`, not silently.
+- Failures are reported by the script's `notify-send`, which fires on every
+  outcome. No `ToastService` on top of it — that shows the same failure twice.
