@@ -3,7 +3,7 @@
 #   - the current folder name (~ for $HOME)
 #   - model display name + reasoning effort level
 #   - context window usage (bar + %)
-#   - Claude.ai 5-hour and 7-day (1w) rate-limit usage, each with time-to-reset
+#   - Claude.ai 5-hour and 7-day (1w) rate-limit usage: % used, with time-to-reset when available
 # Managed by the statusline-setup agent — ask Claude to update it rather than
 # editing by hand, so ~/.claude/settings.json stays in sync.
 set -u
@@ -96,11 +96,10 @@ h5_segment=""
 if [[ -n "$h5_pct" ]]; then
   h5_int=$(round "$h5_pct")
   h5_color=$(pct_color "$h5_int")
+  h5_segment="${DIM}5h${RESET} ${h5_color}${h5_int}%${RESET}"
   if [[ "$h5_reset" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
     now=$(date +%s)
-    h5_segment="${DIM}5h${RESET} ${h5_color}$(fmt_duration $(( ${h5_reset%.*} - now )))${RESET}"
-  else
-    h5_segment="${DIM}5h${RESET} ${h5_color}${h5_int}%${RESET}"
+    h5_segment="${h5_segment} ${DIM}($(fmt_duration $(( ${h5_reset%.*} - now )) ))${RESET}"
   fi
 fi
 
@@ -109,11 +108,10 @@ w1_segment=""
 if [[ -n "$w1_pct" ]]; then
   w1_int=$(round "$w1_pct")
   w1_color=$(pct_color "$w1_int")
+  w1_segment="${DIM}1w${RESET} ${w1_color}${w1_int}%${RESET}"
   if [[ "$w1_reset" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
     now=$(date +%s)
-    w1_segment="${DIM}1w${RESET} ${w1_color}$(fmt_duration $(( ${w1_reset%.*} - now )))${RESET}"
-  else
-    w1_segment="${DIM}1w${RESET} ${w1_color}${w1_int}%${RESET}"
+    w1_segment="${w1_segment} ${DIM}($(fmt_duration $(( ${w1_reset%.*} - now )) ))${RESET}"
   fi
 fi
 
