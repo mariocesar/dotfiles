@@ -132,7 +132,17 @@ function emojis() {
 }
 
 function keeptrying() {
-  while ! "$@"; do
+  local clear_each=0
+  if [[ "$1" == "-c" ]]; then
+    clear_each=1
+    shift
+  fi
+  while true; do
+    if ((clear_each)); then
+      clear
+      echo "\$ $*"
+    fi
+    "$@" && break
     echo "Trying again in 2s"
     sleep 2
   done
