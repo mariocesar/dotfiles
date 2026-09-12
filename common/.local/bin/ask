@@ -54,7 +54,8 @@ user: ${USER-} on ${HOSTNAME-}
 cwd: $PWD${now:+
 now: $now}"
 
-system_prompt=$(cat <<'PROMPT'
+# a heredoc inside $() trips bash 3.2's quote tracking on apostrophes; read keeps it top-level
+IFS= read -rd '' system_prompt <<'PROMPT' || true
 You answer short questions.
 Respond in the same language as the user's question.
 Prioritize correctness over completeness.
@@ -65,9 +66,8 @@ Never invent commands, flags, APIs, or facts; if uncertain, say so.
 Do not restate the question or add filler.
 Keep the answer concise unless more detail is necessary.
 PROMPT
-)
 
-system_prompt="$system_prompt
+system_prompt="${system_prompt%$'\n'}
 
 Environment — the machine the user is asking from.
 Use it only when it changes the answer; ignore it otherwise.
