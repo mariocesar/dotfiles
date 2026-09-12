@@ -29,14 +29,15 @@ load_if_exists ~/.config/zsh/macos.zsh
 
 autoload -Uz compinit && compinit
 
+# fzf ^R/^T/alt-c and ** completion; before fzf-tab so fzf-tab keeps TAB
+command -v fzf >/dev/null && source <(fzf --zsh)
+
 # Completion styling; must come after compinit
 source ~/.config/zsh/zshcompletion.zsh
 source ~/.config/zsh/zshfzftab.zsh
 
 load_if_exists ~/.zshrc.$(hostname)
 load_if_exists ~/.aliases
-load_if_exists ~/.fzf.zsh
-load_if_exists ~/.iterm2_shell_integration.zsh
 load_if_exists ~/.cargo/env
 
 # Guarded: a machine missing one of these should still get a working shell
