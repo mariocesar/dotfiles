@@ -6,7 +6,7 @@ When facing a hard task and feeling stuck, managing my dotfiles acts as a produc
 
 ## How to Use
 
-My goal is to keep things simple, just make sure Python 3.10 or higher is installed. After that, all you need to do is clone the repo and run `install.py`.
+My goal is to keep things simple. The installer is a standalone script that needs Python 3.10 or higher; no package installation is required. Clone the repo and run `install.py`.
 
 ```bash
 git clone https://github.com/mariocesar/dotfiles.git ~/.dotfiles
