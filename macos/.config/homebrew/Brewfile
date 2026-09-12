@@ -102,6 +102,7 @@ brew "sshx" # replaces tmate
 brew "tmate"
 brew "tmux"
 brew "tree"
+brew "viu"
 
 brew "heroku/brew/heroku"
 
