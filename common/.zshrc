@@ -20,13 +20,18 @@ setopt EXTENDED_HISTORY
 # Load Zsh bindkeys
 source ~/.config/zsh/zshbindkeys.zsh
 
+function load_if_exists() { if [ -f "$1" ]; then source "$1"; fi; }
+
+# Per-OS config; only the active platform's file exists. Must precede
+# compinit — macos.zsh puts Homebrew's completions on fpath.
+load_if_exists ~/.config/zsh/linux.zsh
+load_if_exists ~/.config/zsh/macos.zsh
+
 autoload -Uz compinit && compinit
 
 # Completion styling; must come after compinit
 source ~/.config/zsh/zshcompletion.zsh
 source ~/.config/zsh/zshfzftab.zsh
-
-function load_if_exists() { if [ -f "$1" ]; then source "$1"; fi; }
 
 load_if_exists ~/.zshrc.$(hostname)
 load_if_exists ~/.aliases
