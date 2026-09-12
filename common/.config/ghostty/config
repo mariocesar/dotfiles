@@ -1,8 +1,9 @@
 # ~/.config/ghostty/config
-# macOS · tuned for long agent sessions (Claude Code, Codex, etc.)
+# Shared (macOS + Linux) · tuned for long agent sessions (Claude Code, Codex, etc.)
 
 # ── Font ─────────────────────────────────────────────────────────────
 font-family = "Fira Code"
+# macOS overrides this in macos.conf.
 font-size = 8
 font-thicken = true
 
@@ -18,8 +19,6 @@ adjust-cell-height = 8%
 window-decoration = true
 gtk-titlebar = false
 gtk-single-instance = true
-macos-titlebar-style = transparent
-macos-non-native-fullscreen = false
 window-padding-x = 12
 window-padding-y = 12
 window-padding-balance = true
@@ -31,11 +30,6 @@ background-opacity = 0.95
 background-blur = true
 minimum-contrast = 1.1
 alpha-blending = linear-corrected
-
-# ── macOS keyboard ───────────────────────────────────────────────────
-# Without this, Option produces ø/å instead of Alt — breaks alt+f,
-# alt+b, alt+. and most shell/TUI word-motion bindings.
-macos-option-as-alt = left
 
 # ── Cursor ───────────────────────────────────────────────────────────
 cursor-style = block
@@ -88,5 +82,6 @@ keybind = ctrl+alt+shift+arrow_right=resize_split:right,10
 # Fixed, so dms's wallpaper-generated `dankcolors` no longer applies here.
 theme = TokyoNight Night
 
-# Linux-only overrides; absent on macOS, hence the ? (optional include).
+# Per-OS overrides; only the active platform's file exists, hence the ?.
 config-file = ?linux.conf
+config-file = ?macos.conf
