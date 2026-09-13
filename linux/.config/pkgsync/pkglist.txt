@@ -62,6 +62,7 @@ power-profiles-daemon   # osdPowerProfileEnabled in update-preferences
 keyd                    # 40-keyd.sh links /etc/keyd/default.conf and enables the service
 satty                   # annotator behind the Annotate action in ~/.local/bin/screenshot
 gpu-screen-recorder     # video in the screenCaptureToolbar DMS plugin
+ttf-jetbrains-mono      # ghostty font-family, fontconfig monospace, KDE/DMS UI font
 
 docker
 docker-compose

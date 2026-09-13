@@ -79,6 +79,8 @@ dms_pref acPostLockMonitorTimeout 300
 
 # Appearance
 dms_pref currentThemeName blue
+dms_pref fontFamily "JetBrains Mono"
+dms_pref monoFontFamily "JetBrains Mono"
 dms_pref widgetBackgroundColor sth
 dms_pref cornerRadius 12
 dms_pref textRenderType 1

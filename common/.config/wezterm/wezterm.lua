@@ -1,7 +1,7 @@
 local wezterm = require 'wezterm'
 local config = {}
 
-config.font = wezterm.font 'FiraMono Nerd Font Mono'
+config.font = wezterm.font 'JetBrains Mono'
 config.font_size = 12
 config.color_scheme = 'Tokyo Night'
 config.window_decorations = 'RESIZE'
