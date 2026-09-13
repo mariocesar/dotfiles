@@ -2,7 +2,7 @@
 # Shared (macOS + Linux) · tuned for long agent sessions (Claude Code, Codex, etc.)
 
 # ── Font ─────────────────────────────────────────────────────────────
-font-family = "Fira Code"
+font-family = "JetBrains Mono"
 # macOS overrides this in macos.conf.
 font-size = 8
 font-thicken = true
