@@ -1,0 +1,5 @@
+[general]
+copy-command = "wl-copy"
+initial-tool = "arrow"
+# Enter is Done: the edit replaces the capture on disk and on the clipboard.
+actions-on-enter = ["save-to-file", "save-to-clipboard", "exit"]
