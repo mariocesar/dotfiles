@@ -14,9 +14,8 @@ looking at `pactl`.
 `~/.config/DankMaterialShell/plugins/airpods`, so edits here are already live.
 Only a **new file** needs an `install.py` run — `AirpodsWidget.qml` will, once.
 
-QML failures are silent; the widget just doesn't appear. The shell runs from
-`/usr/share/quickshell/dms` under `dms.service` — never start a second `qs`. To
-see why:
+QML failures are silent; the widget just doesn't appear. The shell runs under
+`dms.service` — never start another DMS `qs`. To see why:
 
 ```bash
 journalctl --user -fu dms.service -o cat | grep PluginService
@@ -36,13 +35,17 @@ pactl list sources short                  # bluez_input.* exists only in HFP
 
 ## Where the real documentation is
 
-DMS is installed at `/usr/share/quickshell/dms` (root-owned, read-only).
+Since dms-shell 1.6 the UI is embedded in `/usr/bin/dms`; the package ships no
+QML. Each start extracts it read-only to `/run/user/$UID/danklinux-shell/<hash>/`
+— `ls -d` it, don't hardcode the hash. The same tree is `quickshell/` in
+AvengeMedia/DankMaterialShell at the tag in its `VERSION` file.
 
-- `PLUGINS/README.md` — 1774-line authoring guide. Read it before guessing.
+- `PLUGINS/README.md` — the authoring guide. Read it before guessing.
 - `PLUGINS/plugin-schema.json` — the `plugin.json` schema.
 - `PLUGINS/THEME_REFERENCE.md` — `Theme` property names. It is `fontSizeSmall`,
   not `fontSizeS`.
 - `Modules/Plugins/PluginComponent.qml` — the base type and its full contract.
+- `dms ipc --help` — every IPC target and its functions.
 - `~/.config/DankMaterialShell/plugins/grimblast/Grimblast.qml` — 317 lines, the
   closest working template for a pill plus popout menu.
 

@@ -102,7 +102,16 @@ PluginComponent {
 
     horizontalBarPill: Component {
         Row {
+            id: pill
+
+            readonly property real textSize: Theme.barTextSize(root.barThickness, root.barConfig?.fontScale)
+
             spacing: Theme.spacingXS
+
+            // passive: the pill's own MouseArea still gets hover and clicks
+            HoverHandler {
+                id: pillHover
+            }
 
             DankIcon {
                 name: "event"
@@ -111,13 +120,23 @@ PluginComponent {
                 anchors.verticalCenter: parent.verticalCenter
             }
 
-            StyledText {
-                text: root.headline
-                font.pixelSize: Theme.barTextSize(root.barThickness, root.barConfig?.fontScale)
+            ScrollingText {
+                text: root.featured ? root.featured.title : root.headline
+                font.pixelSize: pill.textSize
                 color: root.failed && !root.agenda ? Theme.surfaceVariantText : Theme.surfaceText
+                active: pillHover.hovered
+                holdStartMs: 400
+                pxPerMs: 1 / 20
+                width: Math.min(implicitTextWidth, Theme.fontSizeSmall * 18)
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            StyledText {
+                text: root.featured && root.agenda.headline_when ? root.agenda.headline_when : ""
+                visible: text !== ""
+                font.pixelSize: pill.textSize
+                color: Theme.surfaceVariantText
                 wrapMode: Text.NoWrap
-                elide: Text.ElideRight
-                width: Math.min(implicitWidth, Theme.fontSizeSmall * 22)
                 anchors.verticalCenter: parent.verticalCenter
             }
         }
