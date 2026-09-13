@@ -189,6 +189,7 @@ window-rule {
     match app-id=r#"^org\.kde\.dolphin$"#
     match app-id=r#"^xdg-desktop-portal$"#
     match app-id=r#"^1password$"#
+    match app-id=r#"^com\.gabm\.satty$"#
     open-floating true
 }
 window-rule {
@@ -389,12 +390,14 @@ binds {
     Mod+Shift+Equal { set-window-height "+10%"; }
 
     // === Screenshots ===
-    XF86Launch1 { screenshot; }
-    Ctrl+XF86Launch1 { screenshot-screen; }
-    Alt+XF86Launch1 { screenshot-window; }
-    Print { screenshot; }
-    Ctrl+Print { screenshot-screen; }
-    Alt+Print { screenshot-window; }
+    XF86Launch1 { spawn "sh" "-c" "exec $HOME/.local/bin/screenshot region"; }
+    Ctrl+XF86Launch1 { spawn "sh" "-c" "exec $HOME/.local/bin/screenshot full"; }
+    Alt+XF86Launch1 { spawn "sh" "-c" "exec $HOME/.local/bin/screenshot window"; }
+    Shift+XF86Launch1 { spawn "dms" "ipc" "call" "screenCaptureToolbar" "toggle"; }
+    Print { spawn "sh" "-c" "exec $HOME/.local/bin/screenshot region"; }
+    Ctrl+Print { spawn "sh" "-c" "exec $HOME/.local/bin/screenshot full"; }
+    Alt+Print { spawn "sh" "-c" "exec $HOME/.local/bin/screenshot window"; }
+    Shift+Print { spawn "dms" "ipc" "call" "screenCaptureToolbar" "toggle"; }
 
     // === System Controls ===
     Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }

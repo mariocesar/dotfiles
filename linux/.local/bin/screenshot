@@ -1,0 +1,25 @@
+#!/bin/sh
+set -eu
+
+# Capture with dms, then offer to annotate it in satty from the notification.
+#
+#   screenshot [region|full|window]
+
+mode=${1:-region}
+case $mode in
+    region|full|window) ;;
+    *) echo "usage: screenshot [region|full|window]" >&2; exit 2 ;;
+esac
+
+# Esc in the region picker still exits 0; only the status says it was aborted.
+json=$(dms screenshot "$mode" --no-notify --json)
+[ "$(printf '%s' "$json" | jq -r .status)" = success ] || exit 0
+file=$(printf '%s' "$json" | jq -r .path)
+scale=$(printf '%s' "$json" | jq -r .scale)
+
+# DMS runs the first action on a body click too, so "default" catches both.
+action=$(notify-send --app-name=Screenshot --icon="$file" --action=default=Annotate \
+    "Screenshot saved" "${file##*/}")
+[ "$action" = default ] || exit 0
+
+exec satty --filename "$file" --output-filename "$file" --input-scale "$scale"
