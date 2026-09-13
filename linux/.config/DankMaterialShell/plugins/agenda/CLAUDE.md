@@ -5,8 +5,8 @@ meeting; its popout lists today's agenda with Refresh and Settings rows. The
 repo root `CLAUDE.md` applies — edit here, never under `$HOME`.
 
 The widget is a front end for `linux/.local/bin/agenda`, which owns the JSON
-contract (`agenda --format json`: `headline`, `today_label`, `now`, `current`,
-`next`, `today`) and the config file (`agenda config`). A change to the script's
+contract (`agenda --format json`: `headline`, `headline_when`, `today_label`,
+`now`, `current`, `next`, `today`) and the config file (`agenda config`). A change to the script's
 output and to the widget that parses it belong in one commit.
 
 ## Dev loop
@@ -17,8 +17,7 @@ Only a **new file** needs `python3.13 install.py`.
 
 Reload after a change: `dms ipc call plugins reload agenda` (also loads an
 unloaded plugin). QML failures are silent — the widget just doesn't appear. The
-shell runs under `dms.service` from `/usr/share/quickshell/dms`; never start a
-second `qs`. Errors:
+shell runs under `dms.service`; never start another DMS `qs`. Errors:
 
 ```bash
 journalctl --user -u dms.service -o cat --since "HH:MM:SS"
@@ -32,19 +31,17 @@ Exercise `agenda config` only with a stub `xdg-open` first on `PATH` and
 
 ## Where the real documentation is
 
-The list in `../airpods/CLAUDE.md` — DMS sources under
-`/usr/share/quickshell/dms`, `PLUGINS/README.md`, `THEME_REFERENCE.md`, and the
-grimblast plugin as the pill + popout template. Add `Common/Proc.qml`
-(`runCommand` debouncing) and `Modules/Plugins/PluginPopout.qml` (injects
+The list in `../airpods/CLAUDE.md`, including where the DMS sources live now.
+Add `DankCommon/Common/Proc.qml` (`runCommand` debouncing; `Common/Proc.qml`
+only forwards to it) and `Modules/Plugins/PluginPopout.qml` (injects
 `closePopout`, rebinds the popout height).
 
 ## Facts that cost time
 
 **The plugin lifecycle IPC target is `plugins`, not `widget`.** `dms ipc call
 plugins list|status|enable|disable|toggle|reload <id>`. `widget` is bar-widget
-visibility; `widget reload` answers "Function not found". In `DMSShellIPC.qml`
-the `target:` line sits at the *end* of each `IpcHandler`, so grepping `-A`
-from it shows the next handler's functions.
+visibility; `widget reload` answers "Function not found". `dms ipc --help` lists
+every target's functions — no need to grep `DMSShellIPC.qml`.
 
 **A new plugin needs a scan before it can be enabled:** `dms ipc call
 plugin-scan scan`, debounced, so wait ~3 s before `plugins list`. PluginService

@@ -61,11 +61,10 @@ outside this plan.
 included), the running shell's PATH starts with `.local/bin`:
 
 ```bash
-tr '\0' '\n' < /proc/$(pgrep -f 'qs -p /usr/share/quickshell/dms')/environ | grep ^PATH
+tr '\0' '\n' < /proc/$(pgrep -P "$(systemctl --user show -p MainPID --value dms.service)" -x qs)/environ | grep ^PATH
 ```
 
-The shell runs from `/usr/share/quickshell/dms` under `dms.service` — never
-start a second `qs`. Keep this running in a terminal to see load errors:
+The shell runs under `dms.service` — never start another DMS `qs`. Keep this running in a terminal to see load errors:
 
 ```bash
 journalctl --user -fu dms.service -o cat | grep PluginService
@@ -203,10 +202,10 @@ profile string is empty, so the icon falls to `earbuds`; colour it
 `Theme.surfaceVariantText` in that state so a card stuck at `off` is visible
 and a switch in progress reads as one. Both names are confirmed present
 (`earbuds` f003, `headset_mic` e311); verify any other name against the
-codepoints file DMS ships:
+upstream codepoints file (DMS bundles the font, not this file):
 
 ```
-/usr/share/quickshell/dms/assets/fonts/material-design-icons/variablefont/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].codepoints
+https://raw.githubusercontent.com/google/material-design-icons/master/variablefont/MaterialSymbolsRounded%5BFILL,GRAD,opsz,wght%5D.codepoints
 ```
 
 No timer, no polling — these are notifying properties.

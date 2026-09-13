@@ -247,20 +247,27 @@ def humanize(delta):
     return f"{mins}m"
 
 
-def headline_line(sel, now):
+def headline_when(sel, now):
     if sel.current:
         left = humanize(sel.current.end - now)
-        return f"{sel.current.title} ends {'now' if left == 'now' else 'in ' + left}"
+        return f"ends {'now' if left == 'now' else 'in ' + left}"
     ev = sel.next
     if ev is None:
-        return f"No meetings in the next {LOOKAHEAD_DAYS} days"
+        return None
     until = humanize(ev.start - now)
-    line = f"{ev.title} {'starts now' if until == 'now' else 'in ' + until}"
+    when = "starts now" if until == "now" else f"in {until}"
     if ev.start.date() != now.date():
         tomorrow = ev.start.date() == now.date() + dt.timedelta(days=1)
-        when = "tomorrow" if tomorrow else ev.start.strftime("%a %-d %b")
-        line += f" ({when} {ev.start:%H:%M})"
-    return line
+        day = "tomorrow" if tomorrow else ev.start.strftime("%a %-d %b")
+        when += f" ({day} {ev.start:%H:%M})"
+    return when
+
+
+def headline_line(sel, now):
+    ev = headline(sel)
+    if ev is None:
+        return f"No meetings in the next {LOOKAHEAD_DAYS} days"
+    return f"{ev.title} {headline_when(sel, now)}"
 
 
 def day_label(day, today):
@@ -333,6 +340,7 @@ def render_json(sel, now):
     doc = {
         "now": now.replace(microsecond=0).isoformat(),
         "headline": headline_line(sel, now),
+        "headline_when": headline_when(sel, now),
         "today_label": day_label(now.date(), now.date()),
         "current": enc(sel.current),
         "next": enc(sel.next),
