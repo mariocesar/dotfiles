@@ -34,6 +34,7 @@ opt.ignorecase = true
 opt.smartcase = true
 opt.hlsearch = true
 opt.inccommand = 'split'
+opt.grepprg = 'rg --vimgrep'
 
 opt.autoindent = true
 opt.smartindent = true
@@ -116,6 +117,10 @@ cmd("Reload", "source $MYVIMRC", {
 cmd("Cheat", "tabnew " .. vim.fn.stdpath("config") .. "/cheatsheet.md", {
   desc = 'open the keybinding cheat sheet'
 })
+cmd("Grep", "silent grep! <args>", {
+  nargs = '+',
+  desc = 'grep into quickfix without jumping to the first match'
+})
 
 -- open (new) terminal at the bottom of the current tab
 cmd("Terminal", function(tbl)
@@ -183,6 +188,16 @@ map('t', '<esc><esc>', '<C-\\><C-n>', {
 map('n', '<leader>d', '<cmd>Clap dotfiles<cr>', {
   desc = 'Open some dotfile'
 })
+map('n', '<leader>g', '<cmd>Clap grep<cr>', {
+  desc = 'Live grep in the project'
+})
+map('n', '<leader>G', '<cmd>Clap grep ++query=<cword><cr>', {
+  desc = 'Live grep the word under cursor'
+})
+-- `:` not <cmd>: leaving visual mode first sets the '< '> marks @visual reads
+map('v', '<leader>g', ':<C-u>Clap grep ++query=@visual<cr>', {
+  desc = 'Live grep the selection'
+})
 
 -- Paste on Normal, Insert and Command-Line mode
 
@@ -223,6 +238,17 @@ function conceal.handler() vim.opt_local.conceallevel = 0 end
 local yank = au("user_yank")
 
 function yank.TextYankPost() vim.hl.on_yank() end
+
+-- open the quickfix list after :grep
+
+local grep = au("user_grep")
+local results = grep({
+  'QuickFixCmdPost'
+}, {
+  pattern = 'grep'
+})
+
+function results.handler() vim.cmd.cwindow() end
 
 -- Markdown preferences
 
