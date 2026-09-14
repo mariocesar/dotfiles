@@ -2,13 +2,13 @@
 
 set -euo pipefail
 
-# Asserts the DMS settings chosen in the dotfiles through its IPC, counterpart
-# to macos/.local/bin/update-preferences and `defaults write`. DMS owns
+# Asserts the DMS and KDE settings chosen in the dotfiles, counterpart to
+# macos/.local/bin/update-preferences and `defaults write`. DMS owns
 # settings.json; only the keys listed here are pinned, the rest stay UI-managed.
 
 usage() {
     cat <<'USAGE'
-update-preferences - apply the DMS settings chosen in the dotfiles
+update-preferences - apply the DMS and KDE settings chosen in the dotfiles
 
 Usage: update-preferences [-n] [-h]
 
@@ -25,7 +25,9 @@ while getopts ':nh' opt; do
     esac
 done
 
-command -v dms >/dev/null 2>&1 || { echo "update-preferences: needs dms" >&2; exit 1; }
+for tool in dms kreadconfig6 kwriteconfig6 busctl; do
+    command -v "$tool" >/dev/null 2>&1 || { echo "update-preferences: needs $tool" >&2; exit 1; }
+done
 # dms ipc exits 0 whether or not the shell is up; only the reply tells.
 # The -- keeps negative values like -100 from being read as flags.
 [[ $(dms ipc call -- settings get settingsConfigVersion) =~ ^[0-9]+$ ]] || {
@@ -72,6 +74,30 @@ dms_pref() {
     reply=$("${cmd[@]}")
     [ "$reply" = SETTINGS_SET_SUCCESS ] || { echo "update-preferences: $key: $reply" >&2; exit 1; }
     show set "was $have" "${cmd[@]}"
+}
+
+# kded6's gtkconfig mirrors kdeglobals into GTK, but --notify doesn't D-Bus-activate it.
+kded_up=0
+kde_pref() {
+    local file=$1 group=$2 key=$3 want=$4 have
+    local -a cmd=(kwriteconfig6 --file "$file" --group "$group" --key "$key" --notify "$want")
+    checked=$((checked + 1))
+    have=$(kreadconfig6 --file "$file" --group "$group" --key "$key")
+    if [ "$have" = "$want" ]; then
+        show ok "" "${cmd[@]}"
+        return 0
+    fi
+    changed=$((changed + 1))
+    if [ "$dry" -eq 1 ]; then
+        show drift "is ${have:-unset}" "${cmd[@]}"
+        return 0
+    fi
+    if [ "$kded_up" -eq 0 ]; then
+        busctl --user call org.kde.kded6 /kded org.kde.kded6 loadedModules >/dev/null
+        kded_up=1
+    fi
+    "${cmd[@]}"
+    show set "was ${have:-unset}" "${cmd[@]}"
 }
 
 # Monitors off 5 min after locking; seconds.
@@ -126,6 +152,10 @@ dms_pref weatherEnabled false
 dms_pref useSystemSoundTheme true
 dms_pref osdPowerProfileEnabled true
 dms_pref maxFprintTries 3
+
+# Fonts for Qt apps, and for GTK apps through gtkconfig
+kde_pref kdeglobals General font "Inter Variable,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"
+kde_pref kdeglobals General fixed "JetBrains Mono,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"
 
 if [ "$dry" -eq 1 ]; then
     echo "$checked settings, $changed would change"
