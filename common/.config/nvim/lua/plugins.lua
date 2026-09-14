@@ -6,10 +6,6 @@ return {
   'tpope/vim-surround',
   'tpope/vim-repeat',
   {
-    'mg979/vim-visual-multi',
-    cond = not vim.g.vscode,
-  },
-  {
     'liuchengxu/vim-clap',
     build = ':Clap install-binary!',
     cmd = 'Clap',
