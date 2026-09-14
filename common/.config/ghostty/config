@@ -55,7 +55,7 @@ unfocused-split-fill = #414868
 
 # ── Shell integration ────────────────────────────────────────────────
 shell-integration = detect
-shell-integration-features = cursor,sudo,title
+shell-integration-features = cursor,sudo,title,ssh-env,ssh-terminfo
 
 # ── Keybindings ──────────────────────────────────────────────────────
 # macOS defaults already cover cmd+t / cmd+n / cmd+d / cmd+shift+d /
