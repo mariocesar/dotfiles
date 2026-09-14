@@ -3,6 +3,8 @@ Description=espanso
 # The evdev worker panics with NoCompositor if it starts before niri
 PartOf=graphical-session.target
 After=graphical-session.target
+# dms.service is Type=dbus on org.freedesktop.Notifications; earlier, the startup notification fails
+After=dms.service
 
 [Service]
 ExecStart=/usr/bin/espanso launcher
