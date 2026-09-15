@@ -163,12 +163,10 @@ map('n', '<esc><esc>', '<cmd>nohlsearch<cr><C-l>', {
 map('n', '<leader>p', '<cmd>Clap files<cr>', {
   desc = 'Navigate files in the current working directory'
 })
-
-map('n', '<C-d>', '<C-d>zz', {
+map('n', '<C-j>', '<C-d>zz', {
   desc = 'Scroll down and center',
 })
-
-map('n', '<C-u>', '<C-u>zz', {
+map('n', '<C-k>', '<C-u>zz', {
   desc = 'Scroll up and center',
 })
 
