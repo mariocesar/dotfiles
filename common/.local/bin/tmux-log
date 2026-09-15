@@ -1,0 +1,52 @@
+#!/bin/sh
+# Log a pane's output, ANSI-stripped, to a file fit for a person or an LLM.
+#   tmux-log [file]    outside tmux: new session with its pane logged
+#                      inside tmux: toggle logging on the current pane
+set -eu
+
+if [ "${1:-}" = --filter ]; then
+    # Line-buffered so an abrupt kill loses at most one line.
+    exec perl -pe '
+        BEGIN { $| = 1 }
+        s/\e\][^\a\e]*(?:\a|\e\\)?//g;    # OSC: titles, hyperlinks, clipboard
+        s/\e\[[0-9;?]*[ -\/]*[@-~]//g;    # CSI: colors, cursor movement
+        s/\e[()][B0-2]//g;
+        s/\e[@-_=>]//g;
+        1 while s/[^\x08]\x08//;
+        s/\x08//g;
+        s/\r+(\n?)$/$1/;
+        s/.*\r//;                         # progress bars: keep the final rewrite
+    '
+fi
+
+pane=
+if [ "${1:-}" = -t ]; then
+    pane=$2
+    shift 2
+fi
+
+log=${1:-$HOME/tmux-$(date +%Y-%m-%d-%H%M%S).log}
+case $log in
+    '~'*) log=$HOME${log#'~'} ;;  # tmux prompts hand us the tilde unexpanded
+esac
+case $log in
+    /*) ;;
+    *) log=$PWD/$log ;;
+esac
+
+self=$(realpath "$0")
+# pipe-pane format-expands its command, so a literal # must be doubled.
+pipe=$(printf "exec '%s' --filter >> '%s'" "$self" "$log" | sed 's/#/##/g')
+
+if [ -n "$pane" ] || [ -n "${TMUX:-}" ]; then
+    t=${pane:+-t "$pane"}
+    if [ "$(tmux display -p $t '#{pane_pipe}')" = 1 ]; then
+        tmux pipe-pane $t
+        tmux display $t 'pane log stopped'
+    else
+        tmux pipe-pane $t "$pipe"
+        tmux display $t "pane log → $log"
+    fi
+else
+    exec tmux new-session \; pipe-pane "$pipe" \; display "pane log → $log"
+fi
