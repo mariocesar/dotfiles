@@ -17,6 +17,7 @@ fzf
 ripgrep
 eza             # the `ls` alias, and fzf-tab dir previews
 bat             # fzf-tab file previews
+viu
 ddgr            # DuckduckGo
 direnv
 mise
@@ -45,11 +46,14 @@ glow          # Render markdown in terminal
 entr
 just
 jq
+duckdb
 pwgen           # the `makepassword` alias
 wl-clipboard    # the `copy` alias on Wayland
 cmake
 ninja
+graphviz
 meld
+pre-commit
 
 firefox         # default browser in mimeapps.list; 10-firefox-chrome.py links its profile
 

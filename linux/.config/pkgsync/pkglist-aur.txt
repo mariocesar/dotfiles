@@ -3,7 +3,6 @@ espanso-wayland-git
 google-chrome
 matugen-bin
 minecraft-launcher
-ngrok
 quickshell-git
 sublime-text-4
 ttf-material-icons-git

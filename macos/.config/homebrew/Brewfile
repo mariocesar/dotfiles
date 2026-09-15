@@ -6,7 +6,6 @@ tap "gitguardian/tap"
 tap "hashicorp/tap"
 tap "heroku/brew"
 
-brew "amazon-ecs-cli"
 brew "awscli"
 
 brew "coreutils"
@@ -65,6 +64,7 @@ brew "ninja"
 brew "hey"
 brew "htop"
 brew "btop"
+brew "lazydocker"
 brew "glances"
 brew "duf"
 brew "pv"
@@ -76,9 +76,8 @@ brew "infracost"
 brew "inframap"
 brew "jq"
 brew "mysql-client"
-brew "neovim"
+brew "neovim", args: ["HEAD"]
 brew "tree-sitter-cli" # nvim-treesitter builds parsers with it
-brew "neovide"
 brew "fnm" # Faster alternative to nvm
 brew "optipng"
 brew "pandoc"
@@ -97,10 +96,8 @@ brew "starship"
 
 brew "terraform"
 brew "terraform-docs"
-brew "tflint"
 
 brew "sshx" # replaces tmate
-brew "tmate"
 brew "tmux"
 brew "tree"
 brew "viu"
@@ -145,10 +142,7 @@ cask "imageoptim"
 #cask "microsoft-powerpoint"
 #cask "microsoft-word"
 
-cask "qlcolorcode"
 cask "qlmarkdown"
-cask "qlprettypatch"
-cask "quicklook-csv"
 
 cask "raycast"
 cask "reminders-menubar"
