@@ -43,5 +43,13 @@ return {
       'mason-org/mason-lspconfig.nvim'
     },
     config = function() require('lsp') end
+  },
+  {
+    -- Ghostty ships ftdetect/ftplugin/syntax for its own config format next to
+    -- $GHOSTTY_RESOURCES_DIR on every platform, so no OS-specific path needed.
+    dir = (vim.env.GHOSTTY_RESOURCES_DIR or '') .. '/../nvim/site',
+    cond = vim.env.GHOSTTY_RESOURCES_DIR ~= nil,
+    name = 'ghostty',
+    lazy = false,
   }
 }
