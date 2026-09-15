@@ -31,7 +31,7 @@ Full message expands under the cursor line automatically, with rule code and
 
 | | |
 |---|---|
-| `<C-d>` `<C-u>` | Half page, recentred |
+| `<C-j>` `<C-k>` | Half page, recentred |
 | `%` | Matching bracket / tag / keyword |
 | `{` `}` | Previous / next blank line |
 | `` `` `` | Position before the last jump |
