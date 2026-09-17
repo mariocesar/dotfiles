@@ -153,3 +153,8 @@ cask "visual-studio-code"
 cask "vlc"
 cask "zoom"
 cask "docker-desktop"
+
+brew "openjdk@21"      # keg-only; 60-flutter.sh points flutter at it
+brew "cocoapods"       # flutter's iOS toolchain
+cask "android-studio"  # its SDK Manager owns ~/Library/Android/sdk
+cask "flutter"
