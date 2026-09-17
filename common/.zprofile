@@ -8,3 +8,12 @@ export RIPGREP_CONFIG_PATH="$HOME/.config/ripgrep/config"
 
 # Unset, xcrun picks the newest SDK — betas included; this symlink tracks the installed CLT.
 [ -d /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk ] && export SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+
+# Session-wide Android Studio
+if [ -d "$HOME/Android/Sdk" ]; then
+    export ANDROID_HOME="$HOME/Android/Sdk"
+    export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+fi
+
+# flutter looks for `google-chrome`
+[ -x /usr/bin/google-chrome-stable ] && export CHROME_EXECUTABLE=/usr/bin/google-chrome-stable

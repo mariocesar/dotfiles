@@ -77,3 +77,11 @@ hugo
 # gtk-theme=adw-gtk3-dark and icon-theme=Papirus-Dark are configured; missing, GTK3 falls back to stock Adwaita and icons to hicolor
 adw-gtk-theme
 papirus-icon-theme
+
+# Flutter — flutter-bin and android-studio are AUR; cmake and ninja are listed above
+clang           # Linux desktop target
+pkgconf
+gtk3
+unzip           # bin/internal/update_dart_sdk.sh unpacks the Dart SDK with it
+jdk21-openjdk   # 60-flutter.sh pins flutter to it; Gradle rejects the default JDK 26
+android-udev    # adb over USB without root
