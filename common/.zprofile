@@ -12,8 +12,12 @@ export RIPGREP_CONFIG_PATH="$HOME/.config/ripgrep/config"
 # Session-wide Android Studio
 if [ -d "$HOME/Android/Sdk" ]; then
     export ANDROID_HOME="$HOME/Android/Sdk"
-    export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+elif [ -d "$HOME/Library/Android/sdk" ]; then
+    export ANDROID_HOME="$HOME/Library/Android/sdk"
 fi
+
+[ -n "${ANDROID_HOME:-}" ] && \
+  export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
 
 # flutter looks for `google-chrome`
 [ -x /usr/bin/google-chrome-stable ] && export CHROME_EXECUTABLE=/usr/bin/google-chrome-stable
