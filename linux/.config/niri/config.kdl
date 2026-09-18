@@ -96,7 +96,8 @@ environment {
   XDG_CURRENT_DESKTOP "niri"
   ELECTRON_OZONE_PLATFORM_HINT "auto"
 
-  QT_QPA_PLATFORM "wayland"
+  // xcb fallback for apps bundling Qt without the wayland plugin (Android emulator).
+  QT_QPA_PLATFORM "wayland;xcb"
   // KDE apps are the bulk of the Qt ones; the gtk3 theme drew them in Fusion.
   QT_QPA_PLATFORMTHEME "kde"
   QT_QPA_PLATFORMTHEME_QT6 "kde"
