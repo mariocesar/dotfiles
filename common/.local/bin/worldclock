@@ -1,0 +1,379 @@
+#!/usr/bin/env python3
+import re
+import sys
+import argparse
+from collections import Counter
+import datetime as dt
+from itertools import pairwise
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import tomllib
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+
+DEFAULT_CONFIG = """# The first city is home. Run worldclock config to edit this file.
+[[cities]]
+label = "Santa Cruz de la Sierra"
+timezone = "America/La_Paz"
+
+[[cities]]
+label = "Valencia"
+timezone = "Europe/Madrid"
+# working_hours = ["09:00", "17:00"]
+"""
+
+
+def config_path():
+    return (
+        Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config")
+        / "worldclock/config.toml"
+    )
+
+
+def load_config(path):
+    data = tomllib.loads(path.read_text() if path.exists() else DEFAULT_CONFIG)
+    if set(data) - {"cities"}:
+        raise ValueError("only the top-level key 'cities' is supported")
+    cities = data.get("cities", tomllib.loads(DEFAULT_CONFIG)["cities"])
+    if not isinstance(cities, list):
+        raise ValueError("cities must be an ordered list of [[cities]] tables")
+    result = []
+    for index, city in enumerate(cities, 1):
+        if not isinstance(city, dict) or set(city) - {"label", "timezone", "working_hours"}:
+            raise ValueError(f"city {index}: expected label, timezone and optional working_hours")
+        for field in ("label", "timezone"):
+            if not isinstance(city.get(field), str) or not city[field].strip():
+                raise ValueError(f"city {index}: {field} must be a nonempty string")
+            if not city[field].isprintable():
+                raise ValueError(f"city {index}: {field} must not contain control characters")
+        try:
+            zone = ZoneInfo(city["timezone"])
+        except (ZoneInfoNotFoundError, ValueError) as exc:
+            raise ValueError(f"city {index}: unknown timezone {city['timezone']!r}") from exc
+        validate_working_hours(city, index)
+        result.append({**city, "zone": zone})
+    return result
+
+
+def validate_working_hours(city, index):
+    work = city.get("working_hours")
+    if "working_hours" in city:
+        if (
+            not isinstance(work, list)
+            or len(work) != 2  # noqa: PLR2004 — a window has two endpoints
+            or not all(
+                isinstance(value, str) and re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", value)
+                for value in work
+            )
+        ):
+            raise ValueError(
+                f"city {index}: working_hours must contain two HH:mm values (00:00–23:59)"
+            )
+        if work[0] == work[1]:
+            raise ValueError(f"city {index}: working_hours start and end must differ")
+
+
+def offset_label(seconds):
+    sign = "+" if seconds >= 0 else "−"
+    hours, rest = divmod(abs(int(seconds)), 3600)
+    minutes, seconds = divmod(rest, 60)
+    return f"{sign}{hours:02}:{minutes:02}" + (f":{seconds:02}" if seconds else "")
+
+
+def wall_instants(day, minute, zone):
+    wall = dt.datetime.combine(day, dt.time(minute // 60, minute % 60))
+    candidates = {wall.replace(tzinfo=zone, fold=fold).astimezone(dt.UTC) for fold in (0, 1)}
+    return {
+        instant for instant in candidates if instant.astimezone(zone).replace(tzinfo=None) == wall
+    }
+
+
+def transitions(start, end, zone):
+    cursor = start
+    while cursor < end:
+        following = min(cursor + dt.timedelta(minutes=15), end)
+        if cursor.astimezone(zone).utcoffset() != following.astimezone(zone).utcoffset():
+            low, high = int(cursor.timestamp()), int(following.timestamp())
+            before = cursor.astimezone(zone).utcoffset()
+            while high - low > 1:
+                middle = (low + high) // 2
+                if dt.datetime.fromtimestamp(middle, dt.UTC).astimezone(zone).utcoffset() == before:
+                    low = middle
+                else:
+                    high = middle
+            yield dt.datetime.fromtimestamp(high, dt.UTC)
+        cursor = following
+
+
+def shading(local, work):
+    minute = local.hour * 60 + local.minute
+    if work:
+        begin, finish = [int(value[:2]) * 60 + int(value[3:]) for value in work]
+        inside = begin <= minute < finish if begin < finish else minute >= begin or minute < finish
+        return "working" if inside else "outside"
+    if 8 * 60 <= minute < 18 * 60:
+        return "day"
+    if 6 * 60 <= minute < 22 * 60:
+        return "twilight"
+    return "night"
+
+
+def timeline_events(start, end, zone, work):
+    events = {start, end, *transitions(start, end, zone)}
+    hours = set()
+    minutes = set(range(0, 1440, 60))
+    if work:
+        minutes.update(int(value[:2]) * 60 + int(value[3:]) for value in work)
+    day = start.astimezone(zone).date() - dt.timedelta(days=1)
+    last_day = end.astimezone(zone).date() + dt.timedelta(days=1)
+    while day <= last_day:
+        for minute in minutes:
+            for instant in wall_instants(day, minute, zone):
+                if start <= instant <= end:
+                    events.add(instant)
+                    if minute % 60 == 0:
+                        hours.add(instant)
+        day += dt.timedelta(days=1)
+    return events, hours
+
+
+def city_row(city, now, start, end, home_offset):
+    zone = city["zone"]
+    local = now.astimezone(zone)
+    work = city.get("working_hours")
+    duration = (end - start).total_seconds()
+
+    def position(instant):
+        return (instant - start).total_seconds() / duration
+
+    events, hours = timeline_events(start, end, zone, work)
+    repeated = Counter(instant.astimezone(zone).strftime("%Y-%m-%d %H:%M") for instant in hours)
+    ticks = []
+    for instant in sorted(hours):
+        wall = instant.astimezone(zone)
+        offset = offset_label(wall.utcoffset().total_seconds())
+        ambiguous = repeated[wall.strftime("%Y-%m-%d %H:%M")] > 1
+        ticks.append(
+            {
+                "position": position(instant),
+                "instant": instant.isoformat(),
+                "label": wall.strftime("%H:%M") + (f" ({offset})" if ambiguous else ""),
+                "utc_offset": offset,
+            }
+        )
+    boundaries = []
+    segments = []
+    ordered = sorted(events)
+    for instant in ordered:
+        wall = instant.astimezone(zone)
+        if wall.date() != (instant - dt.timedelta(seconds=1)).astimezone(zone).date():
+            boundaries.append({"position": position(instant), "date": wall.date().isoformat()})
+    for begin, finish in pairwise(ordered):
+        kind = shading(begin.astimezone(zone), work)
+        if segments and segments[-1]["kind"] == kind:
+            segments[-1]["end"] = position(finish)
+        else:
+            segments.append({"start": position(begin), "end": position(finish), "kind": kind})
+    delta = (local.utcoffset() - home_offset).total_seconds()
+    return {
+        "label": city["label"],
+        "timezone": city["timezone"],
+        "time": local.strftime("%H:%M"),
+        "date": local.date().isoformat(),
+        "abbreviation": local.tzname(),
+        "utc_offset": offset_label(local.utcoffset().total_seconds()),
+        "offset_from_home_seconds": delta,
+        "offset_from_home": offset_label(delta),
+        "working_hours": work,
+        "ticks": ticks,
+        "date_boundaries": boundaries,
+        "segments": segments,
+    }
+
+
+def build_data(cities, mode="today", now=None):
+    now = (now or dt.datetime.now(dt.UTC)).astimezone(dt.UTC)
+    result = {
+        "generated_at": now.isoformat(),
+        "mode": mode,
+        "timeline": None,
+        "cities": [],
+        "message": "",
+    }
+    if not cities:
+        result["message"] = (
+            "No cities configured. Open Settings or run worldclock config to add [[cities]]."
+        )
+        return result
+    home = now.astimezone(cities[0]["zone"])
+    if mode == "today":
+        start = dt.datetime.combine(home.date(), dt.time(), home.tzinfo).astimezone(dt.UTC)
+        end = dt.datetime.combine(
+            home.date() + dt.timedelta(days=1), dt.time(), home.tzinfo
+        ).astimezone(dt.UTC)
+    else:
+        start, end = now - dt.timedelta(hours=12), now + dt.timedelta(hours=12)
+    duration = (end - start).total_seconds()
+    result["timeline"] = {
+        "start": start.isoformat(),
+        "end": end.isoformat(),
+        "duration_seconds": duration,
+        "now_position": (now - start).total_seconds() / duration,
+    }
+    result["cities"] = [
+        {"home": index == 0, **city_row(city, now, start, end, home.utcoffset())}
+        for index, city in enumerate(cities)
+    ]
+    return result
+
+
+BAND_COLORS = {"day": 24, "twilight": 60, "night": 235, "working": 29, "outside": 235}
+BAND_SYMBOLS = {"day": "░", "twilight": "▒", "night": "▓", "working": "░", "outside": "▓"}
+BAND_LABELS = {
+    "day": "Day",
+    "twilight": "Morning / evening",
+    "night": "Night",
+    "working": "Working",
+    "outside": "Outside work",
+}
+
+
+def place_labels(entries, width):
+    line = [" "] * width
+    occupied = -1
+    for position, label in entries:
+        column = min(width - len(label), round(position * (width - 1)))
+        if column > occupied:
+            line[column : column + len(label)] = label
+            occupied = column + len(label)
+    return "".join(line).rstrip()
+
+
+def terminal_band(city, width, marker, *, color):
+    midnights = {
+        min(width - 1, round(b["position"] * (width - 1))) for b in city["date_boundaries"]
+    }
+    bar = []
+    previous = None
+    for index in range(width):
+        position = index / width
+        kind = next(s["kind"] for s in city["segments"] if s["start"] <= position < s["end"])
+        if color and kind != previous:
+            bar.append(f"\033[48;5;{BAND_COLORS[kind]}m\033[38;5;250m")
+        char = " " if color else BAND_SYMBOLS[kind]
+        if index in midnights:
+            char = "┊"
+        if index == marker:
+            char = "┃"
+            if color:
+                char = "\033[97;1m┃\033[22;38;5;250m"
+        bar.append(char)
+        previous = kind
+    if color:
+        bar.append("\033[0m")
+    return "".join(bar)
+
+
+def terminal(data, *, color=False):
+    def paint(text, code):
+        return f"\033[{code}m{text}\033[0m" if color else text
+
+    if data["message"]:
+        print(data["message"])
+        return
+    timeline = data["timeline"]
+    width = max(40, min(120, shutil.get_terminal_size().columns - 4))
+    marker = min(width - 1, round(timeline["now_position"] * (width - 1)))
+    mode = "Today" if data["mode"] == "today" else "Around now"
+    home = data["cities"][0]
+    print(
+        "\n  "
+        + paint("WORLD CLOCK", "1;38;5;75")
+        + "  "
+        + paint(f"{mode} · {timeline['duration_seconds'] / 3600:g}h", "38;5;250")
+    )
+    print("  " + paint(f"Home · {home['label']}   /   {home['date']}", "38;5;245"))
+    print("  " + paint("─" * width, "38;5;238"))
+    for city in data["cities"]:
+        tag = "home" if city["home"] else city["offset_from_home"]
+        left = f"{city['label']}  {city['time']}"
+        right = f"{city['date']} · {city['abbreviation']} · {tag}"
+        gap = " " * max(2, width - len(left) - len(right))
+        title = paint(city["label"], "1") + "  " + paint(city["time"], "1;38;5;75")
+        if len(left) + len(right) + 2 > width:
+            print("\n  " + title)
+            print("  " + paint(right, "38;5;245"))
+        else:
+            print("\n  " + title + gap + paint(right, "38;5;245"))
+        hours = place_labels(
+            ((t["position"], t["label"][:2]) for t in city["ticks"] if t["position"] < 1), width
+        )
+        print("  " + paint(hours, "38;5;250"))
+        print("  " + terminal_band(city, width, marker, color=color))
+        dates = place_labels(((b["position"], b["date"]) for b in city["date_boundaries"]), width)
+        if dates:
+            print("  " + paint(dates, "38;5;245"))
+        repeated = [t["label"] for t in city["ticks"] if " (" in t["label"]]
+        if repeated:
+            print("  " + paint("Repeated hours: " + " · ".join(repeated), "38;5;245"))
+    kinds = {segment["kind"] for city in data["cities"] for segment in city["segments"]}
+    legend = []
+    for kind, label in BAND_LABELS.items():
+        if kind in kinds:
+            swatch = paint("  ", f"48;5;{BAND_COLORS[kind]}") if color else BAND_SYMBOLS[kind]
+            legend.append(swatch + " " + paint(label, "38;5;245"))
+    print("\n  " + "   ".join(legend))
+    print("  " + paint("┃ Now   ┊ Date change · 24-hour local time", "38;5;245") + "\n")
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Compare city clocks on a shared elapsed-time axis."
+    )
+    parser.add_argument(
+        "command", nargs="?", choices=["config"], help="create and open your TOML config"
+    )
+    parser.add_argument(
+        "--format",
+        choices=["ansi", "plain", "json"],
+        help="default: ANSI on a terminal, plain when piped (respects NO_COLOR)",
+    )
+    parser.add_argument("--mode", choices=["today", "around-now"], default="today")
+    args = parser.parse_args()
+    path = config_path()
+    try:
+        if args.command == "config":
+            if not path.exists():
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(DEFAULT_CONFIG)
+            opener_name = "open" if sys.platform == "darwin" else "xdg-open"
+            opener = shutil.which(opener_name)
+            if not opener:
+                raise ValueError(f"{opener_name} not found; edit the configuration directly")
+            subprocess.Popen(  # noqa: S603 — config path is one argument to the desktop opener
+                [opener, str(path)],
+                start_new_session=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            print(path)
+            return 0
+        data = build_data(load_config(path), args.mode)
+        if args.format == "json":
+            print(json.dumps(data, ensure_ascii=False))
+        else:
+            color = args.format == "ansi" or (
+                args.format is None and sys.stdout.isatty() and "NO_COLOR" not in os.environ
+            )
+            terminal(data, color=color)
+        return 0
+    except (OSError, ValueError) as exc:
+        print(f"worldclock: {path}: {exc}. Edit with 'worldclock config'.", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
