@@ -191,6 +191,7 @@ window-rule {
     match app-id=r#"^xdg-desktop-portal$"#
     match app-id=r#"^1password$"#
     match app-id=r#"^com\.gabm\.satty$"#
+    match app-id=r#"^Emulator$"#   // Android emulator
     open-floating true
 }
 window-rule {
