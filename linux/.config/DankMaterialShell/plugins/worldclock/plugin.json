@@ -1,0 +1,18 @@
+{
+  "id": "worldclock",
+  "name": "World Clock",
+  "description": "Compare city clocks on aligned timezone bars",
+  "version": "0.1.0",
+  "author": "Mario-César",
+  "type": "composite",
+  "capabilities": ["daemon", "launcher"],
+  "components": {
+    "daemon": "./WorldClockDaemon.qml",
+    "launcher": "./WorldClockLauncher.qml"
+  },
+  "trigger": "",
+  "icon": "public",
+  "dependencies": ["worldclock"],
+  "requires_dms": ">=1.6.0",
+  "permissions": ["process"]
+}
