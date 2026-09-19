@@ -217,6 +217,12 @@ window-rule {
     match app-id="zoom"
     open-floating true
 }
+// Playwright's Chromium (the MCP, `just e2e-headed`): tiled, the tile would become the viewport.
+window-rule {
+    match app-id=r#"^chromium-browser$"#
+    open-floating true
+    open-focused false
+}
 window-rule {
     match is-floating=true
     shadow { on; }
