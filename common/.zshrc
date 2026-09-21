@@ -48,3 +48,6 @@ command -v starship >/dev/null && eval "$(starship init zsh)"
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+
+# bun completions
+[ -s "/home/mariocesar/.bun/_bun" ] && source "/home/mariocesar/.bun/_bun"
