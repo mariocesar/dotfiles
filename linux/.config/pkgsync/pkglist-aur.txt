@@ -16,3 +16,5 @@ fzf-tab
 viddy     # Better watch
 android-studio  # its SDK Manager owns ~/Android/Sdk
 flutter-bin     # join the `flutter` group, or it COW-mounts /opt/flutter into ~/.cache
+
+leaf-markdown-viewer-bin  # Same as glow
