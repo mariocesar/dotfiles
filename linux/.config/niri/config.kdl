@@ -298,11 +298,11 @@ binds {
 
     // === Window Management ===
     Mod+Q repeat=false { close-window; }
-    Mod+F { maximize-column; }
-    Mod+Shift+F { fullscreen-window; }
+    F11 repeat=false { fullscreen-window; }
+    Mod+F11 repeat=false { maximize-column; }
 
     // Client thinks it is fullscreen, niri keeps it tiled.
-    Mod+Alt+F { toggle-windowed-fullscreen; }
+    Mod+Alt+F11 repeat=false { toggle-windowed-fullscreen; }
     Mod+Shift+T { toggle-window-floating; }
     Mod+Shift+V { switch-focus-between-floating-and-tiling; }
     Mod+W { toggle-column-tabbed-display; }
