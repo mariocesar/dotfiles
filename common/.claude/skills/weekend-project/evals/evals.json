@@ -1,0 +1,26 @@
+{
+  "skill_name": "weekend-project",
+  "evals": [
+    {
+      "id": 0,
+      "name": "research-with-mixed-evidence",
+      "prompt": "Acabamos de investigar si usar Postgres LISTEN/NOTIFY o Redis Streams como backend de una cola de trabajos para un side project. Esto es lo que quedó establecido en la conversación:\n\n- Verificado leyendo la documentación oficial de Postgres 17: el payload de NOTIFY está limitado a 8000 bytes, y la cola de notificaciones pendientes tiene un límite global (`max_notify_queue_pages`, por defecto 1048576 páginas = 8 GB). Si se llena, las transacciones que hagan NOTIFY fallan.\n- Verificado con `psql`: en nuestra instancia local (Postgres 17.2, docker) `SHOW max_notify_queue_pages` devuelve 1048576.\n- Verificado en los docs de Redis: Redis Streams sí tiene consumer groups con ACK explícito y XAUTOCLAIM para mensajes huérfanos. LISTEN/NOTIFY no tiene ACK — si el listener está caído cuando llega la notificación, se pierde para siempre.\n- Redis dice en su página de marketing que Streams maneja \"millones de mensajes por segundo\". No dan la configuración ni el hardware.\n- Mi cálculo, nadie lo ha medido: con nuestro volumen esperado (~200 jobs/minuto pico) cualquiera de los dos sobra por tres órdenes de magnitud, así que el rendimiento es irrelevante y la decisión debería ser operativa.\n- Un post de Stack Overflow muy votado decía que NOTIFY se entrega fuera de la transacción; comprobamos en los docs y es falso — las notificaciones se entregan en el COMMIT, dentro de la transacción, y por eso se pierden si haces rollback.\n- Un tutorial de 2019 que salió el primero en Google usa `pg_notify` con la extensión `pgq`, que ya no se mantiene desde 2021. No seguirlo.\n\nGuárdame esto como weekend project para retomarlo, que la semana que viene quiero prototipar el de Postgres.",
+      "expected_output": "Documento markdown en español en la carpeta de weekends, con: veredicto corto arriba, contexto verificado (límites de NOTIFY, versión de Postgres local) separado de la aritmética propia (200 jobs/min) y de la cifra de vendor (Redis 'millones/s'); la afirmación de Stack Overflow marcada como desmentida con el porqué; el tutorial de 2019 marcado como obsoleto en fuentes; preguntas abiertas orientadas al prototipo de Postgres; y una línea añadida al README índice.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "raw-idea-few-verified-facts",
+      "prompt": "Se me acaba de ocurrir una idea y no quiero que se me olvide. Un CLI que lee el historial de git de un repo y genera el CHANGELOG con un LLM, pero la gracia es que no resume los mensajes de commit — lee el diff real, porque los mensajes de commit de la mayoría de la gente son basura y el diff no miente. Lo llamaría `difflog`.\n\nLo único que hemos mirado en la conversación es que `git log -p --since` te da los diffs en un solo comando, y que en un repo grande eso son megas y megas de texto, así que habría que trocearlo. No hemos mirado si ya existe algo así, ni cuánto costaría en tokens, ni qué modelo usar.\n\nApúntamelo como proyecto de fin de semana.",
+      "expected_output": "Documento markdown en español, honesto sobre lo poco que se verificó: solo `git log -p --since` y el problema de tamaño están confirmados; competencia, coste en tokens y elección de modelo deben aparecer marcados como huecos sin verificar (no rellenados con conocimiento general plausible) y convertidos en preguntas abiertas. Debe evitar inventar benchmarks, precios o nombres de herramientas competidoras.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "update-existing-doc",
+      "prompt": "¿Te acuerdas del weekend project de correr Qwen3.8-27B en local? Está en la carpeta de weekends. Acabo de medirlo de verdad este finde y hay que actualizarlo:\n\n- Instalé la build MLX de 4 bits con LM Studio. Medido con el propio LM Studio, prompt de 2K tokens: 14,2 tok/s de decode, 890 tok/s de prefill. O sea que mi estimación de 10-15 tok/s era correcta, ya no es estimación.\n- La torre de visión SÍ se carga siempre, aunque no le pases imágenes. Lo vi en el monitor de memoria: 16,08 GB de pesos pero 18,7 GB residentes en reposo. Eso se come parte de la holgura que había calculado.\n- Desactivar el modo thinking sube el throughput efectivo muchísimo, más de lo que esperaba — en preguntas cortas la respuesta llega en un tercio del tiempo.\n- No conseguí que mlx-vlm usara la cabeza MTP para speculative decoding. No encontré ninguna opción en la CLI. Sigue abierto.\n\nActualiza el documento.",
+      "expected_output": "Debe EDITAR el documento existente, no crear uno nuevo. La estimación de 10-15 tok/s pasa de 'aritmética propia' a 'hecho medido' con la condición de medida; el coste de la torre de visión pasa de pregunta abierta a hecho verificado y corrige la tabla de memoria; la pregunta del MTP sigue abierta; el Estado y la fecha se actualizan; el README índice refleja el nuevo estado.",
+      "files": ["Weekends/qwen3.8-27b-local-m5-pro.md", "Weekends/README.md"]
+    }
+  ]
+}
