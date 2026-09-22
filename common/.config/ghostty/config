@@ -67,6 +67,10 @@ shell-integration-features = cursor,sudo,title,ssh-env,ssh-terminfo
 # Multiline input in Claude Code and friends.
 keybind = shift+enter=text:\n
 
+# Ghostty defaults fullscreen to ctrl+enter, which conflicts with app shortcuts.
+keybind = ctrl+enter=unbind
+keybind = f11=toggle_fullscreen
+
 keybind = ctrl+shift+k=clear_screen
 
 # Default resize_split chord (super+ctrl+shift+arrow) collides with
