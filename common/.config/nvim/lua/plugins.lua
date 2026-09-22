@@ -5,6 +5,7 @@ return {
   },
   'tpope/vim-surround',
   'tpope/vim-repeat',
+  'NoahTheDuke/vim-just', -- newer than the copy bundled in the runtime
   {
     'liuchengxu/vim-clap',
     build = ':Clap install-binary!',
