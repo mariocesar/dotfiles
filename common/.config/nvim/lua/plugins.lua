@@ -7,6 +7,10 @@ return {
   'tpope/vim-repeat',
   'NoahTheDuke/vim-just', -- newer than the copy bundled in the runtime
   {
+    'thgrass/tail.nvim', -- :TailEnable follows appended lines while at the bottom
+    cmd = { 'TailEnable', 'TailToggle' },
+  },
+  {
     'liuchengxu/vim-clap',
     build = ':Clap install-binary!',
     cmd = 'Clap',
