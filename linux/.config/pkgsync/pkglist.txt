@@ -7,11 +7,11 @@ zsh
 
 neovim
 tree-sitter-cli # nvim-treesitter compiles parsers with it
-neovide
 nodejs          # mason installs the npm-based language servers
 npm
 python
 uv
+ollama-cuda     # local models for llm (llm-ollama)
 
 fd              # vim-clap dotfiles provider
 fzf

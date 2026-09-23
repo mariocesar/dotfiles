@@ -86,6 +86,7 @@ brew "pnpm"
 brew "python@3.12"
 brew "python@3.13"
 brew "uv"
+brew "ollama" # local models for llm (llm-ollama)
 brew "mise" # .zshrc activates it
 brew "pre-commit"
 brew "virtualenv"
