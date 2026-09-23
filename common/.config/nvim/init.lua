@@ -86,6 +86,21 @@ opt.wildignore = {
 }
 
 if not global.vscode then
+  require('tokyonight').setup {
+    -- vim-clap only derives its own colors for groups that don't exist yet
+    on_highlights = function(hl, c)
+      hl.ClapInput = { bg = c.bg_highlight }
+      hl.ClapSearchText = { fg = c.fg, bg = c.bg_highlight, bold = true }
+      hl.ClapSpinner = { fg = c.blue, bg = c.bg_highlight, bold = true }
+      hl.ClapIndicator = { fg = c.comment, bg = c.bg_highlight }
+      hl.ClapDisplay = { fg = c.fg_dark, bg = c.bg_dark }
+      hl.ClapPreview = { bg = c.bg_dark }
+      hl.ClapCurrentSelection = { fg = c.fg, bg = c.bg_highlight, bold = true }
+      hl.ClapCurrentSelectionSign = { fg = c.blue, bg = c.bg_highlight }
+      hl.ClapSelected = { fg = c.magenta, bold = true }
+      hl.ClapSelectedSign = { fg = c.magenta }
+    end,
+  }
   vim.cmd [[colorscheme tokyonight-night]]
 end
 

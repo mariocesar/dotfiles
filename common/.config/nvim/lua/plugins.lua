@@ -15,9 +15,14 @@ return {
     build = ':Clap install-binary!',
     cmd = 'Clap',
     cond = not vim.g.vscode,
-    config = function()
+    init = function() -- clap reads some of these while loading, before config runs
       vim.g.enable_clap_auto_resize = true
       vim.g.clap_enable_background_shadow = true
+      vim.g.clap_enable_icon = 1
+      vim.g.clap_search_box_border_style = 'curve'
+      vim.g.clap_current_selection_sign = { text = '▌', texthl = 'ClapCurrentSelectionSign', linehl = 'ClapCurrentSelection' }
+      vim.g.clap_selected_sign = { text = '●', texthl = 'ClapSelectedSign', linehl = 'ClapSelected' }
+      vim.g.clap_fuzzy_match_hl_groups = { { 215, '#ff9e64' } }
       vim.g.clap_provider_dotfiles = {
         source = "fd --type f --hidden --follow --exclude .git . ~/.dotfiles/",
         description = 'Open some dotfile',
