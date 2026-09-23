@@ -281,7 +281,15 @@ function wrap.handler()
 end
 
 if global.neovide then
-  global.neovide_scale_factor = 0.8
+  -- Mirrors Ghostty: its 12pt padding, 8% taller cells and 0.95 background.
+  global.neovide_padding_top = 12
+  global.neovide_padding_bottom = 12
+  global.neovide_padding_left = 12
+  global.neovide_padding_right = 12
+  opt.linespace = 2
+  global.neovide_opacity = 1.0
+  global.neovide_normal_opacity = 0.95
+
   global.neovide_hide_mouse_when_typing = true
   global.neovide_remember_window_size = true
   global.neovide_fullscreen = false

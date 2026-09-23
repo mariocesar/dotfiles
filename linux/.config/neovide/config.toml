@@ -1,0 +1,8 @@
+# Font lives here, not in guifont, so the first frame already uses it.
+[font]
+normal = ["JetBrains Mono"]
+size = 8.0
+
+# Same as Ghostty, so nvim looks the same in both.
+[font.features]
+"JetBrains Mono" = ["-calt", "-liga"]
