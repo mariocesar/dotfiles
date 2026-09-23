@@ -3,6 +3,8 @@ espanso-wayland-git
 google-chrome
 matugen-bin
 minecraft-launcher
+neovide-nightly-bin # 0.16.2 cannot parse 0.13 api-info (neovide#3530)
+neovim-git          # multiple cursors are 0.13-only
 quickshell-git
 sublime-text-4
 ttf-material-icons-git

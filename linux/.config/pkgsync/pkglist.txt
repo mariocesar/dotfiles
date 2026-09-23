@@ -5,7 +5,6 @@ base-devel
 git
 zsh
 
-neovim
 tree-sitter-cli # nvim-treesitter compiles parsers with it
 nodejs          # mason installs the npm-based language servers
 npm
