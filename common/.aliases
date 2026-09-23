@@ -194,7 +194,6 @@ function fzfcopy() {
 }
 
 function suggest-commit-message() {
-  local commit_message
   assert_inside_git || return 1
 
   if [ -z "$(git diff --staged)" ]; then
@@ -202,7 +201,9 @@ function suggest-commit-message() {
     return 1
   fi
 
-  local commit_message=$(gpt --model gpt-4o-mini --prompt "Return only a short concise and adecuate git commit message following industry standards for the following patch:\n$(git diff --staged)\n")
+  # Thinking took 5 min for the same message; the 4096 default context drops the start of big diffs
+  local commit_message=$(git diff --staged | llm -m local -o think false -o num_ctx 16384 \
+    -s "Write a git commit message for this patch. Return only the message: a short imperative subject line under 60 characters, no prefix, no quotes, no code fences.")
 
   git commit --edit -m "$commit_message"
 }

@@ -1,0 +1,5 @@
+{
+    "local": "qwen3.5:9b",
+    "gemma": "gemma4:26b-a4b-it-qat",
+    "oss": "gpt-oss:20b"
+}
