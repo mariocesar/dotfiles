@@ -96,6 +96,9 @@ For symbols use `grn` instead — multi-cursor is for config, markup, columns.
 | `*` | Search word under cursor |
 | `<Esc><Esc>` | Clear highlight |
 | `:%s/old/new/g` | Replace in file |
+| `,g` | Live grep in project |
+| `,G` · `,g` (visual) | Grep word under cursor · selection |
+| `,b` | Search lines in this buffer — `'foo` exact, `^` `$` anchors, `!` negates |
 
 Case-insensitive until you type a capital. `:%s` previews live in a split.
 
@@ -116,7 +119,7 @@ Case-insensitive until you type a capital. `:%s` previews live in a split.
 
 ## Git
 
-`:Gitsigns preview_hunk` · `blame_line` · `diffthis`
+`]c` `[c` next / previous hunk · `:Gitsigns preview_hunk` · `blame_line` · `diffthis`
 
 ## Troubleshoot
 

@@ -29,7 +29,20 @@ return {
   {
     'lewis6991/gitsigns.nvim',
     cond = not vim.g.vscode,
-    config = function() require('gitsigns').setup() end
+    config = function()
+      require('gitsigns').setup {
+        on_attach = function(buf)
+          local gs = require('gitsigns')
+          -- keep the builtin ]c [c in diff windows
+          vim.keymap.set('n', ']c', function()
+            if vim.wo.diff then vim.cmd.normal { ']c', bang = true } else gs.nav_hunk('next') end
+          end, { buffer = buf, desc = 'Next git hunk' })
+          vim.keymap.set('n', '[c', function()
+            if vim.wo.diff then vim.cmd.normal { '[c', bang = true } else gs.nav_hunk('prev') end
+          end, { buffer = buf, desc = 'Previous git hunk' })
+        end,
+      }
+    end
   },
   {
     'nvim-treesitter/nvim-treesitter',

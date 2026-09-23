@@ -192,6 +192,9 @@ map('n', '<leader>g', '<cmd>Clap grep<cr>', {
 map('n', '<leader>G', '<cmd>Clap grep ++query=<cword><cr>', {
   desc = 'Live grep the word under cursor'
 })
+map('n', '<leader>b', '<cmd>Clap blines<cr>', {
+  desc = 'Search lines in the current buffer'
+})
 -- `:` not <cmd>: leaving visual mode first sets the '< '> marks @visual reads
 map('v', '<leader>g', ':<C-u>Clap grep ++query=@visual<cr>', {
   desc = 'Live grep the selection'
