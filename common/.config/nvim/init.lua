@@ -281,14 +281,27 @@ function wrap.handler()
 end
 
 if global.neovide then
-  -- Mirrors Ghostty: its 12pt padding, 8% taller cells and 0.95 background.
-  global.neovide_padding_top = 12
-  global.neovide_padding_bottom = 12
-  global.neovide_padding_left = 12
-  global.neovide_padding_right = 12
-  opt.linespace = 2
+  -- Matched to Ghostty by screenshot: padding is in physical px, so 24 is its 12pt at 2x.
+  global.neovide_padding_top = 24
+  global.neovide_padding_bottom = 24
+  global.neovide_padding_left = 24
+  global.neovide_padding_right = 24
+  opt.linespace = 1
+  global.neovide_text_contrast = 0.9 -- stands in for font-thicken
   global.neovide_opacity = 1.0
   global.neovide_normal_opacity = 0.95
+
+  -- Ghostty's zoom and paste chords; Neovide has neither.
+  global.neovide_scale_factor = 1.0
+  local function zoom(by)
+    global.neovide_scale_factor = by and global.neovide_scale_factor * by or 1.0
+  end
+  map('n', '<C-=>', function() zoom(1.1) end, { desc = 'Zoom in' })
+  map('n', '<C-->', function() zoom(1 / 1.1) end, { desc = 'Zoom out' })
+  map('n', '<C-0>', function() zoom() end, { desc = 'Reset zoom' })
+  map({ 'n', 'i', 'c', 't' }, '<C-S-v>', function()
+    vim.api.nvim_paste(vim.fn.getreg('+'), true, -1)
+  end, { desc = 'Paste' })
 
   global.neovide_hide_mouse_when_typing = true
   global.neovide_remember_window_size = true
