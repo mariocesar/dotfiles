@@ -4,6 +4,13 @@ local global = vim.g
 global.mapleader = ','
 global.maplocalleader = '\\'
 
+-- netrw browses directories; the builtin dir plugin would compete with it for them
+global.loaded_nvim_dir_plugin = 1
+-- netrw's click handler opens ../ instead of the clicked entry on nvim 0.13
+global.netrw_mousemaps = 0
+global.netrw_banner = 0
+global.netrw_liststyle = 3 -- tree
+
 require("config.lazy")
 
 global.have_nerd_fonts = true
@@ -175,6 +182,15 @@ map('n', '<leader>s', '<cmd>write<cr>', {
 map('n', '<esc><esc>', '<cmd>nohlsearch<cr><C-l>', {
   desc = 'Cleanup search highlight and redraw'
 })
+-- Lexplore's own size is a percentage; a tree reads better at a fixed width
+map('n', '<leader>e', function()
+  vim.cmd.Lexplore()
+  if vim.api.nvim_get_current_buf() == vim.t.netrw_lexbufnr then
+    vim.cmd('vertical resize 30')
+  end
+end, {
+  desc = 'Toggle the file tree sidebar'
+})
 map('n', '<leader>p', '<cmd>Clap files<cr>', {
   desc = 'Navigate files in the current working directory'
 })
@@ -238,17 +254,6 @@ map('c', '<D-v>', '<C-r>+', {
 
 local au = require("au")
 
--- JSON show conceal chars
-
-local json = au("json")
-local conceal = json({
-  'BufEnter'
-}, {
-  pattern = '*.json'
-})
-
-function conceal.handler() vim.opt_local.conceallevel = 0 end
-
 -- briefly highlight a selection on yank
 
 local yank = au("user_yank")
@@ -265,20 +270,6 @@ local results = grep({
 })
 
 function results.handler() vim.cmd.cwindow() end
-
--- Markdown preferences
-
-local markdown = au("markdown")
-local wrap = markdown({
-  "FileType"
-}, {
-  pattern = "markdown"
-})
-
-function wrap.handler()
-  vim.opt_local.wrap = true
-  vim.opt_local.linebreak = true
-end
 
 if global.neovide then
   -- Matched to Ghostty by screenshot: padding is in physical px, so 24 is its 12pt at 2x.

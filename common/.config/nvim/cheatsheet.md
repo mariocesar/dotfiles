@@ -49,6 +49,22 @@ Full message expands under the cursor line automatically, with rule code and
 | `gx` | Open URL/path under cursor |
 | `:Cwd` | cwd to current file's dir |
 
+## File tree
+
+| | |
+|---|---|
+| `,e` | Toggle the tree on the left |
+| `<CR>` · double-click | Open file beside the tree · expand / collapse folder |
+| `v` | Open in a vertical split beside the tree |
+| `t` | Open in a new tab |
+| `-` | Up a directory |
+| `%` · `d` | New file · new folder |
+| `R` · `D` | Rename · delete |
+| `<F1>` | All netrw keys |
+
+No horizontal split from the tree — `o` splits the tree itself. Split the
+editor first with `,"`, then `<CR>` fills the top half.
+
 ## Wrap, change, comment
 
 | | |
