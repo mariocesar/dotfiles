@@ -137,6 +137,13 @@ Case-insensitive until you type a capital. `:%s` previews live in a split.
 
 `]c` `[c` next / previous hunk · `:Gitsigns preview_hunk` · `blame_line` · `diffthis`
 
+## Documents
+
+`:Beside` renders markdown (leaf), rst, asciidoc, org… (pandoc) in a right split.
+It follows the cursor and scrolls the source when you scroll it, re-renders as
+you type, moves along to the next document you open beside it, and closes when
+its source is gone. `q` in the preview closes it.
+
 ## Troubleshoot
 
 | | |

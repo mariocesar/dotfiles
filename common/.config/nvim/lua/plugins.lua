@@ -11,6 +11,12 @@ return {
     cmd = { 'TailEnable', 'TailToggle' },
   },
   {
+    'mariocesar/beside.nvim', -- :Beside renders the document in a split that follows the cursor
+    dev = true,
+    cmd = 'Beside',
+    cond = not vim.g.vscode,
+  },
+  {
     'liuchengxu/vim-clap',
     build = ':Clap install-binary!',
     cmd = 'Clap',
