@@ -6,6 +6,12 @@ git
 zsh
 
 tree-sitter-cli # nvim-treesitter compiles parsers with it
+tree-sitter-c   # the grammars neovim bundles; neovim-git does not pull them in
+tree-sitter-lua
+tree-sitter-markdown
+tree-sitter-query
+tree-sitter-vim
+tree-sitter-vimdoc
 nodejs          # mason installs the npm-based language servers
 npm
 python
