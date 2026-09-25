@@ -1,0 +1,13 @@
+{
+  "UserPromptSubmit": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python3 ~/.claude/hooks/idle-reminder.py",
+          "timeout": 5
+        }
+      ]
+    }
+  ]
+}
