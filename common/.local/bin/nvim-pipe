@@ -1,0 +1,223 @@
+#!/bin/sh
+
+# Edit text in the middle of a pipeline with Neovim.
+# Output is released only after at least one successful file write.
+
+set -eu
+
+program=${0##*/}
+version=0.1.0
+
+usage() {
+    cat <<EOF
+Usage: $program [OPTIONS]
+
+Edit standard input in Neovim and write the last successfully saved file to
+standard output. If standard input is a terminal, start with an empty buffer.
+
+Options:
+  -f, --file FILE       Start with a copy of FILE instead of standard input
+  -s, --suffix EXT      Give the temporary buffer a suffix (for example json)
+  -t, --filetype TYPE   Set the Neovim filetype explicitly
+  -h, --help            Show this help
+  -V, --version         Show the version
+
+Editor behavior:
+  :wq, :x, ZZ           Commit and continue the pipeline
+  :q, :q! without :w    Cancel and emit nothing (exit status 20)
+  :w PATH               Make PATH the latest committed output
+  :cq!                  Cancel even after writing
+
+Environment:
+  NVIM_PIPE_NVIM        Neovim executable (default: nvim)
+EOF
+}
+
+die() {
+    printf '%s: %s\n' "$program" "$*" >&2
+    exit 2
+}
+
+file=
+suffix=
+filetype=
+
+while [ "$#" -gt 0 ]; do
+    case $1 in
+        -f|--file)
+            [ "$#" -ge 2 ] || die "missing value for $1"
+            file=$2
+            shift 2
+            ;;
+        --file=*)
+            file=${1#*=}
+            shift
+            ;;
+        -s|--suffix)
+            [ "$#" -ge 2 ] || die "missing value for $1"
+            suffix=$2
+            shift 2
+            ;;
+        --suffix=*)
+            suffix=${1#*=}
+            shift
+            ;;
+        -t|--filetype)
+            [ "$#" -ge 2 ] || die "missing value for $1"
+            filetype=$2
+            shift 2
+            ;;
+        --filetype=*)
+            filetype=${1#*=}
+            shift
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        -V|--version)
+            printf '%s %s\n' "$program" "$version"
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            die "unknown option: $1"
+            ;;
+        *)
+            die "unexpected argument: $1"
+            ;;
+    esac
+done
+
+[ "$#" -eq 0 ] || die "unexpected argument: $1"
+
+if [ -n "$file" ]; then
+    [ -f "$file" ] || die "not a file: $file"
+    [ -r "$file" ] || die "cannot read: $file"
+    # Without an explicit suffix, keep the file's own so filetype detection works.
+    if [ -z "$suffix" ]; then
+        case ${file##*/} in
+            ?*.?*) suffix=${file##*.} ;;
+        esac
+    fi
+fi
+
+if [ -n "$suffix" ]; then
+    suffix=${suffix#.}
+    case $suffix in
+        ''|*/*) die "suffix must be a non-empty filename suffix" ;;
+    esac
+fi
+
+nvim_bin=${NVIM_PIPE_NVIM:-nvim}
+command -v "$nvim_bin" >/dev/null 2>&1 || die "Neovim executable not found: $nvim_bin"
+command -v mktemp >/dev/null 2>&1 || die "mktemp is required"
+( : </dev/tty ) 2>/dev/null || die "a controlling terminal is required"
+
+workdir=
+
+cleanup() {
+    [ -z "$workdir" ] || rm -rf -- "$workdir"
+}
+
+trap cleanup 0
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+umask 077
+workdir=$(mktemp -d "${TMPDIR:-/tmp}/nvim-pipe.XXXXXXXXXX")
+input=$workdir/input
+[ -z "$suffix" ] || input=$input.$suffix
+commit=$workdir/commit
+pending=$workdir/commit.pending
+hook_error=$workdir/hook.error
+hook=$workdir/hook.lua
+
+cat >"$hook" <<'LUA'
+local uv = vim.uv or vim.loop
+local commit = assert(vim.env.NVIM_PIPE_COMMIT)
+local pending = assert(vim.env.NVIM_PIPE_PENDING)
+local error_file = assert(vim.env.NVIM_PIPE_ERROR)
+
+-- A failed snapshot never touches an earlier commit; it stays the output.
+local function fail(message)
+  pcall(uv.fs_unlink, pending)
+  vim.fn.writefile({ message }, error_file)
+  vim.notify("nvim-pipe: " .. message, vim.log.levels.ERROR)
+end
+
+local function snapshot(args)
+  local written = vim.fn.fnamemodify(args.match, ":p")
+
+  -- BufWritePost also fires for a failed write; v:errmsg was cleared in BufWritePre.
+  if vim.v.errmsg ~= "" then
+    fail("write of " .. written .. " failed: " .. vim.v.errmsg)
+    return
+  end
+
+  -- Synchronous on purpose: :wq exits before an async copy could finish.
+  local copied, copy_error = uv.fs_copyfile(written, pending)
+  if not copied then
+    fail("could not snapshot " .. written .. ": " .. tostring(copy_error))
+    return
+  end
+
+  local renamed, rename_error = uv.fs_rename(pending, commit)
+  if not renamed then
+    fail("could not commit snapshot: " .. tostring(rename_error))
+    return
+  end
+
+  pcall(uv.fs_unlink, error_file)
+end
+
+local group = vim.api.nvim_create_augroup("NvimPipe", { clear = true })
+vim.api.nvim_create_autocmd("BufWritePre", {
+  group = group,
+  callback = function() vim.v.errmsg = "" end,
+})
+vim.api.nvim_create_autocmd("BufWritePost", {
+  group = group,
+  callback = snapshot,
+})
+
+local filetype = vim.env.NVIM_PIPE_FILETYPE
+if filetype and filetype ~= "" then
+  vim.bo.filetype = filetype
+end
+LUA
+
+if [ -n "$file" ]; then
+    cat -- "$file" >"$input"
+elif [ -t 0 ]; then
+    : >"$input"
+else
+    cat >"$input"
+fi
+
+status=0
+NVIM_PIPE_COMMIT=$commit \
+NVIM_PIPE_PENDING=$pending \
+NVIM_PIPE_ERROR=$hook_error \
+NVIM_PIPE_FILETYPE=$filetype \
+NVIM_PIPE_HOOK=$hook \
+    "$nvim_bin" -n "$input" -c 'lua dofile(vim.env.NVIM_PIPE_HOOK)' \
+    </dev/tty >/dev/tty 2>&1 || status=$?
+
+# A nonzero editor exit (including :cq!) always cancels the transaction.
+[ "$status" -eq 0 ] || exit "$status"
+
+# A failed later write is reported, but the last good commit still goes out.
+if [ -f "$hook_error" ]; then
+    sed "s/^/$program: /" "$hook_error" >&2
+    [ -f "$commit" ] || exit 1
+fi
+
+# Existence, rather than size, matters: an intentionally empty write commits.
+[ -f "$commit" ] || exit 20
+
+cat -- "$commit"
