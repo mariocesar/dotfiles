@@ -23,6 +23,7 @@ local parsers = {
   'toml',
   'tsx',
   'typescript',
+  'vala',
   'yaml'
 }
 

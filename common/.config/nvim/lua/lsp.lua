@@ -10,7 +10,8 @@ local servers = {
   'cssls',
   'jsonls',
   'yamlls',
-  'bashls'
+  'bashls',
+  'vala_ls'
 }
 
 require('mason').setup()
