@@ -144,15 +144,6 @@ cmd("Grep", "silent grep! <args>", {
   desc = 'grep into quickfix without jumping to the first match'
 })
 
--- open (new) terminal at the bottom of the current tab
-cmd("Terminal", function(tbl)
-  require("term"):open{
-    cmd = #tbl.args > 0 and tbl.args or nil
-  }
-end, {
-  nargs = "?"
-})
-
 -- Make vim.keymap.set defaults every mapping to silent.
 local function map(mode, lhs, rhs, o)
   vim.keymap.set(mode, lhs, rhs, vim.tbl_extend('keep', o or {}, {
@@ -193,6 +184,13 @@ end, {
 })
 map('n', '<leader>p', '<cmd>Clap files<cr>', {
   desc = 'Navigate files in the current working directory'
+})
+-- :terminal takes the rest of the line as its command, so `| startinsert` can't chain
+map('n', '<leader>t', function()
+  vim.cmd('below terminal')
+  vim.cmd.startinsert()
+end, {
+  desc = 'Open a terminal below'
 })
 map('n', '<C-j>', '<C-d>zz', {
   desc = 'Scroll down and center',
@@ -301,6 +299,7 @@ if global.neovide then
   global.neovide_scroll_animation_length = 0.1
   global.neovide_cursor_animation_length = 0.05
   global.neovide_cursor_trail_size = 0.25
+  global.neovide_cursor_animate_in_insert_mode = false -- typed text lands before the gliding cursor does
   global.neovide_refresh_rate = 60
 end
 

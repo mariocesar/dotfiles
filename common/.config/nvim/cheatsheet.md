@@ -126,7 +126,7 @@ Case-insensitive until you type a capital. `:%s` previews live in a split.
 | `,c` `,n` | New tab / next tab |
 | `<C-w>` + `hjkl` | Move between splits |
 | `,s` `,q` | Save / quit |
-| `:Terminal` | Shell pane, persistent buffer |
+| `,t` · `:below terminal` | Shell pane below |
 | `:Run` · `:Config` · `:Reload` | Run file · edit init.lua · source it |
 
 ## Clipboard
