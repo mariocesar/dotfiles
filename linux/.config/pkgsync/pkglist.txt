@@ -48,6 +48,9 @@ sshx          # Replace tmate
 tmux
 glab          # Gitlab CLI
 glow          # Render markdown in terminal
+vhs           # Recording terminal as gifs 
+
+stylua        # Lua Formatter
 
 entr
 just
