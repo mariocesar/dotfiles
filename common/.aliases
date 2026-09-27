@@ -26,7 +26,7 @@ if [[ $OSTYPE == darwin* ]]; then
   alias copy=pbcopy
   alias lan-ip="ipconfig getifaddr en0"
 else
-  alias o=xdg-open
+  o() { setsid -f xdg-open "$@" >/dev/null 2>&1; }
   alias copy=wl-copy
   alias lan-ip="ip -4 route get 1 | awk '{print \$7; exit}'"
 fi
