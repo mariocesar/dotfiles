@@ -213,3 +213,6 @@ alias ask='noglob ask'
 
 # viddy, not procps watch: 1s by default and the command keeps its colours
 alias watch=viddy-watch
+
+# Glance timer: https://github.com/mariocesar/glance-timer
+alias gt=glance-timer
