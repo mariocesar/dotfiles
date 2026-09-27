@@ -22,6 +22,7 @@ x-scheme-handler/file=org.gnome.Nautilus.desktop
 x-scheme-handler/http=firefox.desktop
 x-scheme-handler/https=firefox.desktop
 text/markdown=org.gnome.gitlab.somas.Apostrophe.desktop
+text/x-lua=org.gnome.gitlab.somas.Apostrophe.desktop
 
 [Added Associations]
 application/x-extension-htm=firefox.desktop;
@@ -46,5 +47,6 @@ x-scheme-handler/file=org.gnome.Nautilus.desktop;dms-open.desktop;
 x-scheme-handler/http=firefox.desktop;
 x-scheme-handler/https=firefox.desktop;
 text/markdown=org.gnome.gitlab.somas.Apostrophe.desktop;
+text/x-lua=org.gnome.gitlab.somas.Apostrophe.desktop;
 
 [Removed Associations]

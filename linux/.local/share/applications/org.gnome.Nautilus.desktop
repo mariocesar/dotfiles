@@ -3,7 +3,7 @@
 Name=Files
 Comment=Access and organize files
 Keywords=folder;manager;explore;disk;filesystem;nautilus;
-Exec=sh -c "exec \\$HOME/.local/bin/lightmode \\"\\$@\\"" lightmode nautilus --new-window %U
+Exec=lightmode nautilus --new-window %U
 Icon=org.gnome.Nautilus
 Terminal=false
 Type=Application
@@ -17,4 +17,4 @@ X-Purism-FormFactor=Workstation;Mobile;
 
 [Desktop Action new-window]
 Name=New Window
-Exec=sh -c "exec \\$HOME/.local/bin/lightmode \\"\\$@\\"" lightmode nautilus --new-window
+Exec=lightmode nautilus --new-window
