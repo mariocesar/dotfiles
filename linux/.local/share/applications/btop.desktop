@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=btop++
+GenericName=System Monitor
+Comment=Resource monitor that shows usage and stats for processor, memory, disks, network and processes
+Icon=btop
+# Shadows the stock Terminal=true entry; own app-id so niri opens it floating.
+Exec=ghostty --class=com.mitchellh.ghostty.btop -e btop
+Terminal=false
+Categories=System;Monitor;
+Keywords=system;process;task
