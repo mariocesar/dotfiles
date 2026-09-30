@@ -153,8 +153,8 @@ debug {
 
 // niri has no minimize: windows parked here (Mod+H) stay alive and keep notifying.
 workspace "stash"
-// Named workspaces always start at the top; keep this one below the default.
-spawn-at-startup "sh" "-c" "niri msg action move-workspace-to-index --reference stash 2 && niri msg action focus-workspace 1"
+// Named workspaces start at the top, so stash stays out of the way above; land on the one below it.
+spawn-at-startup "niri" "msg" "action" "focus-workspace" "2"
 
 window-rule {
     geometry-corner-radius 6
