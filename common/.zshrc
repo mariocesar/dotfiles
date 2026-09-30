@@ -41,6 +41,7 @@ command -v fzf >/dev/null && source <(fzf --zsh)
 # Completion styling; must come after compinit
 source ~/.config/zsh/zshcompletion.zsh
 source ~/.config/zsh/zshfzftab.zsh
+source ~/.config/zsh/zshnotes.zsh
 
 load_if_exists ~/.aliases
 load_if_exists ~/.zshrc.$(hostname)
