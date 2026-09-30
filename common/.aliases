@@ -16,15 +16,13 @@ alias l='ls -1'
 alias ll='ls -l'
 alias la='ls -al'
 
-# shortcuts
 alias c='clear'
-alias r='reset'
 if [[ $OSTYPE == darwin* ]]; then
   alias o=open
   alias copy=pbcopy
   alias lan-ip="ipconfig getifaddr en0"
 else
-  o() { setsid -f xdg-open "$@" >/dev/null 2>&1; }
+  function o() { setsid -f xdg-open "$@" >/dev/null 2>&1; }
   alias copy=wl-copy
   alias lan-ip="ip -4 route get 1 | awk '{print \$7; exit}'"
 fi
@@ -40,66 +38,72 @@ alias path='echo -e ${PATH//:/\\n}'
 alias tf="terraform"
 alias tfplan='terraform plan -lock=false'
 
+function assert_arguments_provided() {
+  # Usage: assert_arguments_provided "<usage>" "$@" || return 1
+  local usage=$1
+  shift
+  if [ $# -eq 0 ]; then
+    echo "Usage: $usage"
+    return 1
+  fi
+}
+
 # === Git Related ===
 alias gw="git worktree"
-alias git-short="git log --pretty=format:%h -1 HEAD"
-alias git-hash="git log --pretty=format:%H -1 HEAD"
-
 alias gitk-branches="gitk --all --simplify-by-decoration"
 
 function assert_inside_git() {
-    if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-        echo "Error: Not inside a git repository."
-        return 1
-    fi
-}
-
-function assert_arguments_provided() {
-    if [ $# -eq 0 ]; then
-        echo "Error: Commit message is required."
-        echo "Usage: amend <commit message>"
-        return 1
-    fi
+  if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+    echo "Error: Not inside a git repository."
+    return 1
+  fi
 }
 
 function amend() {
-  # Usage: amend <commit message>
+  # Usage: amend [commit message]; without one the editor opens
   assert_inside_git || return 1
-  assert_arguments_provided "$@" || return 1
 
-  git commit --amend -m "$*"
+  if (( $# )); then
+    git commit --amend -m "$*"
+  else
+    git commit --amend
+  fi
 }
 
 function gchanged() {
-  # List changed and created files in the current git repo
-  assert_inside_git
+  # List changed and created files under the current directory
+  assert_inside_git || return 1
 
   {
-    git diff --name-only HEAD
+    git diff --name-only --relative HEAD
     git ls-files --others --exclude-standard
   } | sort -u
 }
 
 # === fzf shortcuts ===
 
-fzf-edit() {
+function fzf-edit() {
   # Usage: find . -type f | fzf-edit
-  fzf \
-    --layout=reverse \
-    --border \
-    --info=inline \
-    --prompt='edit> ' \
-    --preview 'bat --color=always --style=numbers --line-range=:500 -- {}' \
-    --preview-window='right,60%,border-left' \
-    --bind 'enter:become(nvim -- {})'
+  fzf --prompt='edit> ' $fzf_file_preview --bind 'enter:become(nvim -- {})'
 }
 
 # Networking
 alias public-ip="dig +short txt ch whoami.cloudflare @1.0.0.1 | awk -F'\"' '{ print \$2 }'"
 alias public-ip6="dig -6 TXT +short o-o.myaddr.l.google.com @ns1.google.com | awk -F'\"' '{ print \$2 }'"
-dig-all() { dig +nocmd any +multiline +noall +answer "$1"; }
+
+# ANY is refused (RFC 8482), so ask per type
+function dig-all() {
+  assert_arguments_provided "dig-all <domain>" "$@" || return 1
+
+  local type
+  for type in A AAAA CNAME MX NS TXT SOA CAA; do
+    dig +noall +answer "$1" $type
+  done
+}
 
 function urlencode() {
+  assert_arguments_provided "urlencode <text>" "$@" || return 1
+
   python3 -c '
 import sys
 import urllib.parse
@@ -108,6 +112,8 @@ print(urllib.parse.quote(sys.argv[1], safe=""))
 }
 
 function base64encode() {
+  assert_arguments_provided "base64encode <text>" "$@" || return 1
+
   python3 -c '
 import base64
 import sys
@@ -116,14 +122,8 @@ print(base64.b64encode(sys.argv[1].encode("utf8")).decode())
 }
 
 function todo() {
-  grep -E '(TODO|FIXME|LATER|NOTE|ISSUE|SLOW):?\s' \
-    --recursive \
-    --binary-files=without-match \
-    --line-number \
-    --line-buffered \
-    --exclude-dir={node_modules,.git,lib,.venv,.cache,".cache_*",__pycache__,.yarn,static} \
-    --exclude={"*bundle.js","*.bundle","*.pyc","jquery*.js","*.map","*.min.js","*.csv","*.xls","*.xml","*.svg","*.json",TODO.md,todos.txt} \
-    .
+  # --hidden: rg skips dot-directories like .config otherwise
+  rg --hidden --glob '!.git' '(TODO|FIXME|LATER|NOTE|ISSUE|SLOW):?\s' "$@"
 }
 
 function truecolor() {
@@ -152,6 +152,8 @@ function keeptrying() {
     clear_each=1
     shift
   fi
+  assert_arguments_provided "keeptrying [-c] <command>" "$@" || return 1
+
   while true; do
     if ((clear_each)); then
       clear
@@ -163,17 +165,24 @@ function keeptrying() {
   done
 }
 
-function docker-stop-all {
+function docker-stop-all() {
+  local ids=($(docker ps -q))
+  if (( ! $#ids )); then
+    echo "No running containers."
+    return
+  fi
   docker ps
-  docker stop $(docker ps -q)
+  docker stop $ids
 }
 
 function docker-volume-ls() {
+  assert_arguments_provided "docker-volume-ls <volume>" "$@" || return 1
+
   docker run --rm -v ${1}:/data -it alpine find /data -type f
 }
 
 function docker-prune() {
-  echo "→ Clean up all objects older than 24 hours that are not currently in use"
+  echo "→ Remove unused containers, images, networks and build cache older than 24h, and all unused anonymous volumes"
 
   (
     set -ex
@@ -185,9 +194,8 @@ function docker-prune() {
 function cleanup() {
   (
     set -ex
-    find . -type f -name .DS_Store -delete
-    find . -type f -name "*.pyc" -delete
     find . -type d -name __pycache__ -prune -exec rm -rf {} +
+    find . -type f \( -name .DS_Store -o -name "*.pyc" \) -delete
   )
 }
 

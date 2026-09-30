@@ -9,13 +9,10 @@ for _fzf_tab in /usr/share/zsh/plugins/fzf-tab/fzf-tab.plugin.zsh \
 done
 unset _fzf_tab
 
-# TokyoNight Night, to match ghostty; bg:-1 preserves the window transparency
+# the look lives in FZF_DEFAULT_OPTS (.zshrc); fzf-tab ignores it unless told
+zstyle ':fzf-tab:*' use-fzf-default-opts yes
 zstyle ':fzf-tab:*' fzf-flags \
-  --height=45% --layout=reverse --border=rounded --info=inline --cycle \
-  --preview-window=right:55%:wrap:border-left \
-  --color=bg:-1,bg+:#292e42,fg:#a9b1d6,fg+:#c0caf5,gutter:-1 \
-  --color=hl:#7aa2f7,hl+:#7dcfff,border:#545c7e,info:#565f89 \
-  --color=prompt:#7aa2f7,pointer:#bb9af7,marker:#9ece6a,header:#ff9e64
+  --height=45% --cycle --preview-window=right:55%:wrap:border-left
 
 zstyle ':fzf-tab:*' prefix ''              # the group header already names the group
 zstyle ':fzf-tab:*' switch-group '[' ']'
