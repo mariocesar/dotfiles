@@ -67,9 +67,6 @@ shell-integration-features = cursor,sudo,title,ssh-env,ssh-terminfo
 # Multiline input in Claude Code and friends.
 keybind = shift+enter=text:\n
 
-keybind = ctrl+enter=toggle_fullscreen
-keybind = f11=toggle_fullscreen
-
 keybind = ctrl+shift+k=clear_screen
 
 # Default resize_split chord (super+ctrl+shift+arrow) collides with
