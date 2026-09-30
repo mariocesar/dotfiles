@@ -1,42 +1,6 @@
 # vim: set filetype=zsh :
 
-alias vim=nvim
-
-alias vimrc="vim ~/.config/nvim/init.lua --cmd 'cd ~/.config/nvim'"
-alias niric="vim ~/.config/niri/config.kdl --cmd 'cd ~/.config/niri'"
-
-alias grep='grep --color=auto'
-
-# tree reads no config file; TREE_IGNORE is ours, not its
-TREE_IGNORE="cache|log|logs|node_modules|vendor|__pycache__|.pytest_cache|.mypy_cache|.ruff_cache|.venv|venv|.tox|.git|target|dist|build|.next|.terraform"
-alias tree='tree -I "$TREE_IGNORE"'
-
-alias ls='eza --group-directories-first'
-alias l='ls -1'
-alias ll='ls -l'
-alias la='ls -al'
-
-alias c='clear'
-if [[ $OSTYPE == darwin* ]]; then
-  alias o=open
-  alias copy=pbcopy
-  alias lan-ip="ipconfig getifaddr en0"
-else
-  function o() { setsid -f xdg-open "$@" >/dev/null 2>&1; }
-  alias copy=wl-copy
-  alias lan-ip="ip -4 route get 1 | awk '{print \$7; exit}'"
-fi
-
-alias cd..="cd .."
-alias ..='cd ..'
-alias ...='cd ../..'
-
-alias makepassword="pwgen -y -n 18 1"
-alias path='echo -e ${PATH//:/\\n}'
-
-# Terraform
-alias tf="terraform"
-alias tfplan='terraform plan -lock=false'
+# === Helpers ===
 
 function assert_arguments_provided() {
   # Usage: assert_arguments_provided "<usage>" "$@" || return 1
@@ -48,16 +12,76 @@ function assert_arguments_provided() {
   fi
 }
 
-# === Git Related ===
-alias gw="git worktree"
-alias gitk-branches="gitk --all --simplify-by-decoration"
-
 function assert_inside_git() {
-  if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     echo "Error: Not inside a git repository."
     return 1
   fi
 }
+
+# === Editor ===
+
+alias vim=nvim
+alias vimrc="vim ~/.config/nvim/init.lua --cmd 'cd ~/.config/nvim'"
+alias niric="vim ~/.config/niri/config.kdl --cmd 'cd ~/.config/niri'"
+
+# === Files ===
+
+alias ls='eza --group-directories-first'
+alias l='ls -1'
+alias ll='ls -l'
+alias la='ls -al'
+
+# tree reads no config file; TREE_IGNORE is ours, not its
+TREE_IGNORE="cache|log|logs|node_modules|vendor|__pycache__|.pytest_cache|.mypy_cache|.ruff_cache|.venv|venv|.tox|.git|target|dist|build|.next|.terraform"
+alias tree='tree -I "$TREE_IGNORE"'
+
+alias cd..='cd ..'
+alias ..='cd ..'
+alias ...='cd ../..'
+
+function cleanup() {
+  (
+    set -ex
+    find . -type d -name __pycache__ -prune -exec rm -rf {} +
+    find . -type f \( -name .DS_Store -o -name "*.pyc" \) -delete
+  )
+}
+
+# === Per-OS ===
+
+if [[ $OSTYPE == darwin* ]]; then
+  alias o=open
+  alias copy=pbcopy
+  alias lan-ip='ipconfig getifaddr en0'
+else
+  function o() { setsid -f xdg-open "$@" >/dev/null 2>&1; }
+  alias copy=wl-copy
+  alias lan-ip="ip -4 route get 1 | awk '{print \$7; exit}'"
+fi
+
+# === Search ===
+
+alias grep='grep --color=auto'
+
+function todo() {
+  # --hidden: rg skips dot-directories like .config otherwise
+  rg --hidden --glob '!.git' '(TODO|FIXME|LATER|NOTE|ISSUE|SLOW):?\s' "$@"
+}
+
+function fzf-edit() {
+  # Usage: find . -type f | fzf-edit
+  fzf --prompt='edit> ' $fzf_file_preview --bind 'enter:become(nvim -- {})'
+}
+
+function fzfcopy() {
+  fzf --multi | copy
+}
+
+# === Git ===
+
+alias gw='git worktree'
+alias gitk-branches='gitk --all --simplify-by-decoration'
 
 function amend() {
   # Usage: amend [commit message]; without one the editor opens
@@ -80,90 +104,37 @@ function gchanged() {
   } | sort -u
 }
 
-# === fzf shortcuts ===
+function suggest-commit-message() {
+  assert_inside_git || return 1
 
-function fzf-edit() {
-  # Usage: find . -type f | fzf-edit
-  fzf --prompt='edit> ' $fzf_file_preview --bind 'enter:become(nvim -- {})'
+  if [ -z "$(git diff --staged)" ]; then
+    echo "Error: No staged content to commit."
+    return 1
+  fi
+
+  # Thinking took 5 min for the same message; the 4096 default context drops the start of big diffs
+  local commit_message=$(git diff --staged | llm -m local -o think false -o num_ctx 16384 \
+    -s "Write a git commit message for this patch. Return only the message: a short imperative subject line under 60 characters, no prefix, no quotes, no code fences.")
+
+  git commit --edit -m "$commit_message"
 }
 
-# Networking
+# === Network ===
+
 alias public-ip="dig +short txt ch whoami.cloudflare @1.0.0.1 | awk -F'\"' '{ print \$2 }'"
 alias public-ip6="dig -6 TXT +short o-o.myaddr.l.google.com @ns1.google.com | awk -F'\"' '{ print \$2 }'"
 
-# ANY is refused (RFC 8482), so ask per type
 function dig-all() {
   assert_arguments_provided "dig-all <domain>" "$@" || return 1
 
+  # ANY is refused (RFC 8482), so ask per type
   local type
   for type in A AAAA CNAME MX NS TXT SOA CAA; do
     dig +noall +answer "$1" $type
   done
 }
 
-function urlencode() {
-  assert_arguments_provided "urlencode <text>" "$@" || return 1
-
-  python3 -c '
-import sys
-import urllib.parse
-print(urllib.parse.quote(sys.argv[1], safe=""))
-' "${*}"
-}
-
-function base64encode() {
-  assert_arguments_provided "base64encode <text>" "$@" || return 1
-
-  python3 -c '
-import base64
-import sys
-print(base64.b64encode(sys.argv[1].encode("utf8")).decode())
-' "${*}"
-}
-
-function todo() {
-  # --hidden: rg skips dot-directories like .config otherwise
-  rg --hidden --glob '!.git' '(TODO|FIXME|LATER|NOTE|ISSUE|SLOW):?\s' "$@"
-}
-
-function truecolor() {
-  awk 'BEGIN{
-            s="/\\/\\/\\/\\/\\"; s=s s s s s s s s;
-            for (colnum = 0; colnum<77; colnum++) {
-                r = 255-(colnum*255/76);
-                g = (colnum*510/76);
-                b = (colnum*255/76);
-                if (g>255) g = 510-g;
-                printf "\033[48;2;%d;%d;%dm", r,g,b;
-                printf "\033[38;2;%d;%d;%dm", 255-r,255-g,255-b;
-                printf "%s\033[0m", substr(s,colnum+1,1);
-            }
-            printf "\n";
-        }'
-}
-
-function emojis() {
-  echo "👍😄🎉💻🔥🚀🌟🌈🌺🍕🎶📚🌞🌍🍦🏆"
-}
-
-function keeptrying() {
-  local clear_each=0
-  if [[ "$1" == "-c" ]]; then
-    clear_each=1
-    shift
-  fi
-  assert_arguments_provided "keeptrying [-c] <command>" "$@" || return 1
-
-  while true; do
-    if ((clear_each)); then
-      clear
-      echo "\$ $*"
-    fi
-    "$@" && break
-    echo "Trying again in 2s"
-    sleep 2
-  done
-}
+# === Docker ===
 
 function docker-stop-all() {
   local ids=($(docker ps -q))
@@ -171,6 +142,7 @@ function docker-stop-all() {
     echo "No running containers."
     return
   fi
+
   docker ps
   docker stop $ids
 }
@@ -191,32 +163,43 @@ function docker-prune() {
   )
 }
 
-function cleanup() {
-  (
-    set -ex
-    find . -type d -name __pycache__ -prune -exec rm -rf {} +
-    find . -type f \( -name .DS_Store -o -name "*.pyc" \) -delete
-  )
+# === Terraform ===
+
+alias tf=terraform
+alias tfplan='terraform plan -lock=false'
+
+# === Text ===
+
+alias makepassword='pwgen -y -n 18 1'
+
+function urlencode() {
+  assert_arguments_provided "urlencode <text>" "$@" || return 1
+
+  python3 -c '
+import sys
+import urllib.parse
+print(urllib.parse.quote(sys.argv[1], safe=""))
+' "$*"
 }
 
-function fzfcopy() {
-  fzf --multi | copy
+function base64encode() {
+  assert_arguments_provided "base64encode <text>" "$@" || return 1
+
+  python3 -c '
+import base64
+import sys
+print(base64.b64encode(sys.argv[1].encode("utf8")).decode())
+' "$*"
 }
 
-function suggest-commit-message() {
-  assert_inside_git || return 1
-
-  if [ -z "$(git diff --staged)" ]; then
-    echo "Error: No staged content to commit."
-    return 1
-  fi
-
-  # Thinking took 5 min for the same message; the 4096 default context drops the start of big diffs
-  local commit_message=$(git diff --staged | llm -m local -o think false -o num_ctx 16384 \
-    -s "Write a git commit message for this patch. Return only the message: a short imperative subject line under 60 characters, no prefix, no quotes, no code fences.")
-
-  git commit --edit -m "$commit_message"
+function emojis() {
+  echo "👍😄🎉💻🔥🚀🌟🌈🌺🍕🎶📚🌞🌍🍦🏆"
 }
+
+# === Shell ===
+
+alias c=clear
+alias path='echo -e ${PATH//:/\\n}'
 
 # noglob so `ask how do I use tar?` doesn't die on the ?
 alias ask='noglob ask'
@@ -226,3 +209,38 @@ alias watch=viddy-watch
 
 # Glance timer: https://github.com/mariocesar/glance-timer
 alias gt=glance-timer
+
+function keeptrying() {
+  local clear_each=0
+  if [[ "$1" == "-c" ]]; then
+    clear_each=1
+    shift
+  fi
+  assert_arguments_provided "keeptrying [-c] <command>" "$@" || return 1
+
+  while true; do
+    if ((clear_each)); then
+      clear
+      echo "\$ $*"
+    fi
+    "$@" && break
+    echo "Trying again in 2s"
+    sleep 2
+  done
+}
+
+function truecolor() {
+  awk 'BEGIN{
+    s="/\\/\\/\\/\\/\\"; s=s s s s s s s s;
+    for (colnum = 0; colnum<77; colnum++) {
+      r = 255-(colnum*255/76);
+      g = (colnum*510/76);
+      b = (colnum*255/76);
+      if (g>255) g = 510-g;
+      printf "\033[48;2;%d;%d;%dm", r,g,b;
+      printf "\033[38;2;%d;%d;%dm", 255-r,255-g,255-b;
+      printf "%s\033[0m", substr(s,colnum+1,1);
+    }
+    printf "\n";
+  }'
+}
