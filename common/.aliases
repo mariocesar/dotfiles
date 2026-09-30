@@ -6,8 +6,6 @@ alias vimrc="vim ~/.config/nvim/init.lua --cmd 'cd ~/.config/nvim'"
 alias niric="vim ~/.config/niri/config.kdl --cmd 'cd ~/.config/niri'"
 
 alias grep='grep --color=auto'
-alias fgrep='fgrep --color=auto'
-alias egrep='egrep --color=auto'
 
 # tree reads no config file; TREE_IGNORE is ours, not its
 TREE_IGNORE="cache|log|logs|node_modules|vendor|__pycache__|.pytest_cache|.mypy_cache|.ruff_cache|.venv|venv|.tox|.git|target|dist|build|.next|.terraform"
@@ -38,16 +36,9 @@ alias ...='cd ../..'
 alias makepassword="pwgen -y -n 18 1"
 alias path='echo -e ${PATH//:/\\n}'
 
-# Term
-command -v wezterm >/dev/null && alias imgcat="wezterm imgcat"
-
 # Terraform
 alias tf="terraform"
 alias tfplan='terraform plan -lock=false'
-
-# Github CLI
-alias suggest="gh copilot suggest"
-alias explain="gh copilot explain"
 
 # === Git Related ===
 alias gw="git worktree"
@@ -66,13 +57,13 @@ function assert_inside_git() {
 function assert_arguments_provided() {
     if [ $# -eq 0 ]; then
         echo "Error: Commit message is required."
-        echo "Usage: ci <commit message>"
+        echo "Usage: amend <commit message>"
         return 1
     fi
 }
 
-function ci() {
-  # Usage: ci <commit message>
+function amend() {
+  # Usage: amend <commit message>
   assert_inside_git || return 1
   assert_arguments_provided "$@" || return 1
 
@@ -179,19 +170,6 @@ function docker-stop-all {
 
 function docker-volume-ls() {
   docker run --rm -v ${1}:/data -it alpine find /data -type f
-}
-
-function docker-cat-entrypoint-contents() {
-  local image_name=$1
-  local entrypoint=$(docker inspect --format='{{json .Config.Entrypoint}}' "$image_name")
-
-  if [ -z "$entrypoint" ] || [ "$entrypoint" = "null" ]; then
-    echo "Entrypoint: Not found"
-  else
-    local entrypoint_script=$(echo "$entrypoint" | jq -r '.[]' | base64 --decode)
-    echo "Entrypoint:"
-    echo "$entrypoint_script"
-  fi
 }
 
 function docker-prune() {
