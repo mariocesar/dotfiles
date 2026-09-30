@@ -49,7 +49,7 @@ alias tfplan='terraform plan -lock=false'
 alias suggest="gh copilot suggest"
 alias explain="gh copilot explain"
 
-# Git CLI
+# === Git Related ===
 alias gw="git worktree"
 alias git-short="git log --pretty=format:%h -1 HEAD"
 alias git-hash="git log --pretty=format:%H -1 HEAD"
@@ -77,6 +77,30 @@ function ci() {
   assert_arguments_provided "$@" || return 1
 
   git commit --amend -m "$*"
+}
+
+function gchanged() {
+  # List changed and created files in the current git repo
+  assert_inside_git
+
+  {
+    git diff --name-only HEAD
+    git ls-files --others --exclude-standard
+  } | sort -u
+}
+
+# === fzf shortcuts ===
+
+fzf-edit() {
+  # Usage: find . -type f | fzf-edit
+  fzf \
+    --layout=reverse \
+    --border \
+    --info=inline \
+    --prompt='edit> ' \
+    --preview 'bat --color=always --style=numbers --line-range=:500 -- {}' \
+    --preview-window='right,60%,border-left' \
+    --bind 'enter:become(nvim -- {})'
 }
 
 # Networking
