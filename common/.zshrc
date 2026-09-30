@@ -46,14 +46,14 @@ load_if_exists ~/.aliases
 load_if_exists ~/.zshrc.$(hostname)
 load_if_exists ~/.cargo/env
 
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
 # Guarded: a machine missing one of these should still get a working shell
 command -v direnv >/dev/null && eval "$(direnv hook zsh)"
 command -v mise >/dev/null && eval "$(mise activate zsh)"
 command -v starship >/dev/null && eval "$(starship init zsh)"
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
 
 # bun completions
 [ -s "/home/mariocesar/.bun/_bun" ] && source "/home/mariocesar/.bun/_bun"
