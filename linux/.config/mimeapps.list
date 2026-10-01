@@ -23,6 +23,7 @@ x-scheme-handler/http=firefox.desktop
 x-scheme-handler/https=firefox.desktop
 text/markdown=org.gnome.gitlab.somas.Apostrophe.desktop
 text/x-lua=org.gnome.gitlab.somas.Apostrophe.desktop
+x-scheme-handler/codex=chatgpt.desktop
 
 [Added Associations]
 application/x-extension-htm=firefox.desktop;
