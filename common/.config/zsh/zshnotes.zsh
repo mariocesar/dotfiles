@@ -9,6 +9,7 @@
 #   Everything on top (edit, browse, search, pick) is composed here from that path.
 #   A new kind of path goes in notes.py; a new way to use a path goes here; nothing a pipe can do goes in the script.
 #   Mirrored dot-dirs (home/.ssh) are hidden: rg --hidden, fd -H, glow -a.
+#   n, nn, nj and nf open nvim-autosave (~/.local/bin): nvim whose buffers write themselves.
 # `notes` is an alias so the script keeps its .py. Only zsh sees it: anything that execs the
 #   command directly (nvim :!, scripts, other shells) must call notes.py.
 
@@ -18,18 +19,21 @@ alias notes=notes.py
 # except where the wrapped tool owns them: nn (title), ns/nsa (rg pattern).
 function n() {      # this notebook's notes.md
   local f; f="$(notes "$@" file)" || return
-  $EDITOR "$f"
+  nvim-autosave "$f"
 }
 function nn() {     # new note; args are the title: nn postgres locking
   local f; f="$(notes new "$@")" || return
-  $EDITOR "$f"
+  nvim-autosave "$f"
 }
 function nj() {     # today's journal entry
   local f; f="$(notes -n journal today)" || return
-  $EDITOR "$f"
+  nvim-autosave "$f"
 }
 function nb()  { glow -a "$(notes "$@")" }                   # browse
 function ns()  { rg --hidden -i "$@" "$(notes)" }            # search this notebook
 function nsa() { rg --hidden -i "$@" ~/.notes }              # search the library
-function nf()  { fd -H -e md . "$(notes "$@")" | fzf-edit }  # pick a note to edit
+function nf() {     # pick a note to edit
+  fd -H -e md . "$(notes "$@")" |
+    fzf --prompt='note> ' $fzf_file_preview --bind 'enter:become(nvim-autosave -- {})'
+}
 function ncd() { cd "$(notes "$@")" }

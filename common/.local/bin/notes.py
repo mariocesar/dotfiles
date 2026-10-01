@@ -77,14 +77,52 @@ def slug(title):
     return re.sub(r"[^a-z0-9]+", "-", folded.lower()).strip("-")
 
 
+DESCRIPTION = """\
+Resolve a notebook and print a path inside it. Notes are plain Markdown files.
+
+  ~/.notes/home/<path>   the git root (else cwd) relative to $HOME; the default
+  ~/.notes/named/NAME    an explicit notebook, with -n NAME
+"""
+
+EPILOG = """\
+zsh shortcuts (~/.config/zsh/zshnotes.zsh):
+  n [-n NAME]        edit the notebook's notes.md
+  nn [TITLE...]      edit a new note
+  nj                 edit today's journal entry
+  nb [-n NAME]       browse the notebook in glow
+  ns PATTERN         search the notebook
+  nsa PATTERN        search the whole library
+  nf [-n NAME]       pick a note with fzf and edit it
+  ncd [-n NAME]      cd into the notebook
+  the editor is nvim-autosave: nvim whose buffers write themselves
+
+with other tools:
+  nvim "$(notes file)"                    edit the persistent note
+  nvim "$(notes new 'postgres locking')"  create and edit a titled note
+  nvim "$(notes -n journal today)"        today's journal entry
+  glow -a "$(notes)"                      browse the notebook
+  rg --hidden postgres "$(notes)"         search the notebook
+  rg --hidden postgres ~/.notes           search everything
+  fd -H -e md . "$(notes)" | fzf          pick a note
+  cd "$(notes)"
+
+Mirrored dot-dirs (home/.ssh) are hidden: pass --hidden to rg, -H to fd, -a to glow.
+"""
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Resolve a notebook and print a path inside it.")
+    parser = argparse.ArgumentParser(
+        prog="notes",
+        description=DESCRIPTION,
+        epilog=EPILOG,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument("-n", "--name", help="a named notebook instead of the one for cwd")
     commands = parser.add_subparsers(dest="command")
     commands.add_parser("path", help="the notebook directory (default)")
     commands.add_parser("file", help="the notebook's notes.md")
     new = commands.add_parser("new", help="a new timestamped note")
-    new.add_argument("title", nargs="*")
+    new.add_argument("title", nargs="*", help="words for the filename, after the timestamp")
     commands.add_parser("today", help="today's note, as YYYY/MM/YYYY-MM-DD.md")
     args = parser.parse_args()
 
