@@ -104,6 +104,13 @@ function gchanged() {
   } | sort -u
 }
 
+function guntracked() {
+  # Lista untracked/ignored files from the current repo
+  assert_inside_git || return 1
+
+  git ls-files --others | grep -v -E "\.venv|\.pyc|\..+_cache"
+}
+
 function suggest-commit-message() {
   assert_inside_git || return 1
 
