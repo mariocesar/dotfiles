@@ -108,7 +108,7 @@ function guntracked() {
   # Lista untracked/ignored files from the current repo
   assert_inside_git || return 1
 
-  git ls-files --others | grep -v -E "\.venv|\.pyc|\..+_cache"
+  git ls-files --others | grep -v -E "\.venv|\.pyc|\..+_cache|\.terraform"
 }
 
 function suggest-commit-message() {
