@@ -1,0 +1,35 @@
+{
+  "board": {
+    "model": "J716sAP",
+    "vendor": "Apple Inc."
+  },
+  "cpu": {
+    "cores": 18,
+    "model": "Apple M5 Pro"
+  },
+  "displays": [
+    {
+      "height": 2234,
+      "model": "Color LCD",
+      "refresh_hz": 120,
+      "type": "Builtin",
+      "width": 3456
+    }
+  ],
+  "gpus": [
+    {
+      "cores": 20,
+      "model": "Apple M5 Pro",
+      "type": "Integrated",
+      "vendor": "Apple"
+    }
+  ],
+  "host": {
+    "chassis": "Laptop",
+    "model": "MacBook Pro (16-inch, M5 Pro, 2026)",
+    "vendor": "Apple Inc."
+  },
+  "memory_gib": 48,
+  "name": "rumba",
+  "os": "macOS Tahoe 26"
+}
