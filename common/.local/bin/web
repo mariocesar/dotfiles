@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Quickly search with DuckDuckGo in the terminal
 
 exec ddgr \
   --noprompt \

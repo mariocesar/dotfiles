@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Show a nice UI to understand timezones schedules.
 import re
 import sys
 import argparse
