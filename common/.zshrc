@@ -54,6 +54,7 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 command -v direnv >/dev/null && eval "$(direnv hook zsh)"
 command -v mise >/dev/null && eval "$(mise activate zsh)"
 command -v starship >/dev/null && eval "$(starship init zsh)"
+command -v notes >/dev/null && eval "$(notes zsh)"
 
 # bun completions
 [ -s "/home/mariocesar/.bun/_bun" ] && source "/home/mariocesar/.bun/_bun"
