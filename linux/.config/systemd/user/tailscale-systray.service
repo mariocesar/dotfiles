@@ -1,0 +1,14 @@
+[Unit]
+Description=Tailscale System Tray
+Documentation=https://tailscale.com/kb/1597/linux-systray
+# Upstream's unit hangs off default.target; DMS owns org.kde.StatusNotifierWatcher, so start after it
+PartOf=graphical-session.target
+After=graphical-session.target dms.service
+
+[Service]
+ExecStart=/usr/bin/tailscale systray
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=graphical-session.target
