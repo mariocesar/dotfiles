@@ -47,7 +47,25 @@ thead { display: block; position: absolute; top: -0.8em; left: 1ch; padding: 0 1
 th, td { padding: 0; text-align: left; vertical-align: top; font-weight: 400; }
 th:first-child { padding-right: 1ch; font-weight: 700; }
 th + th { color: var(--muted); }
-td:first-child { padding-right: 2ch; color: var(--primary); white-space: nowrap; }
+tbody { display: table; width: 100%; border-spacing: 0; }
+td:first-child { width: 1%; padding-right: 2ch; color: var(--primary); white-space: nowrap; }
+code { font: inherit; }
+a { color: inherit; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* a table with tags takes the full row; 24ch fits the longest script name, so names line up across tables */
+.level2 > table:has(td:nth-child(3)) { flex-basis: 100%; }
+table:has(td:nth-child(3)) td:first-child { width: 24ch; }
+/* tags: the code in a third column */
+td:nth-child(3) { width: 1%; padding-left: 2ch; text-align: right; white-space: nowrap; }
+td:nth-child(3) code { color: var(--muted); }
+td:nth-child(3) code::before { content: "["; }
+td:nth-child(3) code::after { content: "]"; }
+/* on a phone a row with tags stacks */
+@media (max-width: 640px) {
+  tr:has(td:nth-child(3)) td { display: block; width: auto; padding: 0; text-align: left; white-space: normal; }
+  tr:has(td:nth-child(3)) td:last-child { padding-bottom: 0.8em; }
+}
 </style>
 </head>
 <body>

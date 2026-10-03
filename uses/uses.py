@@ -10,6 +10,7 @@ from pathlib import Path
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
+SOURCE = "https://github.com/mariocesar/dotfiles/blob/main"
 
 
 class Text(str):
@@ -26,9 +27,11 @@ class Text(str):
 
 b = lambda text: Text(f"**{text}**")
 i = lambda text: Text(f"*{text}*")
+a = lambda text, href: Text(f"[{text}]({href})")
 h2 = lambda text: Text(f"\n## {text}")
 h3 = lambda text: Text(f"\n### {text}")
 li = lambda text: Text(f"- {text}")
+code = lambda text: Text(f"`{text}`")
 tr = lambda *cells: Text(f"| {' | '.join(cells)} |")
 th = lambda *cells: Text(f"\n{tr(*cells)}\n|{'---|' * len(cells)}")
 
@@ -70,3 +73,21 @@ for path in sorted((ROOT_DIR / "machines").glob("*.json")):
         name = "Built-in" if d["type"] == "Builtin" else d["model"]
         size = f"{d['width']}×{d['height']} @ {d['refresh_hz']} Hz"
         tr("display", f"{name} · {size}") >> stdout
+
+
+h2("My ~/.local/bin scripts") >> stdout
+
+for bucket, title in ("common", "common"), ("linux", "only linux"), ("macos", "only macos"):
+    th(title, "", "") >> stdout
+
+    for path in sorted((ROOT_DIR / bucket / ".local/bin").iterdir()):
+        shebang, about, *_ = path.read_text().splitlines()
+        # No sentence on line 2, not listed.
+        if not about.startswith("# "):
+            continue
+        if "uv run" in shebang:
+            tags = code("python") + code("uv")
+        else:
+            tags = code(next(name for name in ("python", "bash", "sh") if name in shebang))
+        name = a(path.name, f"{SOURCE}/{path.relative_to(ROOT_DIR)}")
+        tr(name, about[2:], tags) >> stdout
