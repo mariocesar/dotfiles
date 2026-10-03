@@ -1,9 +1,8 @@
 #!/bin/sh
-set -eu
-
-# Capture with dms, then offer to annotate it in satty from the notification.
+# Take a screenshot with dms, then offer to annotate it in satty from the notification.
 #
 #   screenshot [region|full|window]
+set -eu
 
 mode=${1:-region}
 case $mode in

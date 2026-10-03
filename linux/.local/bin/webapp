@@ -1,6 +1,4 @@
 #!/bin/sh
-set -eu
-
 # Launch a URL as a Chrome app window, or focus the one already open.
 #
 #   webapp [--profile NAME] [--force-dark-mode|--force-light-mode] <url> [chrome args...]
@@ -10,6 +8,7 @@ set -eu
 # Firefox stays the default browser. One shared profile means a single Google
 # sign-in covers all of them; --profile NAME keeps an app in its own
 # $XDG_DATA_HOME/chrome-webapps-NAME instead.
+set -eu
 
 usage() {
     echo "usage: webapp [--profile NAME] [--force-dark-mode|--force-light-mode] <url> [chrome args...]" >&2

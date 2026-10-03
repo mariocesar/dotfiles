@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
-
-set -euo pipefail
-
-# Asserts the DMS and KDE settings chosen in the dotfiles, counterpart to
-# macos/.local/bin/update-preferences and `defaults write`. DMS owns
+# Apply the DMS and KDE settings chosen in the dotfiles.
+# Counterpart to macos/.local/bin/update-preferences and `defaults write`. DMS owns
 # settings.json; only the keys listed here are pinned, the rest stay UI-managed.
+set -euo pipefail
 
 usage() {
     cat <<'USAGE'

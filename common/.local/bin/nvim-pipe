@@ -1,5 +1,4 @@
 #!/bin/sh
-
 # Edit text in the middle of a pipeline with Neovim.
 # Output is released only after at least one successful file write.
 

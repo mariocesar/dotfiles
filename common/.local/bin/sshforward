@@ -1,6 +1,6 @@
-# sshforward 8000 ec2-user@aws-ip.aws.com
-
 #!/usr/bin/env bash
+# Open an SSH reverse tunnel from a port on a remote host to local port 8000.
+#   sshforward 8000 ec2-user@aws-ip.aws.com
 set -eu
 
 port=$1

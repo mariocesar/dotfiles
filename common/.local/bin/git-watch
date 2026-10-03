@@ -1,6 +1,6 @@
 #!/bin/sh
-# git watch [-u] [<git diff args>]: live `git diff` you can scroll, rendered by
-# delta. Every other argument reaches `git diff` untouched.
+# Show a live `git diff` you can scroll, rendered by delta.
+#   git watch [-u] [<git diff args>]    every other argument reaches `git diff` untouched
 set -eu
 
 setup=

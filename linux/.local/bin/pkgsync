@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-
+# Install the packages in the hand-curated pacman and AUR lists.
+# The two stay separate so a fresh machine can get the essentials before yay
+# itself is built.
 set -eu
-
-# Installs the hand-curated package lists. Native and AUR stay separate so a
-# fresh machine can get the essentials before yay itself is built.
 
 # Read from the installed config, so this needs install.py to have run first.
 config="${XDG_CONFIG_HOME:-$HOME/.config}/pkgsync"

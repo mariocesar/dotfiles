@@ -1,6 +1,7 @@
 #!/bin/sh
-# nvim whose buffers write themselves: on leaving insert mode, a normal-mode change,
-# losing focus or leaving the buffer. Special buffers (terminal, netrw, help) are skipped.
+# Run nvim with buffers that write themselves.
+# They write on leaving insert mode, a normal-mode change, losing focus or leaving the buffer.
+# Special buffers (terminal, netrw, help) are skipped.
 set -eu
 
 exec nvim -c 'autocmd InsertLeave,TextChanged,FocusLost,BufLeave * if empty(&buftype) | silent update | endif' "$@"

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Ask Claude Code a short question, with this machine's details as context.
 set -eu
 
 read_stdin() {

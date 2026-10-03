@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Show a punchcard of commits by weekday and hour.
 import argparse
 import datetime
 import os

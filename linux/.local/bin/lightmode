@@ -1,6 +1,4 @@
 #!/bin/sh
-set -eu
-
 # Run a program pinned to a light theme while the session stays dark.
 #
 #   lightmode [--gtk3] <command> [args...]
@@ -8,6 +6,7 @@ set -eu
 #   lightmode --kde <app>           pin a KDE app via its own <app>rc (dolphin, kate, konsole…)
 #
 # Launch-time env only: nothing can retheme a window that is already open.
+set -eu
 
 usage() {
     echo "usage: lightmode [--gtk3] <command> [args...]" >&2

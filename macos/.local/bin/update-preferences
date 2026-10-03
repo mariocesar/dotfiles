@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Apply the macOS defaults chosen in the dotfiles.
 
 set -eux
 

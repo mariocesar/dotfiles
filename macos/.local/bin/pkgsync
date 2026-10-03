@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-
+# Install the packages in the hand-curated Brewfile.
+# Counterpart to linux/.local/bin/pkgsync, same flags, so `pkgsync -n` means
+# the same thing on either machine.
 set -eu
-
-# Installs the hand-curated Brewfile. Counterpart to linux/.local/bin/pkgsync,
-# same flags, so `pkgsync -n` means the same thing on either machine.
 
 brewfile="${XDG_CONFIG_HOME:-$HOME/.config}/homebrew/Brewfile"
 

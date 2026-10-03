@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Open a SOCKS proxy on a local port through an SSH host.
 set -eu
 
 port=$1

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Recover a bonded BLE mouse that can't re-attach because a bluez discovery
-# scan is running (a scan left on in the Bluetooth panel or in bluetoothctl).
+# Recover a bonded BLE mouse that cannot re-attach while a bluez discovery scan is running.
+# That is a scan left on in the Bluetooth panel or in bluetoothctl.
 # Runs from bt-mouse-guard.timer; `--now` skips the waiting.
 set -euo pipefail
 

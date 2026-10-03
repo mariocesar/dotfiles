@@ -1,4 +1,5 @@
 #!/bin/bash
+# Run maintenance on a Git repository: prune, repack and collect garbage.
 
 set -eu
 

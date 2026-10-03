@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Upgrade Homebrew formulae and casks, then remove stale versions and cached downloads.
 
 set -euo pipefail
 

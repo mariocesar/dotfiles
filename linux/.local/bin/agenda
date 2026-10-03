@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Current or next meeting from the dcal daemon, plus today's agenda. Backend for bar widgets.
+# Show the current or next meeting and today's agenda, from the dcal daemon.
+# Backend for bar widgets.
 import re
 import sys
 import argparse

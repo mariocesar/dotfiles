@@ -1,12 +1,11 @@
 #!/bin/sh
-set -eu
-
 # Float every window an app opens while it already has a tiled one.
 #
 #   niri-float-popups <app-id>...
 #
 # Chrome popups (Slack huddles, Meet pop-outs) share the parent's app-id and
 # map with a placeholder title, so a window-rule can't single them out.
+set -eu
 
 [ $# -ge 1 ] || { echo "usage: niri-float-popups <app-id>..." >&2; exit 2; }
 

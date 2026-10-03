@@ -1,6 +1,6 @@
 #!/bin/sh
-# viddy-watch [-n <secs>] [viddy options] <command...>: viddy at 1s, with the
-# command in a pty so it still prints in colour.
+# Run a command under viddy every second, in a pty so it still prints in colour.
+#   viddy-watch [-n <secs>] [viddy options] <command...>
 set -eu
 
 interval=1

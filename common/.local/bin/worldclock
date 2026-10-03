@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Show a nice UI to understand timezones schedules.
+# Compare city clocks on a shared elapsed-time axis.
 import re
 import sys
 import argparse
