@@ -4,6 +4,10 @@ These are my personal dotfiles. They're not perfect, and they don't always work 
 
 When facing a hard task and feeling stuck, managing my dotfiles acts as a productive form of "sharpening knives." Instead of getting distracted by TikTok or YouTube, I spend my time refining configurations, learning, and improving my skills. It keeps me engaged, productive, and constantly moving forward. At least, that's what I think now, though it's likely that I put too much pressure on myself to always spend my time productively. I'm still learning about myself.
 
+## What I Use
+
+[mariocesar.github.io/dotfiles](https://mariocesar.github.io/dotfiles/) lists my machines and scripts. It is generated from this repo by [`uses/`](uses/) on every push.
+
 ## How to Use
 
 My goal is to keep things simple. The installer is a standalone script that needs Python 3.10 or higher; no package installation is required. Clone the repo and run `install.py`.
