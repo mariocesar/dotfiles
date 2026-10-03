@@ -1,0 +1,35 @@
+{
+  "board": {
+    "model": "B760 Pro RS WiFi White",
+    "vendor": "ASRock"
+  },
+  "cpu": {
+    "cores": 24,
+    "model": "Intel(R) Core(TM) i9-14900K",
+    "threads": 32
+  },
+  "displays": [
+    {
+      "height": 2160,
+      "model": "LG HDR 4K",
+      "refresh_hz": 60,
+      "type": "External",
+      "width": 3840
+    }
+  ],
+  "gpus": [
+    {
+      "model": "GeForce RTX 5060",
+      "type": "Discrete",
+      "vendor": "NVIDIA"
+    }
+  ],
+  "host": {
+    "chassis": "Desktop",
+    "model": "B760 Pro RS WiFi White",
+    "vendor": "ASRock"
+  },
+  "memory_gib": 32,
+  "name": "tango",
+  "os": "CachyOS Linux"
+}
