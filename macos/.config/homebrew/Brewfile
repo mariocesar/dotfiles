@@ -119,6 +119,8 @@ cask "dbeaver-community"
 cask "meld"
 cask "discord"
 cask "dropbox"
+cask "tailscale-app"
+cask "syncthing-app"
 cask "easy-move+resize"
 cask "espanso"
 cask "keycastr"  # for showing keystrokes
