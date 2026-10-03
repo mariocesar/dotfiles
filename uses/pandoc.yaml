@@ -1,0 +1,8 @@
+# pandoc defaults for the /uses page: uses/uses.py | pandoc -d uses/pandoc.yaml
+from: gfm
+standalone: true
+# Wraps each heading and its content in <section class="levelN">, which template.html styles.
+section-divs: true
+template: ${.}/template.html
+metadata:
+  pagetitle: mariocesar's setup

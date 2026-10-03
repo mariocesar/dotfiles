@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>$pagetitle$</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap">
+<script>
+  // In the head, so a saved choice applies before the first paint.
+  document.documentElement.dataset.theme = localStorage.getItem("uses-theme") || "";
+</script>
+<style>
+/* Colors: Azulejo Brutalism, github.com/VerticalHeretic/AzulejoBrutalism */
+:root {
+  /* light-dark() follows color-scheme: the system's, until the switch sets data-theme */
+  color-scheme: light dark;
+  --bg: light-dark(#F3F0E8, #0C1030); /* glaze, ink */
+  --fg: light-dark(#0C1030, #F3F0E8);
+  --muted: light-dark(#5A5E78, #8A8FB5);
+  --primary: light-dark(#1E2A9E, #9FB2E4); /* cobalt; wash stands in for it on ink */
+  --ochre: #D49A1A;
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+
+/* one font, one size, like a terminal: weight and color carry the hierarchy */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0 2ch; background: var(--bg); color: var(--fg); font: 13px/1.6 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+main { position: relative; max-width: 980px; margin: 0 auto; padding-block: 48px 64px; display: grid; gap: 48px; }
+#theme { position: absolute; top: 14px; right: 0; padding: 0; border: 0; background: none; color: var(--muted); font: inherit; cursor: pointer; }
+#theme:hover { color: var(--fg); }
+h2, h3 { font-size: inherit; margin: 0; }
+
+/* a section: its heading on a full row, its panels side by side below */
+.level2 { display: flex; flex-wrap: wrap; gap: 24px 2ch; }
+.level2 > * { flex: 1 1 100%; }
+h2 { display: flex; align-items: center; gap: 1ch; }
+h2::before { content: "■"; color: var(--ochre); }
+h2::after { content: ""; flex: 1; border-top: 1px solid var(--fg); }
+
+/* a panel: a table drawn as a box, its header row sitting on the top border as the title */
+.level2 > table { flex-basis: 280px; }
+table { display: block; position: relative; border: 1px solid var(--fg); border-radius: 4px; padding: 1.2em 2ch 1em; min-width: 0; border-spacing: 0; }
+thead { display: block; position: absolute; top: -0.8em; left: 1ch; padding: 0 1ch; background: var(--bg); }
+th, td { padding: 0; text-align: left; vertical-align: top; font-weight: 400; }
+th:first-child { padding-right: 1ch; font-weight: 700; }
+th + th { color: var(--muted); }
+td:first-child { padding-right: 2ch; color: var(--primary); white-space: nowrap; }
+</style>
+</head>
+<body>
+<main>
+<button id="theme" type="button">◐ theme</button>
+$body$
+</main>
+<script>
+  const root = document.documentElement;
+  document.getElementById("theme").onclick = () => {
+    const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    root.dataset.theme = dark ? "light" : "dark";
+    localStorage.setItem("uses-theme", root.dataset.theme);
+  };
+</script>
+</body>
+</html>
