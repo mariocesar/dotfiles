@@ -198,6 +198,7 @@ window-rule {
     match app-id=r#"^1password$"#
     match app-id=r#"^com\.gabm\.satty$"#
     match app-id=r#"^Emulator$"#   // Android emulator
+    match app-id=r#"^syncthingtray$"#
     open-floating true
 }
 window-rule {

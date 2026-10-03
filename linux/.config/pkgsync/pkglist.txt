@@ -84,6 +84,10 @@ aws-cli-v2
 terraform
 hugo
 
+tailscale       # 48-tailscale.sh enables tailscaled; login stays manual: sudo tailscale up
+syncthing       # 49-syncthing.sh enables the user service
+syncthingtray   # autostarts from ~/.config/autostart/syncthingtray.desktop
+
 # gtk-theme=adw-gtk3-dark and icon-theme=Papirus-Dark are configured; missing, GTK3 falls back to stock Adwaita and icons to hicolor
 adw-gtk-theme
 papirus-icon-theme
