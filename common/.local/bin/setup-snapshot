@@ -1,0 +1,143 @@
+#!/usr/bin/env -S uv run --quiet --script
+# Record this machine's hardware, from fastfetch, in machines/<name>.json of the dotfiles repo.
+# /// script
+# requires-python = ">=3.12"
+# ///
+# ruff: noqa: INP001
+import re
+import sys
+import argparse
+import json
+import math
+from pathlib import Path
+import shutil
+import socket
+import subprocess
+
+
+ROOT = Path(__file__).resolve().parents[3]
+TYPES = ("Host", "Chassis", "Board", "CPU", "GPU", "Memory", "Display", "OS")
+GIB = 1024**3
+
+
+def fetch() -> dict:
+    exe = shutil.which("fastfetch")
+    if exe is None:
+        sys.exit("setup-snapshot: fastfetch is not installed; run pkgsync")
+    # -c none: a personal fastfetch config must not change what gets recorded
+    out = subprocess.run(  # noqa: S603
+        [exe, "-c", "none", "--format", "json", "-s", ":".join(TYPES).lower()],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    results = {m["type"]: m.get("result") for m in json.loads(out)}
+    # A module that failed has no result; GPU and Display report lists.
+    return {t: results.get(t) or ([] if t in ("GPU", "Display") else {}) for t in TYPES}
+
+
+def compact(d: dict) -> dict:
+    return {k: v for k, v in d.items() if v not in ("", None, [], {})}
+
+
+def gib(n: int | None, step: int = 1) -> int | None:
+    return None if not n else math.ceil(n / GIB / step) * step
+
+
+def stable(items: list[dict]) -> list[dict]:
+    return sorted(items, key=lambda d: json.dumps(d, sort_keys=True))
+
+
+def gpu(g: dict) -> dict:
+    dedicated = (g.get("memory") or {}).get("dedicated") or {}
+    return compact(
+        {
+            "vendor": g.get("vendor"),
+            "model": g.get("name"),
+            "type": g.get("type"),
+            "cores": g.get("coreCount"),
+            "vram_gib": gib(dedicated.get("total")),
+        }
+    )
+
+
+# The preferred mode is the panel's native one, whatever scaling is in use.
+def display(d: dict) -> dict:
+    mode = d.get("preferred") or {}
+    return compact(
+        {
+            "model": d.get("name"),
+            "type": d.get("type"),
+            "width": mode.get("width"),
+            "height": mode.get("height"),
+            "refresh_hz": round(mode.get("refreshRate") or 0) or None,
+        }
+    )
+
+
+# Only the fields named here are copied: fastfetch also reports serials and UUIDs.
+def snapshot(name: str, raw: dict) -> dict:
+    host, chassis, board = raw["Host"], raw["Chassis"], raw["Board"]
+    cpu, os_ = raw["CPU"], raw["OS"]
+    cores = cpu.get("cores") or {}
+    threads = cores.get("logical")
+    major = (os_.get("versionID") or "").split(".")[0]
+    return compact(
+        {
+            "name": name,
+            "host": compact(
+                {
+                    "vendor": host.get("vendor"),
+                    "model": host.get("name"),
+                    "chassis": chassis.get("type"),
+                }
+            ),
+            "board": compact({"vendor": board.get("vendor"), "model": board.get("name")}),
+            "cpu": compact(
+                {
+                    "model": cpu.get("cpu"),
+                    "cores": cores.get("physical"),
+                    "threads": threads if threads != cores.get("physical") else None,
+                }
+            ),
+            # The kernel keeps some RAM back, so the total reads under the installed size.
+            "memory_gib": gib(raw["Memory"].get("total"), step=4),
+            "gpus": stable([gpu(g) for g in raw["GPU"]]),
+            "displays": stable([display(d) for d in raw["Display"]]),
+            "os": " ".join(p for p in (os_.get("name"), os_.get("codename"), major) if p),
+        }
+    )
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Record this machine's hardware in the dotfiles repo."
+    )
+    parser.add_argument("--name", help="machine name (default: the hostname)")
+    parser.add_argument(
+        "-n", "--dry-run", action="store_true", help="print the snapshot instead of writing it"
+    )
+    args = parser.parse_args()
+
+    name = args.name or socket.gethostname().split(".")[0].lower()
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", name):
+        sys.exit(f"setup-snapshot: {name!r} is not a usable machine name; pass --name")
+    if not (ROOT / "install.py").is_file():
+        sys.exit(f"setup-snapshot: {ROOT} is not the dotfiles repo; run it through its symlink")
+
+    text = json.dumps(snapshot(name, fetch()), indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+    if args.dry_run:
+        print(text, end="")
+        return
+
+    path = ROOT / "machines" / f"{name}.json"
+    if path.is_file() and path.read_text() == text:
+        print(f"{path.relative_to(ROOT)}: unchanged")
+        return
+    path.parent.mkdir(exist_ok=True)
+    path.write_text(text)
+    print(f"{path.relative_to(ROOT)}: written; review it with git diff before committing")
+
+
+if __name__ == "__main__":
+    main()

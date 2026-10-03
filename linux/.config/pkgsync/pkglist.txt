@@ -37,6 +37,7 @@ difftastic      # git difftool
 github-cli
 glances
 duf
+fastfetch       # setup-snapshot reads the hardware from it
 tree
 pv
 plocate

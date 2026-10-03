@@ -67,6 +67,7 @@ brew "btop"
 brew "lazydocker"
 brew "glances"
 brew "duf"
+brew "fastfetch" # setup-snapshot reads the hardware from it
 brew "pv"
 brew "entr"
 brew "just"
