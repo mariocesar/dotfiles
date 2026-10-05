@@ -56,8 +56,15 @@ opt.splitbelow = true
 opt.splitright = true
 opt.scrolloff = 10
 
-vim.o.modeline = true
-vim.o.modelines = 10
+opt.modeline = true
+opt.modelines = 10
+
+opt.swapfile = false
+opt.backup = false
+opt.writebackup = false
+
+opt.undofile = true
+opt.undolevels = 1000
 
 -- Schedule after UIEnter to avoid increase startup time
 vim.schedule(function()
