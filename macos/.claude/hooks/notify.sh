@@ -1,9 +1,9 @@
 #!/bin/sh
-# Notification hook: show Claude's permission prompts and idle waits as a macOS notification.
+# Notification hook: show Claude's notifications as a macOS notification.
 set -eu
 
 event=$(cat)
-# Also registered on UserPromptSubmit for the Linux window tracking; nothing to do here.
+# Also registered on SessionStart and UserPromptSubmit for the Linux window tracking; nothing to do here.
 [ "$(printf '%s' "$event" | jq -r '.hook_event_name')" = Notification ] || exit 0
 project=$(printf '%s' "$event" | jq -r '.cwd | split("/") | last')
 message=$(printf '%s' "$event" | jq -r '.message')

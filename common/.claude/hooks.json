@@ -1,7 +1,18 @@
 {
   "Notification": [
     {
-      "matcher": "permission_prompt|idle_prompt|elicitation_dialog",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "~/.claude/hooks/notify.sh",
+          "timeout": 5
+        }
+      ]
+    }
+  ],
+  "SessionStart": [
+    {
+      "matcher": "startup|resume|clear",
       "hooks": [
         {
           "type": "command",
