@@ -32,9 +32,6 @@ if not global.vscode then
   }
 end
 
-opt.updatetime = 300
-opt.timeoutlen = 300
-
 opt.mouse = 'a'
 
 opt.ignorecase = true
@@ -65,6 +62,9 @@ opt.writebackup = false
 
 opt.undofile = true
 opt.undolevels = 1000
+
+opt.updatetime = 250
+opt.timeoutlen = 300
 
 -- Schedule after UIEnter to avoid increase startup time
 vim.schedule(function()
