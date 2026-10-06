@@ -1,6 +1,6 @@
 [user]
   email = mariocesar.c50@gmail.com
-	name = Mario-César
+  name = Mario-César
 
 [core]
   editor = nvim
@@ -73,7 +73,7 @@
 
 [branch]
   autoSetupRebase = always
-	sort = -committerdate
+  sort = -committerdate
 
 [filter "lfs"]
   clean = git-lfs clean -- %f
