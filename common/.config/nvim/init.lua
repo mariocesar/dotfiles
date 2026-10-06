@@ -310,7 +310,7 @@ if global.neovide then
   global.neovide_refresh_rate = 60
 end
 
--- Skip syntax highlighting for large files. 
+-- Skip syntax highlighting for large files.
 vim.api.nvim_create_autocmd('BufReadPost', {
   pattern = '*',
   callback = function(args)

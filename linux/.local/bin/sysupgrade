@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Upgrade repo and AUR packages with paru, then remove orphans.
 
-set -euo pipefail 
+set -euo pipefail
 
 echo "⇨ Upgrading repos and AUR"
 

@@ -112,28 +112,28 @@ main() {
     run_git_command "git fetch --all --prune" "Failed to fetch and prune" || return 1
     run_git_command "git checkout -f $branch" "Failed to checkout $branch branch" || return 1
     run_git_command "git remote prune origin" "Failed to prune origin" || return 1
-    
+
     if [ "$clean_untracked" = true ]; then
         run_git_command "git clean -fd" "Failed to clean untracked files and directories" || return 1
     fi
-    
+
     run_git_command "git repack" "Failed to repack" || return 1
     run_git_command "git prune-packed" "Failed to prune packed objects" || return 1
     run_git_command "git reflog expire --expire=1.month.ago" "Failed to expire reflog" || return 1
-    
+
     if [ "$gc_aggressive" = true ]; then
         run_git_command "git gc --aggressive" "Failed to run aggressive garbage collection" || return 1
     else
         run_git_command "git gc" "Failed to run garbage collection" || return 1
     fi
-    
+
     if [ "$optimize_repo" = true ]; then
         run_git_command "git fsck" "Failed to run filesystem check" || return 1
         run_git_command "git prune" "Failed to prune unreachable objects" || return 1
     fi
-    
+
     run_git_command "git pull origin $branch" "Failed to pull from origin/$branch" || return 1
-    
+
     info "Git maintenance completed successfully"
 }
 
