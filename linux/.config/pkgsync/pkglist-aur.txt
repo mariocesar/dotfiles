@@ -1,5 +1,6 @@
 android-studio                       # its SDK Manager owns ~/Android/Sdk
 dgop-bin
+eclint                               # EditorConfig linter
 espanso-wayland-git
 flutter-bin                          # join the `flutter` group, or it COW-mounts /opt/flutter into ~/.cache
 fzf-tab
