@@ -25,6 +25,7 @@ text/markdown=org.gnome.gitlab.somas.Apostrophe.desktop
 text/x-lua=org.gnome.gitlab.somas.Apostrophe.desktop
 x-scheme-handler/codex=chatgpt.desktop
 application/pdf=org.gnome.Papers.desktop
+x-scheme-handler/slack=slack.desktop
 
 [Added Associations]
 application/x-extension-htm=firefox.desktop;
@@ -51,5 +52,6 @@ x-scheme-handler/https=firefox.desktop;
 text/markdown=org.gnome.gitlab.somas.Apostrophe.desktop;
 text/x-lua=org.gnome.gitlab.somas.Apostrophe.desktop;
 application/pdf=org.gnome.Papers.desktop;
+x-scheme-handler/slack=slack.desktop;
 
 [Removed Associations]
