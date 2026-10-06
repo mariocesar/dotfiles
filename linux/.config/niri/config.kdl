@@ -89,8 +89,8 @@ overview {
 
 spawn-at-startup "bash" "-c" "wl-paste --watch cliphist store &"
 
-// Slack huddles are Chrome popups; see niri-float-popups for why a window-rule can't.
-spawn-at-startup "sh" "-c" "exec $HOME/.local/bin/niri-float-popups chrome-app.slack.com__client-Default"
+// Native Slack huddles open as extra windows under the same app-id; see niri-float-popups.
+spawn-at-startup "sh" "-c" "exec $HOME/.local/bin/niri-float-popups slack"
 
 environment {
   XDG_CURRENT_DESKTOP "niri"
