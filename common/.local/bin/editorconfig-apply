@@ -2,4 +2,4 @@
 # editorconfig-apply: apply .editorconfig to every tracked text file in the current git repo
 set -euo pipefail
 
-git grep -Ilz '' | xargs -0 nvim --headless --clean -c 'silent argdo write' -c 'qa'
+git grep -Ilz '' | xargs -0r nvim --headless --clean -c 'silent argdo write' -c 'qa'
