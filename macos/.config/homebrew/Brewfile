@@ -7,8 +7,11 @@ tap "hashicorp/tap"
 tap "heroku/brew"
 
 brew "awscli"
+brew "ansible"
+brew "ansible-lint"
 
 brew "coreutils"
+brew "parallel"
 brew "fzf"
 brew "fzf-tab" # zshfzftab.zsh sources it
 brew "eza"
@@ -19,8 +22,10 @@ brew "pwgen"
 brew "watch"
 brew "viddy" # git-watch
 brew "glow"  # Render Markdown in the console
+brew "ast-grep"
 
 brew "yt-dlp"
+brew "ffmpeg"
 brew "xz"
 brew "libtiff"
 brew "little-cms2"
@@ -57,6 +62,7 @@ brew "difftastic"
 brew "git-delta" # git config sets delta as the pager; git is unusable without it
 brew "git-filter-repo"
 brew "git-gui"
+brew "glab"
 brew "graphviz"
 brew "cmake"
 brew "ninja"
@@ -83,16 +89,18 @@ brew "fnm" # Faster alternative to nvm
 brew "optipng"
 brew "pandoc"
 brew "pnpm"
+brew "leaf-markdown-viewer"
 
 brew "python@3.12"
 brew "python@3.13"
-brew "uv"
 brew "ollama" # local models for llm (llm-ollama)
 brew "mise" # .zshrc activates it
 brew "pre-commit"
 brew "virtualenv"
 brew "pyenv"
 brew "pygobject3"
+
+brew "rust"
 
 brew "starship"
 
@@ -125,6 +133,14 @@ cask "easy-move+resize"
 cask "espanso"
 cask "keycastr"  # for showing keystrokes
 cask "loom"
+cask "google-chrome"
+cask "codex"
+cask "claude-code@latest"
+cask "the-unarchiver"
+cask "linearmouse"
+cask "karabiner-elements"
+cask "postico"
+cask "transmission"
 
 cask "font-dejavu-sans-mono-nerd-font"
 cask "font-droid-sans-mono-nerd-font"
