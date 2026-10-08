@@ -1,0 +1,13 @@
+#!/bin/sh
+# Step through the commits touching the given paths, each with its diff, in diffview.
+#   git timeline [<path>...] [<DiffviewFileHistory options>]    no path: the whole repo
+set -eu
+
+git rev-parse --git-dir >/dev/null
+
+# Handed over as a list: an Ex command line would split paths on spaces.
+GIT_TIMELINE_ARGS=$(printf '%s\n' "$@")
+export GIT_TIMELINE_ARGS
+
+exec nvim -c 'autocmd User DiffviewViewClosed qa' \
+    -c "lua require('diffview').file_history(nil, vim.split(vim.env.GIT_TIMELINE_ARGS or '', '\n', { trimempty = true }))"

@@ -1,0 +1,36 @@
+#!/bin/sh
+# Review the current branch like a PR, in diffview.
+#   git review [--commits] [<base>]    base defaults to origin/HEAD
+set -eu
+
+git rev-parse --git-dir >/dev/null
+
+usage() {
+    echo "usage: git review [--commits] [<base>]" >&2
+    exit 2
+}
+
+commits=
+base=
+for arg; do
+    case $arg in
+        --commits) commits=1 ;;
+        -*) usage ;;
+        *) [ -z "$base" ] || usage; base=$arg ;;
+    esac
+done
+
+if [ -z "$base" ] && ! base=$(git rev-parse --abbrev-ref --verify --quiet origin/HEAD); then
+    echo "git review: origin/HEAD is not set; run: git remote set-head origin --auto" >&2
+    exit 1
+fi
+
+if [ -n "$commits" ]; then
+    # two dots: in a log, three would also list main's commits missing here
+    view="DiffviewFileHistory --range=$base..HEAD"
+else
+    # a single rev is diffed against the working tree, so uncommitted work shows too
+    view="DiffviewOpen $(git merge-base "$base" HEAD)"
+fi
+
+exec nvim -c 'autocmd User DiffviewViewClosed qa' "+$view"

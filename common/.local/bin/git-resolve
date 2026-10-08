@@ -1,0 +1,7 @@
+#!/bin/sh
+# Open uncommitted changes in diffview; mid merge or rebase, conflicts get a 3-way view.
+set -eu
+
+git rev-parse --git-dir >/dev/null
+
+exec nvim -c 'autocmd User DiffviewViewClosed qa' +DiffviewOpen
