@@ -80,5 +80,28 @@ return {
     cond = vim.env.GHOSTTY_RESOURCES_DIR ~= nil,
     name = 'ghostty',
     lazy = false,
+  },
+  {
+    'dlyongemallo/diffview-plus.nvim',
+    dependencies = {
+      'nvim-tree/nvim-web-devicons',
+    },
+    opts = {
+      view = {
+        default = {
+          layout = 'diff1_inline',
+        },
+        inline = {
+          style = 'unified',
+        },
+      },
+      file_panel = {
+        listing_style = 'tree',
+        win_config = {
+          position = 'left',
+          width = 35,
+        },
+      },
+    },
   }
 }
