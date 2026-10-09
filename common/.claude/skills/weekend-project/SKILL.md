@@ -1,6 +1,6 @@
 ---
 name: weekend-project
-description: Captura lo investigado o discutido en la conversación actual como un documento de "weekend project" en ~/Projects/@mariocesar/Weekends — un punto de re-entrada en español idiomático que permite retomar la idea en frío meses después. Úsalo siempre que el usuario diga "guárdalo para el finde", "weekend project", "proyecto de fin de semana", "apunta esto para después", "quiero volver a esto", "para que no se me olvide", "save this so I can work on it later", o cuando acabe de terminar una investigación, comparativa o exploración técnica y quiera conservar el contexto para trabajar en ella más tarde. También aplica cuando pida actualizar, revisar o retomar un weekend project que ya existe.
+description: Captura lo investigado o discutido en la conversación actual como un documento de "weekend project" en ~/.notes/named/weekends — un punto de re-entrada en español idiomático que permite retomar la idea en frío meses después. Úsalo siempre que el usuario diga "guárdalo para el finde", "weekend project", "proyecto de fin de semana", "apunta esto para después", "quiero volver a esto", "para que no se me olvide", "save this so I can work on it later", o cuando acabe de terminar una investigación, comparativa o exploración técnica y quiera conservar el contexto para trabajar en ella más tarde. También aplica cuando pida actualizar, revisar o retomar un weekend project que ya existe.
 ---
 
 # Weekend project
@@ -35,7 +35,7 @@ De ahí salen las tres cosas que hacen bueno a un documento así:
 **Fecha real.** Ejecuta `date +%Y-%m-%d`. Las fechas van absolutas, nunca
 relativas — «hace tres días» es inútil dentro de tres meses.
 
-**Ubicación.** Por defecto `~/Projects/@mariocesar/Weekends/` (créala si no
+**Ubicación.** Por defecto `~/.notes/named/weekends/` (créala si no
 existe). Si el usuario nombra otra ruta, o si la idea pertenece claramente a un
 proyecto que ya tiene su sitio, usa esa.
 
