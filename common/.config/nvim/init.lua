@@ -66,6 +66,20 @@ opt.undolevels = 1000
 opt.updatetime = 250
 opt.timeoutlen = 300
 
+-- No display over ssh, and nvim's own OSC 52 fallback is skipped once 'clipboard' is set
+if vim.env.SSH_TTY then
+  local osc52 = require('vim.ui.clipboard.osc52')
+  -- Paste from nvim's own register: OSC 52 reads make Ghostty prompt on every `p`
+  local function paste()
+    return { vim.fn.split(vim.fn.getreg(''), '\n'), vim.fn.getregtype('') }
+  end
+  global.clipboard = {
+    name = 'OSC 52',
+    copy = { ['+'] = osc52.copy('+'), ['*'] = osc52.copy('*') },
+    paste = { ['+'] = paste, ['*'] = paste },
+  }
+end
+
 -- Schedule after UIEnter to avoid increase startup time
 vim.schedule(function()
   -- Sync clipboard with system clipboard
