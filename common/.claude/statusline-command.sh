@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Claude Code statusLine — shows:
+#   - @hostname, only over ssh
 #   - the current folder name (~ for $HOME)
 #   - model display name + reasoning effort level
 #   - context window usage (bar + %)
@@ -32,6 +33,11 @@ else
   dir_name=$(basename "$cwd")
 fi
 dir_segment="${BOLD}${CYAN}${dir_name}${RESET}"
+
+host_segment=""
+if [[ -n "${SSH_CONNECTION:-}" ]]; then
+  host_segment="${BOLD}${MAGENTA}@${HOSTNAME%%.*}${RESET}"
+fi
 
 # --- helpers ---
 round() { awk -v n="$1" 'BEGIN{printf "%d", (n<0?0:n)+0.5}'; }
@@ -123,6 +129,7 @@ fi
 
 # --- assemble, skipping any segment whose data was unavailable ---
 segments=()
+[[ -n "$host_segment" ]] && segments+=("$host_segment")
 [[ -n "$dir_segment" ]] && segments+=("$dir_segment")
 [[ -n "$model_segment" ]] && segments+=("$model_segment")
 [[ -n "$ctx_segment" ]] && segments+=("$ctx_segment")
