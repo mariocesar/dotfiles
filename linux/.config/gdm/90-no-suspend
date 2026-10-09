@@ -1,0 +1,3 @@
+# The greeter suspends after 15 min idle on AC; SSH doesn't count as activity.
+[org/gnome/settings-daemon/plugins/power]
+sleep-inactive-ac-type='nothing'
