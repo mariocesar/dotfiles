@@ -1,0 +1,6 @@
+// Lets `caffeinate` block sleep over SSH, where the default is auth_admin_keep.
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.login1.inhibit-block-sleep" && subject.user == "mariocesar") {
+        return polkit.Result.YES;
+    }
+});

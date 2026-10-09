@@ -58,6 +58,17 @@ else
   function o() { setsid -f xdg-open "$@" >/dev/null 2>&1; }
   alias copy=wl-copy
   alias lan-ip="ip -4 route get 1 | awk '{print \$7; exit}'"
+
+  # Toggle; setsid makes inhibit a group leader, so killing the group takes sleep too
+  function caffeinate() {
+    local pid=$(pgrep -xf 'systemd-inhibit --what=sleep --why=remote work sleep infinity')
+    if [[ -n $pid ]]; then
+      kill -- -"$pid" && echo "caffeinate off"
+    else
+      setsid -f systemd-inhibit --what=sleep --why="remote work" sleep infinity >/dev/null
+      echo "caffeinate on"
+    fi
+  }
 fi
 
 # === Search ===
