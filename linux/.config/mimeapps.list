@@ -15,7 +15,7 @@ image/svg+xml=org.gnome.Loupe.desktop
 image/webp=org.gnome.Loupe.desktop
 inode/directory=org.gnome.Nautilus.desktop
 text/html=firefox.desktop
-text/plain=nvim-ghostty.desktop
+text/plain=neovide.desktop
 x-scheme-handler/chrome=firefox.desktop
 x-scheme-handler/claude-cli=claude-code-url-handler.desktop
 x-scheme-handler/file=org.gnome.Nautilus.desktop
@@ -44,7 +44,7 @@ image/svg+xml=org.gnome.Loupe.desktop;
 image/webp=org.gnome.Loupe.desktop;
 inode/directory=org.gnome.Nautilus.desktop;dms-open.desktop;
 text/html=firefox.desktop;
-text/plain=nvim-ghostty.desktop;
+text/plain=nvim-ghostty.desktop;neovide.desktop;
 x-scheme-handler/chrome=firefox.desktop;
 x-scheme-handler/file=org.gnome.Nautilus.desktop;dms-open.desktop;
 x-scheme-handler/http=firefox.desktop;
@@ -52,6 +52,5 @@ x-scheme-handler/https=firefox.desktop;
 text/markdown=org.gnome.gitlab.somas.Apostrophe.desktop;
 text/x-lua=org.gnome.gitlab.somas.Apostrophe.desktop;
 application/pdf=org.gnome.Papers.desktop;
-x-scheme-handler/slack=slack.desktop;
 
 [Removed Associations]
