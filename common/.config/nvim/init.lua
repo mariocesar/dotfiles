@@ -160,6 +160,8 @@ map("n", "<esc><esc>", "<cmd>nohlsearch<cr><C-l>", { desc = "Cleanup search high
 map("n", "J", "mzJ`z", { desc = "Join lines without moving the cursor" })
 map("n", "n", "nzzzv", { desc = "Jumps to the next match and center" })
 map("n", "N", "Nzzzv", { desc = "Jumps to the previous match and center" })
+map("n", "<C-]>", "<cmd>cnext<CR>zz", { desc = "Focus on the next quickfix item" })
+map("n", "<C-[>", "<cmd>cprev<CR>zz", { desc = "Focus on the previous quickfix item" })
 
 -- Lexplore's own size is a percentage; a tree reads better at a fixed width
 map("n", "<leader>e", function()
