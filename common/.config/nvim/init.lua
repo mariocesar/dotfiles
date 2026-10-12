@@ -1,120 +1,81 @@
 local opt = vim.opt
 local global = vim.g
 
-global.mapleader = ','
-global.maplocalleader = '\\'
+global.mapleader = ","
+global.maplocalleader = "\\"
 
--- netrw browses directories; the builtin dir plugin would compete with it for them
+global.loaded_python3_provider = 0
 global.loaded_nvim_dir_plugin = 1
--- netrw's click handler opens ../ instead of the clicked entry on nvim 0.13
+
 global.netrw_mousemaps = 0
 global.netrw_banner = 0
 global.netrw_liststyle = 3 -- tree
 
 require("config.lazy")
 
-global.have_nerd_fonts = true
+-- Options
 
--- Fixes slow startup time
-global.loaded_python3_provider = 0
-
-if not global.vscode then
-  opt.number = true
-  opt.signcolumn = 'yes'
-
-  opt.list = true
-  opt.listchars = {
-    tab = '▸ ',
-    trail = '·',
-    extends = '>',
-    precedes = '<',
-    nbsp = '␣'
-  }
-end
-
-opt.mouse = 'a'
+opt.mouse = "a"
+opt.cursorline = true
+opt.scrolloff = 10
+opt.splitbelow = true
+opt.splitright = true
 
 opt.ignorecase = true
 opt.smartcase = true
-opt.hlsearch = true
-opt.inccommand = 'split'
-opt.grepprg = 'rg --vimgrep'
+opt.inccommand = "split"
+opt.grepprg = "rg --vimgrep"
 
-opt.autoindent = true
-opt.smartindent = true
-opt.breakindent = true
-opt.cursorline = true
-opt.autowrite = true
 opt.tabstop = 2
 opt.shiftwidth = 2
 opt.softtabstop = 2
 opt.expandtab = true
-opt.splitbelow = true
-opt.splitright = true
-opt.scrolloff = 10
+opt.smartindent = true
+opt.breakindent = true
+opt.autowrite = true
 
-opt.modeline = true
 opt.modelines = 10
-
 opt.swapfile = false
-opt.backup = false
 opt.writebackup = false
-
 opt.undofile = true
-opt.undolevels = 1000
 
 opt.updatetime = 250
 opt.timeoutlen = 300
 
--- No display over ssh, and nvim's own OSC 52 fallback is skipped once 'clipboard' is set
-if vim.env.SSH_TTY then
-  local osc52 = require('vim.ui.clipboard.osc52')
-  -- Paste from nvim's own register: OSC 52 reads make Ghostty prompt on every `p`
-  local function paste()
-    return { vim.fn.split(vim.fn.getreg(''), '\n'), vim.fn.getregtype('') }
-  end
-  global.clipboard = {
-    name = 'OSC 52',
-    copy = { ['+'] = osc52.copy('+'), ['*'] = osc52.copy('*') },
-    paste = { ['+'] = paste, ['*'] = paste },
-  }
-end
-
--- Schedule after UIEnter to avoid increase startup time
-vim.schedule(function()
-  -- Sync clipboard with system clipboard
-  opt.clipboard = 'unnamedplus'
-end)
-
 opt.wildignore = {
-  '*/node_modules/**',
-  '*/*_cache/*',
-  '*/.git/**',
-  '*.o',
-  '*~',
-  '*.pyc',
-  '*/tmp/**',
-  '*.so',
-  '*.swp',
-  '*.zip',
-  '*.tar.gz',
-  '*.min.*',
-  '*.png',
-  '*.jpg',
-  '*.jpeg',
-  '*.svg',
-  '*.gif',
-  '*/__pycache__/',
-  '*/.idea/**',
-  '*/.cache/**',
-  '*/var/**',
-  '*/venv/**',
-  '*/.venv/**',
-  '*DS_Store*'
+  "*/.git/**",
+  "*/.idea/**",
+  "*/.cache/**",
+  "*/*_cache/*",
+  "*/__pycache__/",
+  "*/node_modules/**",
+  "*/venv/**",
+  "*/.venv/**",
+  "*/tmp/**",
+  "*/var/**",
+  "*.o",
+  "*.so",
+  "*.pyc",
+  "*.swp",
+  "*~",
+  "*.zip",
+  "*.tar.gz",
+  "*.min.*",
+  "*.png",
+  "*.jpg",
+  "*.jpeg",
+  "*.gif",
+  "*.svg",
+  "*DS_Store*",
 }
 
 if not global.vscode then
-  require('tokyonight').setup {
+  opt.number = true
+  opt.signcolumn = "yes"
+  opt.list = true
+  opt.listchars = { tab = "▸ ", trail = "·", extends = ">", precedes = "<", nbsp = "␣" }
+
+  require("tokyonight").setup({
     -- vim-clap only derives its own colors for groups that don't exist yet
     on_highlights = function(hl, c)
       hl.ClapInput = { bg = c.bg_highlight }
@@ -128,180 +89,137 @@ if not global.vscode then
       hl.ClapSelected = { fg = c.magenta, bold = true }
       hl.ClapSelectedSign = { fg = c.magenta }
     end,
-  }
-  vim.cmd [[colorscheme tokyonight-night]]
+  })
+  vim.cmd.colorscheme("tokyonight-night")
 end
+
+-- Clipboard
+
+-- No display over ssh, and nvim's own OSC 52 fallback is skipped once 'clipboard' is set
+if vim.env.SSH_TTY then
+  local osc52 = require("vim.ui.clipboard.osc52")
+  -- Paste from nvim's own register: OSC 52 reads make Ghostty prompt on every `p`
+  local function paste()
+    return { vim.fn.split(vim.fn.getreg(""), "\n"), vim.fn.getregtype("") }
+  end
+  global.clipboard = {
+    name = "OSC 52",
+    copy = { ["+"] = osc52.copy("+"), ["*"] = osc52.copy("*") },
+    paste = { ["+"] = paste, ["*"] = paste },
+  }
+end
+
+-- Resolving the clipboard provider runs external tools; keep it off the startup path
+vim.schedule(function()
+  opt.clipboard = "unnamedplus"
+end)
 
 -- Filetype
 
-vim.filetype.add {
-  extension = {
-    jinja = 'jinja',
-    jinja2 = 'jinja',
-    j2 = 'jinja'
-  }
-}
+vim.filetype.add({ extension = { jinja = "jinja", jinja2 = "jinja", j2 = "jinja" } })
 
 -- Commands
+
 local cmd = vim.api.nvim_create_user_command
 
-cmd("Cwd", "cd %:p:h", {
-  desc = 'set cwd to directory of current file'
-})
-cmd("Run", '!"%:p"', {
-  desc = 'Execute current file'
-})
-cmd("Config", "edit $MYVIMRC", {
-  desc = 'open config file with :Config'
-})
-cmd("Reload", "source $MYVIMRC", {
-  desc = 'reload config file with :Reload'
-})
-cmd("Cheat", "tabnew " .. vim.fn.stdpath("config") .. "/cheatsheet.md", {
-  desc = 'open the keybinding cheat sheet'
-})
-cmd("Grep", "silent grep! <args>", {
-  nargs = '+',
-  desc = 'grep into quickfix without jumping to the first match'
-})
+cmd("Cwd", "cd %:p:h", { desc = "Set cwd to the directory of the current file" })
+cmd("Run", '!"%:p"', { desc = "Execute the current file" })
+cmd("Config", "edit $MYVIMRC", { desc = "Edit init.lua" })
+cmd("Reload", "source $MYVIMRC", { desc = "Source init.lua" })
+cmd("Cheat", "tabnew " .. vim.fn.stdpath("config") .. "/cheatsheet.md", { desc = "Open the keybinding cheat sheet" })
+cmd("Grep", "silent grep! <args>", { nargs = "+", desc = "Grep into quickfix without jumping to the first match" })
 cmd("WriterMode", function()
   vim.opt_local.wrap = true
-  vim.opt_local.textwidth = 80
   vim.opt_local.linebreak = true
   vim.opt_local.showbreak = "»"
+  vim.opt_local.textwidth = 80
   vim.opt_local.colorcolumn = "81"
   vim.opt_local.tabstop = 2
   vim.opt_local.shiftwidth = 2
-
   vim.notify("Applied Writer Mode")
-end, {
-  desc = 'Set useful writing options for the current buffer.'
-})
+end, { desc = "Set useful writing options for the current buffer" })
 
--- Make vim.keymap.set defaults every mapping to silent.
+-- Keymaps
+
+-- vim.keymap.set with silent as the default
 local function map(mode, lhs, rhs, o)
-  vim.keymap.set(mode, lhs, rhs, vim.tbl_extend('keep', o or {}, {
-    silent = true
-  }))
+  vim.keymap.set(mode, lhs, rhs, vim.tbl_extend("keep", o or {}, { silent = true }))
 end
 
--- Normal mode
-map('n', '<leader>q', '<cmd>quit<cr>', {
-  desc = "Quit"
-})
-map('n', '<leader>c', '<cmd>tabnew<cr>', {
-  desc = "New tab"
-})
-map('n', '<leader>n', '<cmd>tabnext<cr>', {
-  desc = "Switch to next tab"
-})
-map('n', '<leader>%', '<cmd>vsplit<cr>', {
-  desc = "Split vertical"
-})
-map('n', '<leader>"', '<cmd>split<cr>', {
-  desc = "Split horizontal"
-})
-map('n', '<leader>s', '<cmd>write<cr>', {
-  desc = 'Save buffer on normal mode'
-})
-map('n', '<esc><esc>', '<cmd>nohlsearch<cr><C-l>', {
-  desc = 'Cleanup search highlight and redraw'
-})
+map("n", "<leader>s", "<cmd>write<cr>", { desc = "Save buffer" })
+map("n", "<leader>q", "<cmd>quit<cr>", { desc = "Quit" })
+map("n", "<leader>%", "<cmd>vsplit<cr>", { desc = "Split vertical" })
+map("n", '<leader>"', "<cmd>split<cr>", { desc = "Split horizontal" })
+map("n", "<leader>c", "<cmd>tabnew<cr>", { desc = "New tab" })
+map("n", "<leader>n", "<cmd>tabnext<cr>", { desc = "Switch to next tab" })
+map("n", "<C-j>", "<C-d>zz", { desc = "Scroll down and center" })
+map("n", "<C-k>", "<C-u>zz", { desc = "Scroll up and center" })
+map("n", "<esc><esc>", "<cmd>nohlsearch<cr><C-l>", { desc = "Cleanup search highlight and redraw" })
+
 -- Lexplore's own size is a percentage; a tree reads better at a fixed width
-map('n', '<leader>e', function()
+map("n", "<leader>e", function()
   vim.cmd.Lexplore()
   if vim.api.nvim_get_current_buf() == vim.t.netrw_lexbufnr then
-    vim.cmd('vertical resize 30')
+    vim.cmd("vertical resize 30")
   end
-end, {
-  desc = 'Toggle the file tree sidebar'
-})
-map('n', '<leader>p', '<cmd>Clap files<cr>', {
-  desc = 'Navigate files in the current working directory'
-})
+end, { desc = "Toggle the file tree sidebar" })
+
 -- :terminal takes the rest of the line as its command, so `| startinsert` can't chain
-map('n', '<leader>t', function()
-  vim.cmd('below terminal')
+map("n", "<leader>t", function()
+  vim.cmd("below terminal")
   vim.cmd.startinsert()
-end, {
-  desc = 'Open a terminal below'
-})
-map('n', '<C-j>', '<C-d>zz', {
-  desc = 'Scroll down and center',
-})
-map('n', '<C-k>', '<C-u>zz', {
-  desc = 'Scroll up and center',
-})
+end, { desc = "Open a terminal below" })
 
--- Visual mode
-map('v', '<', '<gv', {
-  desc = 'Mantain the selected blocks when indenting'
-})
-map('v', '>', '>gv', {
-  desc = 'Mantain the selected blocks when indenting'
-})
-
--- Terminal mode
-map('t', '<esc><esc>', '<C-\\><C-n>', {
-  desc = 'Exit terminal mode'
-})
-
-map('n', '<leader>d', '<cmd>Clap dotfiles<cr>', {
-  desc = 'Open some dotfile'
-})
-map('n', '<leader>g', '<cmd>Clap grep<cr>', {
-  desc = 'Live grep in the project'
-})
-map('n', '<leader>G', '<cmd>Clap grep ++query=<cword><cr>', {
-  desc = 'Live grep the word under cursor'
-})
-map('n', '<leader>b', '<cmd>Clap blines<cr>', {
-  desc = 'Search lines in the current buffer'
-})
+map("n", "<leader>p", "<cmd>Clap files<cr>", { desc = "Navigate files in the current working directory" })
+map("n", "<leader>d", "<cmd>Clap dotfiles<cr>", { desc = "Open some dotfile" })
+map("n", "<leader>b", "<cmd>Clap blines<cr>", { desc = "Search lines in the current buffer" })
+map("n", "<leader>g", "<cmd>Clap grep<cr>", { desc = "Live grep in the project" })
+map("n", "<leader>G", "<cmd>Clap grep ++query=<cword><cr>", { desc = "Live grep the word under cursor" })
 -- `:` not <cmd>: leaving visual mode first sets the '< '> marks @visual reads
-map('v', '<leader>g', ':<C-u>Clap grep ++query=@visual<cr>', {
-  desc = 'Live grep the selection'
-})
+map("v", "<leader>g", ":<C-u>Clap grep ++query=@visual<cr>", { desc = "Live grep the selection" })
 
--- Paste on Normal, Insert and Command-Line mode
+map("v", "<", "<gv", { desc = "Keep the selection when indenting" })
+map("v", ">", ">gv", { desc = "Keep the selection when indenting" })
 
-map('v', '<C-c>', function()
-  vim.api.nvim_command('normal! gvy')
-  vim.notify('Copied to clipboard')
-end, {
-  desc = 'Copy to clipboard'
-})
+map("t", "<esc><esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
-map('n', '<D-v>', 'a<C-r>+<Esc>', {
-  desc = 'Paste'
-})
-map('i', '<D-v>', '<C-r>+', {
-  desc = 'Paste'
-})
-map('c', '<D-v>', '<C-r>+', {
-  desc = 'Paste'
-})
+map("v", "<C-c>", function()
+  vim.api.nvim_command("normal! gvy")
+  vim.notify("Copied to clipboard")
+end, { desc = "Copy to clipboard" })
+map("n", "<D-v>", "a<C-r>+<Esc>", { desc = "Paste" })
+map("i", "<D-v>", "<C-r>+", { desc = "Paste" })
+map("c", "<D-v>", "<C-r>+", { desc = "Paste" })
 
--- Auto commands
+-- Autocommands
 
 local au = require("au")
 
 -- briefly highlight a selection on yank
-
 local yank = au("user_yank")
 
-function yank.TextYankPost() vim.hl.on_yank() end
+function yank.TextYankPost()
+  vim.hl.on_yank()
+end
 
 -- open the quickfix list after :grep
-
 local grep = au("user_grep")
-local results = grep({
-  'QuickFixCmdPost'
-}, {
-  pattern = 'grep'
-})
+local results = grep("QuickFixCmdPost", { pattern = "grep" })
 
-function results.handler() vim.cmd.cwindow() end
+function results.handler()
+  vim.cmd.cwindow()
+end
+
+-- skip syntax highlighting for large files
+local bigfile = au("user_bigfile")
+
+function bigfile.BufReadPost(args)
+  if vim.fn.getfsize(args.file) > 100 * 1024 then
+    vim.bo[args.buf].syntax = "off"
+  end
+end
+
+-- Neovide
 
 if global.neovide then
   -- Matched to Ghostty by screenshot: padding is in physical px, so 24 is its 12pt at 2x.
@@ -319,12 +237,22 @@ if global.neovide then
   local function zoom(by)
     global.neovide_scale_factor = by and global.neovide_scale_factor * by or 1.0
   end
-  map('n', '<C-=>', function() zoom(1.1) end, { desc = 'Zoom in' })
-  map('n', '<C-->', function() zoom(1 / 1.1) end, { desc = 'Zoom out' })
-  map('n', '<C-0>', function() zoom() end, { desc = 'Reset zoom' })
-  map({ 'n', 'i', 'c', 't' }, '<C-S-v>', function()
-    vim.api.nvim_paste(vim.fn.getreg('+'), true, -1)
-  end, { desc = 'Paste' })
+
+  map("n", "<C-=>", function()
+    zoom(1.1)
+  end, { desc = "Zoom in" })
+
+  map("n", "<C-->", function()
+    zoom(1 / 1.1)
+  end, { desc = "Zoom out" })
+
+  map("n", "<C-0>", function()
+    zoom()
+  end, { desc = "Reset zoom" })
+
+  map({ "n", "i", "c", "t" }, "<C-S-v>", function()
+    vim.api.nvim_paste(vim.fn.getreg("+"), true, -1)
+  end, { desc = "Paste" })
 
   global.neovide_hide_mouse_when_typing = true
   global.neovide_remember_window_size = true
@@ -337,15 +265,4 @@ if global.neovide then
   global.neovide_refresh_rate = 60
 end
 
--- Skip syntax highlighting for large files.
-vim.api.nvim_create_autocmd('BufReadPost', {
-  pattern = '*',
-  callback = function(args)
-    if vim.fn.getfsize(args.file) > 100 * 1024 then
-      vim.bo[args.buf].syntax = 'off'
-    end
-  end
-})
-
 -- TODO: load init.lua from a working directory. Similar to .envrc load setup
---
