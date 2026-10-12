@@ -164,6 +164,19 @@ cmd("Grep", "silent grep! <args>", {
   nargs = '+',
   desc = 'grep into quickfix without jumping to the first match'
 })
+cmd("WriterMode", function()
+  vim.opt_local.wrap = true
+  vim.opt_local.textwidth = 80
+  vim.opt_local.linebreak = true
+  vim.opt_local.showbreak = "»"
+  vim.opt_local.colorcolumn = "81"
+  vim.opt_local.tabstop = 2
+  vim.opt_local.shiftwidth = 2
+
+  vim.notify("Applied Writer Mode")
+end, {
+  desc = 'Set useful writing options for the current buffer.'
+})
 
 -- Make vim.keymap.set defaults every mapping to silent.
 local function map(mode, lhs, rhs, o)
