@@ -152,9 +152,13 @@ map("n", "<leader>%", "<cmd>vsplit<cr>", { desc = "Split vertical" })
 map("n", '<leader>"', "<cmd>split<cr>", { desc = "Split horizontal" })
 map("n", "<leader>c", "<cmd>tabnew<cr>", { desc = "New tab" })
 map("n", "<leader>n", "<cmd>tabnext<cr>", { desc = "Switch to next tab" })
+map("n", "<leader>f", vim.lsp.buf.format, { desc = "Format the current buffer" })
 map("n", "<C-j>", "<C-d>zz", { desc = "Scroll down and center" })
 map("n", "<C-k>", "<C-u>zz", { desc = "Scroll up and center" })
 map("n", "<esc><esc>", "<cmd>nohlsearch<cr><C-l>", { desc = "Cleanup search highlight and redraw" })
+map("n", "J", "mzJ`z", { desc = "Join lines without moving the cursor" })
+map("n", "n", "nzzzv", { desc = "Jumps to the next match and center" })
+map("n", "N", "Nzzzv", { desc = "Jumps to the previous match and center" })
 
 -- Lexplore's own size is a percentage; a tree reads better at a fixed width
 map("n", "<leader>e", function()
@@ -180,6 +184,8 @@ map("v", "<leader>g", ":<C-u>Clap grep ++query=@visual<cr>", { desc = "Live grep
 
 map("v", "<", "<gv", { desc = "Keep the selection when indenting" })
 map("v", ">", ">gv", { desc = "Keep the selection when indenting" })
+map("v", "K", ":m '<-2<CR>gv=gv", { desc = "Move selected line up" })
+map("v", "J", ":m '>+1<CR>gv=gv", { desc = "Move selected line down" })
 
 map("t", "<esc><esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
