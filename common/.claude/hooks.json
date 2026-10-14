@@ -20,15 +20,6 @@
           "timeout": 5
         }
       ]
-    },
-    {
-      "hooks": [
-        {
-          "type": "command",
-          "command": "~/.claude/hooks/direnv-env.sh",
-          "timeout": 10
-        }
-      ]
     }
   ],
   "UserPromptSubmit": [
@@ -43,29 +34,6 @@
           "type": "command",
           "command": "~/.claude/hooks/notify.sh",
           "timeout": 5
-        }
-      ]
-    }
-  ],
-  "CwdChanged": [
-    {
-      "hooks": [
-        {
-          "type": "command",
-          "command": "~/.claude/hooks/direnv-env.sh",
-          "timeout": 10
-        }
-      ]
-    }
-  ],
-  "FileChanged": [
-    {
-      "matcher": ".envrc|.env",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "~/.claude/hooks/direnv-env.sh",
-          "timeout": 10
         }
       ]
     }
