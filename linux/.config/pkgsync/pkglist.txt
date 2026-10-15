@@ -27,16 +27,11 @@ viu
 ddgr            # DuckduckGo
 direnv
 mise
-starship
 
 btop
 htop
-lazygit
 git-delta
-difftastic      # git difftool
-github-cli
 glances
-duf
 fastfetch       # setup-snapshot reads the hardware from it
 tree
 pv
@@ -48,9 +43,6 @@ paru
 pacman-contrib  # paccache, used by sysupgrade
 sshx          # Replace tmate
 tmux
-glab          # Gitlab CLI
-glow          # Render markdown in terminal
-vhs           # Recording terminal as gifs
 
 stylua        # Lua Formatter
 
@@ -82,7 +74,6 @@ docker
 docker-compose
 aws-cli-v2
 terraform
-hugo
 opencode                # The opensource coding agent
 
 tailscale       # 48-tailscale.sh enables tailscaled; login stays manual: sudo tailscale up

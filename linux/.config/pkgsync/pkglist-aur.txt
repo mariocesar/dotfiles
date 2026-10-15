@@ -5,7 +5,6 @@ espanso-wayland-git
 flutter-bin                          # join the `flutter` group, or it COW-mounts /opt/flutter into ~/.cache
 fzf-tab
 google-chrome
-lazydocker
 leaf-markdown-viewer-bin             # Same as glow
 matugen-bin
 minecraft-launcher
@@ -16,7 +15,6 @@ rapidraw                             # RAW image editor
 slack-desktop-wayland-jetm           # Slack Native to Wayland
 ttf-material-icons-git
 ttf-material-symbols-variable-git
-viddy                                # Better watch
 visual-studio-code-bin
 woff2-material-symbols-variable-git
 zoom

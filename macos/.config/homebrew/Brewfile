@@ -20,8 +20,6 @@ brew "ripgrep"
 brew "fd" # zshbindkeys.zsh ctrl+p / ctrl+g pickers
 brew "pwgen"
 brew "watch"
-brew "viddy" # git-watch
-brew "glow"  # Render Markdown in the console
 brew "ast-grep"
 
 brew "yt-dlp"
@@ -56,13 +54,9 @@ brew "deno"
 brew "direnv"
 brew "duckdb"
 brew "git"
-brew "gh"
-brew "lazygit"
-brew "difftastic"
 brew "git-delta" # git config sets delta as the pager; git is unusable without it
 brew "git-filter-repo"
 brew "git-gui"
-brew "glab"
 brew "graphviz"
 brew "cmake"
 brew "ninja"
@@ -70,14 +64,11 @@ brew "ninja"
 brew "hey"
 brew "htop"
 brew "btop"
-brew "lazydocker"
 brew "glances"
-brew "duf"
 brew "fastfetch" # setup-snapshot reads the hardware from it
 brew "pv"
 brew "entr"
 brew "just"
-brew "hugo"
 
 brew "infracost"
 brew "inframap"
@@ -101,7 +92,6 @@ brew "pygobject3"
 
 brew "rust"
 
-brew "starship"
 
 brew "terraform"
 brew "terraform-docs"
