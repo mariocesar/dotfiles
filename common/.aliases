@@ -172,12 +172,18 @@ function docker-volume-ls() {
 }
 
 function docker-prune() {
-  echo "→ Remove unused containers, images, networks and build cache older than 24h, and all unused anonymous volumes"
+  echo "→ Remove unused containers, images and networks older than 24h, all unused anonymous volumes, and the build cache of every buildx builder"
 
   (
     set -ex
     docker system prune --all --force --filter until=24h
     docker volume prune --force
+    # no until filter: recently touched records anchor whole chains of old layers, so it matched nothing
+    for builder in $(docker buildx ls --format json | jq -r .Name); do
+      docker buildx inspect --bootstrap "$builder" >/dev/null
+      docker buildx prune --builder "$builder" --all --force
+      docker buildx stop "$builder"
+    done
   )
 }
 
