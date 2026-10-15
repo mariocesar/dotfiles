@@ -64,7 +64,6 @@ cmake
 ninja
 graphviz
 meld
-pre-commit
 
 firefox         # default browser in mimeapps.list; 10-firefox-chrome.py links its profile
 
