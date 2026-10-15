@@ -6,11 +6,12 @@ is_distro arch || exit 0
 
 if [ "$DRY" -eq 1 ]; then
     step "Pending repo upgrades"
-    checkupdates || true
+    # Each check exits with the code shown when there is nothing to report; anything else is a failure.
+    checkupdates || [ $? -eq 2 ]
     step "Pending AUR upgrades"
-    paru -Qua || true
+    paru -Qua || [ $? -eq 1 ]
     step "Orphans"
-    pacman -Qtdq || true
+    pacman -Qtdq || [ $? -eq 1 ]
     if has flatpak; then
         step "Pending flatpak updates"
         flatpak remote-ls --updates
@@ -22,7 +23,7 @@ step "Upgrading repos and AUR"
 paru -Syu --skipreview
 
 step "Removing orphans"
-orphans=$(pacman -Qtdq || true)
+orphans=$(pacman -Qtdq || [ $? -eq 1 ])
 if [ -n "$orphans" ]; then
     sudo pacman -Rns -- $orphans
 else
