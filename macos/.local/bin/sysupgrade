@@ -15,3 +15,9 @@ brew upgrade
 echo "⇨ Removing stale versions and cached downloads"
 
 brew cleanup --prune=all
+
+
+echo "⇨ Syncing mise tools"
+
+mise install
+mise prune -y

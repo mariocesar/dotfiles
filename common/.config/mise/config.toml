@@ -1,0 +1,6 @@
+[tools]
+bun = "latest"
+node = "20.19.6"
+pi = "latest"
+python = "3.13"
+

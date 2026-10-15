@@ -84,6 +84,7 @@ docker-compose
 aws-cli-v2
 terraform
 hugo
+opencode                # The opensource coding agent
 
 tailscale       # 48-tailscale.sh enables tailscaled; login stays manual: sudo tailscale up
 syncthing       # 49-syncthing.sh enables the user service

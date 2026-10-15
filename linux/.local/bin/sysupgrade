@@ -26,3 +26,9 @@ sudo paccache -ruk0
 for dir in ~/.cache/paru/clone/*/; do
     git -C "$dir" clean -fdxq
 done
+
+
+echo "⇨ Syncing mise tools"
+
+mise install
+mise prune -y
