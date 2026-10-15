@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Arch packages: upgrade repos and AUR, clean, update flatpaks.
+set -euo pipefail
+
+is_distro arch || exit 0
+
+if [ "$DRY" -eq 1 ]; then
+    step "Pending repo upgrades"
+    checkupdates || true
+    step "Pending AUR upgrades"
+    paru -Qua || true
+    step "Orphans"
+    pacman -Qtdq || true
+    if has flatpak; then
+        step "Pending flatpak updates"
+        flatpak remote-ls --updates
+    fi
+    exit 0
+fi
+
+step "Upgrading repos and AUR"
+paru -Syu --skipreview
+
+step "Removing orphans"
+orphans=$(pacman -Qtdq || true)
+if [ -n "$orphans" ]; then
+    sudo pacman -Rns -- $orphans
+else
+    echo "No orphans found."
+fi
+
+step "Pruning package caches"
+sudo paccache -rk2
+sudo paccache -ruk0
+# AUR clones keep every downloaded source and built package; all of it is rebuildable from the PKGBUILD
+for dir in ~/.cache/paru/clone/*/; do
+    [ -d "$dir" ] && git -C "$dir" clean -fdxq
+done
+
+if has flatpak; then
+    step "Updating flatpaks"
+    flatpak update -y
+    flatpak uninstall --unused -y
+fi

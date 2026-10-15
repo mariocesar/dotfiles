@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Bring this machine up to date by running each part in sysupgrade.d in name order.
+# install.py links only the parts for this OS; a part that doesn't apply exits 0.
+set -euo pipefail
+
+usage() {
+    cat <<'USAGE'
+sysupgrade - upgrade and clean everything on this machine
+
+Usage: sysupgrade [-n] [-h]
+
+  -n  report pending upgrades, change nothing
+USAGE
+}
+
+DRY=0
+while getopts ':nh' opt; do
+    case "$opt" in
+        n) DRY=1 ;;
+        h) usage; exit 0 ;;
+        *) usage >&2; exit 2 ;;
+    esac
+done
+
+. "$HOME/.local/lib/runparts.sh"
+
+has mise || { echo "sysupgrade: needs mise" >&2; exit 1; }
+
+run_parts sysupgrade

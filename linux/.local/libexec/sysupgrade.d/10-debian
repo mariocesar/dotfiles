@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Placeholder for Debian and Ubuntu: apt is left alone, the toolchains still run.
+set -euo pipefail
+
+is_distro debian || exit 0
+
+step "apt packages"
+echo "sysupgrade: Debian/Ubuntu packages are not handled yet" >&2

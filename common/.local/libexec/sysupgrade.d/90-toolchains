@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# User-level toolchains, the same on any OS; runs after the system packages they may build on.
+set -euo pipefail
+
+step "mise tools"
+if [ "$DRY" -eq 1 ]; then
+    mise outdated
+else
+    # install alone never moves an installed "latest" forward; upgrade does, within the pinned range.
+    mise install
+    mise upgrade
+    mise prune -y
+fi
+
+if has uv; then
+    step "uv tools"
+    if [ "$DRY" -eq 1 ]; then uv tool list --outdated; else uv tool upgrade --all; fi
+fi
+
+if has rustup; then
+    step "Rust toolchains"
+    # check exits 100 when an update is available; that is the report, not a failure.
+    if [ "$DRY" -eq 1 ]; then rustup check || [ $? -eq 100 ]; else rustup update; fi
+fi

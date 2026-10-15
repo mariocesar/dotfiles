@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Homebrew: upgrade formulae and casks, clean.
+set -euo pipefail
+
+has brew || { echo "sysupgrade: needs brew" >&2; exit 1; }
+
+if [ "$DRY" -eq 1 ]; then
+    step "Pending upgrades"
+    brew outdated
+    exit 0
+fi
+
+step "Refreshing formulae"
+brew update
+
+step "Upgrading formulae and casks"
+# Casks that update themselves are left alone; --greedy would fight them.
+brew upgrade
+
+step "Removing stale versions and cached downloads"
+brew cleanup --prune=all
