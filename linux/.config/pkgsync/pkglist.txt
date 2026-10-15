@@ -45,6 +45,7 @@ reflector
 pkgfile
 yay
 paru
+pacman-contrib  # paccache, used by sysupgrade
 sshx          # Replace tmate
 tmux
 glab          # Gitlab CLI
