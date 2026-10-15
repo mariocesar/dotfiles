@@ -1,7 +1,12 @@
 # Sourced by the sysupgrade and pkgsync runners; helpers and context are exported to their parts,
 # so a part only runs through its runner.
 
-step() { printf '\n\033[1m⇨ %s\033[0m\n' "$*"; }
+# Plain '# heading' when piped, so grep -v '^#' drops it.
+if [ -t 1 ]; then
+    step() { printf '\n\033[1m⇨ %s\033[0m\n' "$*"; }
+else
+    step() { printf '# %s\n' "$*"; }
+fi
 has() { command -v "$1" >/dev/null 2>&1; }
 # Matches ID or ID_LIKE: CachyOS is ID=cachyos, Ubuntu and Mint list debian in ID_LIKE.
 is_distro() { case " $DISTRO " in *" $1 "*) ;; *) return 1 ;; esac; }
