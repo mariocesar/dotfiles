@@ -19,6 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      # Only the binary: uses.py reads tool descriptions from its registry.
+      - uses: jdx/mise-action@v5
+        with:
+          install: false
       - run: mkdir _site && uses/uses.py > uses.md
       - uses: docker://pandoc/core:3.11
         with:

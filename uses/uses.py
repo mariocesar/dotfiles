@@ -8,6 +8,9 @@ import re
 from sys import stdout
 import json
 from pathlib import Path
+import subprocess
+import tomllib
+from urllib.request import urlopen
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -140,6 +143,44 @@ li(code("keybind") + "bound to a key in niri") >> stdout
 li(code("startup") + "started with the niri session") >> stdout
 li(code("timer") + "run by a systemd timer") >> stdout
 li(code("launcher") + "has an entry in the app launcher") >> stdout
+
+
+h2("Tools installed with mise") >> stdout
+th("tool", "", "mise backend") >> stdout
+
+tools = tomllib.loads((ROOT_DIR / "common/.config/mise/config.toml").read_text())["tools"]
+
+for key, version in tools.items():
+    name = key.removeprefix("pypi:")
+
+    if key.startswith("pypi:"):
+        backend = "pypi"
+
+        with urlopen(f"https://pypi.org/pypi/{name}/json") as response:
+            info = json.load(response)["info"]
+
+        urls = {key.lower(): url for key, url in (info["project_urls"] or {}).items()}
+        about = info["summary"]
+        href = info["home_page"] or urls.get("homepage") or f"https://pypi.org/project/{name}"
+    else:
+        result = subprocess.run(["mise", "tool", "--json", name], capture_output=True, check=True)  # noqa: S603, S607
+        tool = json.loads(result.stdout)
+        backend, source = tool["backend"].split(":")
+        about = tool["description"] or ""
+
+        if backend == "core":
+            href = f"https://mise.jdx.dev/lang/{name}.html"
+        elif backend == "gitlab":
+            href = f"https://gitlab.com/{source}"
+        else:
+            href = f"https://github.com/{source}"
+
+    tags = code(backend)
+
+    if version != "latest":
+        tags += code(version)
+
+    tr(a(name, href), about, tags) >> stdout
 
 hr()
 
