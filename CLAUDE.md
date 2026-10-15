@@ -32,9 +32,9 @@ macos/.local/bin/update-preferences    ->  ~/.local/bin/update-preferences
 
 Nothing outside a bucket is ever walked, so `install.py`, `README.md`, `ruff.toml` and friends need no exclusion. `DotfileMapper.EXCLUDE_PATTERNS` is down to junk that can appear *inside* a bucket (`.DS_Store`, `*.pyc`, `*~`); `postinstall.d` is skipped structurally, as part of a bucket's shape, not as a denylist entry.
 
-The platform bucket is installed after `common/`, so a path present in both is **deliberately** won by the platform — the run prints `… from common overridden by macos`. That is the supported way to keep a mostly-shared config with one OS-specific variant. Two files of the same name in `linux/` and `macos/` never collide, since only one bucket is ever active: that is how `pkgsync` and `sysupgrade` are one command with two implementations.
+The platform bucket is installed after `common/`, so a path present in both is **deliberately** won by the platform — the run prints `… from common overridden by macos`. That is the supported way to keep a mostly-shared config with one OS-specific variant. Two files of the same name in `linux/` and `macos/` never collide, since only one bucket is ever active: that is how `update-preferences` is one command with two implementations.
 
-Skipping is not unlinking: a file moved between buckets leaves its old symlink behind on the other machine. `--prune` removes those — it unlinks foreign-bucket dests pointing into this repo, including links left dangling by the move, then drops the directories that empties. Left alone: real files, links pointing outside the repo, and anything the active buckets own — a shared-name command like `pkgsync` is installed, not foreign.
+Skipping is not unlinking: a file moved between buckets leaves its old symlink behind on the other machine. `--prune` removes those — it unlinks foreign-bucket dests pointing into this repo, including links left dangling by the move, then drops the directories that empties. Left alone: real files, links pointing outside the repo, and anything the active buckets own — a shared-name command like `update-preferences` is installed, not foreign.
 
 Package manifests are config, not repo files: `macos/.config/homebrew/Brewfile` (where `brew bundle --global` looks) and `linux/.config/pkgsync/pkglist*.txt`. They get symlinked like anything else, which is why they need no exclusion. `pkgsync` reads the *installed* copy, so `install.py` has to run before it.
 
@@ -73,5 +73,5 @@ Same for code: no docstring on an obvious function, no narrating the next statem
 ## Conventions
 
 - Repo path == home path, under whichever bucket applies. New tool config goes where it'd live under `$HOME`.
-- Shell scripts in `*/.local/bin/` start with `set -eu`/`-euo pipefail`. A command needing per-OS behaviour is two files of the same name, one per platform bucket — see `pkgsync`.
+- Shell scripts in `*/.local/bin/` start with `set -eu`/`-euo pipefail`. A command whose per-OS implementations share nothing is two files of the same name, one per platform bucket — see `update-preferences`. One built from per-OS steps, like `sysupgrade` and `pkgsync`, is a `common/` runner over a `<name>.d/` whose parts sit in the buckets they apply to; a part sharing `linux/` with another distro's checks `/etc/os-release` and exits 0.
 - No tests. Sanity-check with `python3.13 install.py --fake`, or reload the tool directly (`source ~/.zshrc`, `:source %`).

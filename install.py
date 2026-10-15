@@ -142,7 +142,7 @@ class Installer:
             count = 0
 
             for _, dest in mapper():
-                # A name shared across platform buckets (pkgsync) is installed, not foreign.
+                # A name shared across platform buckets is installed, not foreign.
                 if dest in installed:
                     continue
 
