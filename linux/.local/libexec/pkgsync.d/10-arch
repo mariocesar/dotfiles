@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Arch: install what pkglist.txt and pkglist-aur.txt name, report explicit packages on neither.
+set -euo pipefail
+
+is_distro arch || exit 0
+
+config="${XDG_CONFIG_HOME:-$HOME/.config}/pkgsync"
+
+# The lists are hand-written: strip comments and blanks.
+read_list() {
+    [ -f "$1" ] || return 0
+    sed -e 's/#.*//' -e 's/[[:space:]]//g' -e '/^$/d' "$1"
+}
+
+missing() {
+    read_list "$1" | while IFS= read -r pkg; do
+        pacman -Qq -- "$pkg" >/dev/null 2>&1 || printf '%s\n' "$pkg"
+    done
+}
+
+native=$(missing "$config/pkglist.txt")
+aur=$(missing "$config/pkglist-aur.txt")
+unlisted=$(comm -23 <(pacman -Qqe | sort) <({ read_list "$config/pkglist.txt"; read_list "$config/pkglist-aur.txt"; } | sort -u))
+
+if [ "$DRY" -eq 1 ]; then
+    step "Missing from the system"
+    echo native: ${native:-none}
+    echo aur: ${aur:-none}
+else
+    step "Installing missing packages"
+    # No -y: a database refresh without -u is a partial upgrade. A 404 means run sysupgrade first.
+    [ -z "$native" ] || sudo pacman -S --needed -- $native
+    [ -z "$aur" ] || paru -S --needed --skipreview -- $aur
+    [ -n "$native$aur" ] || echo "Nothing missing."
+fi
+
+step "Installed explicitly but on no list ($(printf '%s' "$unlisted" | grep -c .))"
+echo ${unlisted:-none} | fmt -w 100

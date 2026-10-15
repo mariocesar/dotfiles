@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Homebrew: install what the Brewfile names, report what it doesn't.
+set -euo pipefail
+
+has brew || { echo "pkgsync: needs brew" >&2; exit 1; }
+
+brewfile="${XDG_CONFIG_HOME:-$HOME/.config}/homebrew/Brewfile"
+[ -f "$brewfile" ] || { echo "pkgsync: no Brewfile at $brewfile" >&2; exit 1; }
+
+if [ "$DRY" -eq 1 ]; then
+    step "Missing from the system"
+    # check exits non-zero when anything is missing; here that is the report, not a failure.
+    brew bundle check --verbose --file="$brewfile" || true
+else
+    step "Installing missing packages"
+    # Upgrading is sysupgrade's job.
+    brew bundle install --no-upgrade --file="$brewfile"
+fi
+
+step "Installed but not in the Brewfile"
+# Without --force, cleanup only lists what it would uninstall, and exits non-zero when that is anything.
+brew bundle cleanup --file="$brewfile" || true

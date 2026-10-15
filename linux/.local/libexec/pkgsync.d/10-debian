@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Placeholder for Debian and Ubuntu: there is no package list for apt yet.
+set -euo pipefail
+
+is_distro debian || exit 0
+
+echo "pkgsync: Debian/Ubuntu packages are not handled yet" >&2

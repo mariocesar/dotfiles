@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Make the installed packages match the hand-curated lists by running each part in pkgsync.d.
+# Installs what is missing and reports what is not on any list; never removes anything.
+set -euo pipefail
+
+usage() {
+    cat <<'USAGE'
+pkgsync - install the packages listed in the dotfiles
+
+Usage: pkgsync [-n] [-h]
+
+  -n  report missing and unlisted packages, install nothing
+USAGE
+}
+
+DRY=0
+while getopts ':nh' opt; do
+    case "$opt" in
+        n) DRY=1 ;;
+        h) usage; exit 0 ;;
+        *) usage >&2; exit 2 ;;
+    esac
+done
+
+. "$HOME/.local/lib/runparts.sh"
+
+run_parts pkgsync
