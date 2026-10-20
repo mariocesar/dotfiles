@@ -6,3 +6,6 @@ command -v gsettings >/dev/null 2>&1 || { echo "No gsettings, skipping"; exit 0;
 
 # GNOME's schema default is false; without this middle-click paste is dead in every GTK app.
 gsettings set org.gnome.desktop.interface gtk-enable-primary-paste true
+
+# localsearch is a hard dep of nautilus; index nothing instead of crawling all of $HOME.
+gsettings set org.freedesktop.Tracker3.Miner.Files index-recursive-directories "[]"
