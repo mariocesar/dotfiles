@@ -1,14 +1,14 @@
 ---
 name: audit
-description: Read-only health audit of this machine — Arch/CachyOS + niri on Linux, MacBook Pro on macOS — returning a ranked list of issues to work on. Detects the OS and runs the matching checks.
+description: Read-only health audit of this machine — Arch/CachyOS + niri on Linux, MacBook Pro on macOS — plus the Neovim and Claude Code setups on both — returning a ranked list of issues to work on. Detects the OS and runs the matching checks.
 argument-hint: "[window, e.g. -3d on Linux or 3d on macOS]"
 disable-model-invocation: true
-allowed-tools: Bash(uname:*), Bash(journalctl:*), Bash(systemctl:*), Bash(coredumpctl:*), Bash(systemd-analyze:*), Bash(jq:*), Bash(sensors:*), Bash(pacdiff -o), Bash(checkupdates), Bash(fwupdmgr get-updates:*), Bash(df:*), Bash(free:*), Bash(ss:*), Bash(/usr/bin/log:*), Bash(launchctl:*), Bash(last:*), Bash(nvram -p), Bash(pmset -g:*), Bash(system_profiler:*), Bash(softwareupdate --list), Bash(brew doctor), Bash(brew outdated), Bash(brew leaves), Bash(brew missing), Bash(brew cleanup -s --dry-run), Bash(pkgsync -n), Bash(sysupgrade -n), Bash(du:*), Bash(find:*), Bash(mdfind:*), Bash(mdutil -s:*), Bash(vm_stat), Bash(memory_pressure), Bash(sysctl:*), Bash(uptime), Bash(lsof:*), Bash(ps:*), Bash(ls:*), Bash(test:*), Bash(plutil -extract:*), Bash(pkgutil --pkgs:*), Bash(tmutil listlocalsnapshots:*), Bash(docker system df), Bash(spctl --status), Bash(osascript:*), Bash(/usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate)
+allowed-tools: Bash(uname:*), Bash(journalctl:*), Bash(systemctl:*), Bash(coredumpctl:*), Bash(systemd-analyze:*), Bash(jq:*), Bash(sensors:*), Bash(pacdiff -o), Bash(checkupdates), Bash(fwupdmgr get-updates:*), Bash(df:*), Bash(free:*), Bash(ss:*), Bash(/usr/bin/log:*), Bash(launchctl:*), Bash(last:*), Bash(nvram -p), Bash(pmset -g:*), Bash(system_profiler:*), Bash(softwareupdate --list), Bash(brew doctor), Bash(brew outdated), Bash(brew leaves), Bash(brew missing), Bash(brew cleanup -s --dry-run), Bash(pkgsync -n), Bash(sysupgrade -n), Bash(du:*), Bash(find:*), Bash(mdfind:*), Bash(mdutil -s:*), Bash(vm_stat), Bash(memory_pressure), Bash(sysctl:*), Bash(uptime), Bash(lsof:*), Bash(ps:*), Bash(ls:*), Bash(test:*), Bash(plutil -extract:*), Bash(pkgutil --pkgs:*), Bash(tmutil listlocalsnapshots:*), Bash(docker system df), Bash(spctl --status), Bash(osascript:*), Bash(/usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate), Bash(nvim --version), Bash(nvim --headless:*), Bash(mktemp:*), Bash(git -C:*), Bash(grep:*), Bash(sort:*), Bash(wc:*), Bash(which -a claude), Bash(claude --version), Bash(claude mcp list), Bash(npm ls -g:*)
 ---
 
 # /audit
 
-Run `uname -s` first. `Linux` → **Linux audit** below. `Darwin` → **macOS audit** below. Follow only the matching section.
+Run `uname -s` first. `Linux` → **Linux audit** below. `Darwin` → **macOS audit** below. Follow only the matching section, but before its Rank step also run **Neovim** and **Claude Code** at the end, which apply to both. Their findings go into the same ranked list.
 
 **Read-only, on both.** Fix nothing, and don't ask to during the audit. There is no passwordless sudo: list root-only checks at the end as `! <command>` for the user to run.
 
@@ -185,3 +185,50 @@ Needs root, run yourself: `! sudo sfltool dumpbtm`, `! diskutil verifyVolume /`,
 ```
 
 End by asking which item to work on.
+
+---
+
+## Neovim (both OSes)
+
+The config is `common/.config/nvim`, shared by both machines. `lazy-lock.json` is a real file in `~/.config/nvim`, not tracked, so each machine pins its own plugin commits.
+
+- Version: `nvim --version | head -1`. It is a nightly build; checkhealth reports how far behind it is.
+- Health, headless. Checkhealth is async on 0.12+, so wait for the buffer to stop growing before writing it:
+
+  ```sh
+  d=$(mktemp -d)
+  nvim --headless -c checkhealth \
+    -c 'lua local n=-1; vim.wait(150000, function() local c=vim.api.nvim_buf_line_count(0); local done=(c==n and c>10); n=c; return done end, 3000)' \
+    -c "w! $d/health.txt" -c 'qa!' >/dev/null 2>&1
+  grep -E '^- (❌|⚠️) ' "$d/health.txt" | sort | uniq -c | sort -rn
+  ```
+
+  `ERROR` lines are findings. Ignore `Graphics protocol: not supported by this terminal` (headless has no terminal). Missing ruby/perl/node providers are tier 4, fixed by `vim.g.loaded_<name>_provider = 0` if nothing uses them. Anything under `vim.deprecated` is a plugin or config line that breaks on a future release.
+- Startup: run `nvim --headless --startuptime "$d/st.log" +qa` three times and read the `NVIM STARTED` line; take the median. Over 100 ms is a finding, and the slowest `sourcing`/`require` lines (`sort -k2 -rn`) name the cause.
+- Lockfile drift: every plugin in `lazy-lock.json` should be checked out at its locked commit, and nothing should be installed that the lockfile doesn't list:
+
+  ```sh
+  cd ~/.config/nvim
+  jq -r 'to_entries[] | "\(.key) \(.value.commit[0:8])"' lazy-lock.json | while read -r n c; do
+    h=$(git -C ~/.local/share/nvim/lazy/"$n" rev-parse --short=8 HEAD 2>/dev/null)
+    [ "$h" = "$c" ] || echo "drift $n lock=$c installed=${h:-missing}"
+  done
+  ls ~/.local/share/nvim/lazy | while read -r p; do jq -e --arg p "$p" 'has($p)' lazy-lock.json >/dev/null || echo "not in lock: $p"; done
+  ```
+- State growth: `du -sh ~/.local/state/nvim/* ~/.local/share/nvim/* | sort -rh`. A log over 50M (`lsp.log` grows without bound) is a finding.
+- Mason: `ls ~/.local/share/nvim/mason/packages` should match the `servers` list in `lua/lsp.lua` one to one (mason-lspconfig maps `ts_ls` → `typescript-language-server` and so on). A package with no server is leftover disk, often ~95M each for the node-based ones.
+
+---
+
+## Claude Code (both OSes)
+
+`~/.claude/settings.json` is a real file Claude rewrites; its `hooks` are owned by `common/.claude/hooks.json` and merged in by `common/postinstall.d/80-claude-hooks.sh`.
+
+- Install: `claude --version`; `which -a claude`. The native installer links `~/.local/bin/claude` into `~/.local/share/claude/versions/`. A second real binary (e.g. `npm ls -g @anthropic-ai/claude-code` lists one) is a finding; the same path printed twice is not.
+- Model pins: `jq '.model, .env' ~/.claude/settings.json`. A `model` or `CLAUDE_CODE_SUBAGENT_MODEL` naming an older model than the latest of its family (the Environment section of your system prompt lists them) is a finding: tier 3, cheap.
+- Settings integrity: `jq empty ~/.claude/settings.json` must pass, and `jq -e --slurpfile h ~/.claude/hooks.json '.hooks == $h[0]' ~/.claude/settings.json` must print `true`; `false` means hooks drifted from the repo and `install.py` needs a run.
+- MCP: `claude mcp list` (health-checks each server over the network, takes a few seconds). `✘ Failed to connect` is a finding: a server that can never work still lists its name and instructions in every session's context. `! Needs authentication` on a server never used is tier 4. `✔ Connected` can be stale for expired auth, so don't count it as proof.
+- Status line runs on every redraw: time `statusLine.command` with `echo '{}' | time sh -c '<cmd>'`; over 100 ms is a finding. Don't run hooks to time them (`notify.sh` pops a notification); read the scripts, and flag one on `PreToolUse`/`PostToolUse` that does network or heavy work, since it runs on every tool call.
+- Context size: `wc -l ~/.claude/CLAUDE.md CLAUDE.md` and the project memory `MEMORY.md`. A CLAUDE.md over ~200 lines, or task-specific prose that belongs in a skill, is tier 4. `MEMORY.md` loads every session, so a line pointing to a missing memory file is noise to fix.
+- Permissions: `jq -r '.permissions.allow[]' ~/.claude/settings.json | sort | uniq -d` (duplicates) and any `Bash(*)`-style blanket rule.
+- Disk: `du -sh ~/.claude/{projects,debug,file-history,plugins} ~/.local/share/claude/versions; ls -l ~/.claude.json`. Transcripts older than `cleanupPeriodDays` (default 30) mean cleanup isn't running: `find ~/.claude/projects -name '*.jsonl' -mtime +30 | wc -l`. `~/.claude.json` over 1M is known to slow startup. Never suggest `cleanupPeriodDays: 0`, which disables transcripts instead of cleanup.
