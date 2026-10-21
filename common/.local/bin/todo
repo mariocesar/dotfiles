@@ -1,0 +1,31 @@
+#!/bin/sh
+# List TODO-style comments as file:line:col: text, found by ast-grep in real comment nodes.
+#   todo [<path>...] [ast-grep scan options]    no path: the current directory
+# On a terminal the list opens in fzf; Enter or double-click opens nvim at the line.
+set -eu
+
+# A block comment is one node, so each tagged line in it is reported on its own line.
+ast-grep scan \
+    --config "$HOME/.config/ast-grep/sgconfig.yml" \
+    --rule "$HOME/.config/ast-grep/todo.yml" \
+    --no-ignore hidden \
+    --globs '!.git' \
+    --json=stream \
+    "$@" |
+jq -r '
+    .file as $file | .range.start as $start
+    | .text | split("\n") | to_entries[]
+    | select(.value | test("^\\s*(#|//|/\\*|\\*|--(\\[=*\\[)?|<!--)?\\s*(TODO|FIXME|LATER|NOTE|ISSUE|SLOW)\\b"))
+    | (if .key == 0 then $start.column else (.value | match("^\\s*").length) end) as $col
+    | "\($file):\($start.line + .key + 1):\($col + 1): \(.value | sub("^\\s+"; ""))"
+' |
+sort -t: -k1,1 -k2,2n |
+if [ -t 1 ]; then
+    open='become(nvim "+call cursor({2},{3})" "+normal! zz" -- {1})'
+    fzf --prompt='todo> ' --exit-0 --delimiter=: \
+        --preview 'bat --color=always --style=numbers --highlight-line={2} -- {1}' \
+        --preview-window 'right,60%,border-left,+{2}/2' \
+        --bind "enter:$open" --bind "double-click:$open"
+else
+    cat
+fi

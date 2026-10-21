@@ -1,0 +1,48 @@
+id: todo-python
+language: Python
+severity: info
+message: TODO comment
+rule:
+  kind: comment
+  regex: '(?m)^\s*#\s*(TODO|FIXME|LATER|NOTE|ISSUE|SLOW)\b'
+---
+id: todo-javascript
+language: JavaScript
+severity: info
+message: TODO comment
+rule:
+  kind: comment
+  regex: '(?m)^\s*(//|/\*|\*)\s*(TODO|FIXME|LATER|NOTE|ISSUE|SLOW)\b'
+---
+id: todo-typescript
+language: TypeScript
+severity: info
+message: TODO comment
+rule:
+  kind: comment
+  regex: '(?m)^\s*(//|/\*|\*)\s*(TODO|FIXME|LATER|NOTE|ISSUE|SLOW)\b'
+---
+id: todo-shell
+language: Bash
+severity: info
+message: TODO comment
+rule:
+  kind: comment
+  regex: '(?m)^\s*#\s*(TODO|FIXME|LATER|NOTE|ISSUE|SLOW)\b'
+---
+id: todo-lua
+language: Lua
+severity: info
+message: TODO comment
+rule:
+  kind: comment
+  regex: '(?m)^\s*(--(\[=*\[)?)?\s*(TODO|FIXME|LATER|NOTE|ISSUE|SLOW)\b'
+---
+# Markdown has no built-in parser; sgconfig.yml maps *.md to Html for its <!-- --> comments.
+id: todo-markdown
+language: Html
+severity: info
+message: TODO comment
+rule:
+  kind: comment
+  regex: '(?m)^\s*(<!--)?\s*(TODO|FIXME|LATER|NOTE|ISSUE|SLOW)\b'

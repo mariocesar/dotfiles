@@ -75,11 +75,6 @@ fi
 
 alias grep='grep --color=auto'
 
-function todo() {
-  # --hidden: rg skips dot-directories like .config otherwise
-  rg --hidden --glob '!.git' '(TODO|FIXME|LATER|NOTE|ISSUE|SLOW):?\s' "$@"
-}
-
 function fzf-edit() {
   # Usage: find . -type f | fzf-edit
   fzf --prompt='edit> ' $fzf_file_preview --bind 'enter:become(nvim -- {})'
