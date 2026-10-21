@@ -48,6 +48,8 @@ function cleanup() {
   )
 }
 
+alias b='browser'
+
 # === Per-OS ===
 
 if [[ $OSTYPE == darwin* ]]; then

@@ -1,0 +1,18 @@
+#!/bin/sh
+# Launch (or focus) the default browser, optionally to a URL.
+set -eu
+
+case "$(uname)" in
+    Linux)
+        # setsid: detach from this shell so closing the terminal doesn't kill it.
+        exec setsid gtk-launch "$(xdg-settings get default-web-browser)" "$@"
+        ;;
+    Darwin)
+        # `open` hands off to Launch Services and returns at once; no setsid needed.
+        exec open "$@"
+        ;;
+    *)
+        echo "browser: unsupported OS: $(uname)" >&2
+        exit 1
+        ;;
+esac
