@@ -1,6 +1,7 @@
 #!/bin/sh
-# List TODO-style comments as file:line:col: text, found by ast-grep in real comment nodes.
-#   todo [-H|--hidden] [-I|--no-ignore] [<path>...] [ast-grep scan options]    no path: the current directory
+# List TODO-style comments and open Markdown tasks as file:line:col: text.
+# Comments are real comment nodes found by ast-grep; tasks are `- [ ]` lines found by rg in *.md.
+#   todo [-H|--hidden] [-I|--no-ignore] [<path>...]    no path: the current directory
 #   -H, --hidden    also search hidden files and directories
 #   -I, --no-ignore also search files skipped by .gitignore, .ignore and git excludes
 # On a terminal the list opens in fzf; Enter or double-click opens nvim at the line.
@@ -17,21 +18,31 @@ for arg; do
     esac
 done
 
-# A block comment is one node, so each tagged line in it is reported on its own line.
-ast-grep scan \
-    --config "$HOME/.config/ast-grep/sgconfig.yml" \
-    --rule "$HOME/.config/ast-grep/todo.yml" \
-    $hidden $ignore \
-    --globs '!.git' \
-    --json=stream \
-    "$@" |
-jq -r '
-    .file as $file | .range.start as $start
-    | .text | split("\n") | to_entries[]
-    | select(.value | test("^\\s*(#|//|/\\*|\\*|--(\\[=*\\[)?|<!--)?\\s*(TODO|FIXME|XXX)\\b"))
-    | (if .key == 0 then $start.column else (.value | match("^\\s*").length) end) as $col
-    | "\($file):\($start.line + .key + 1):\($col + 1): \(.value | sub("^\\s+"; ""))"
-' |
+{
+    # A block comment is one node, so each tagged line in it is reported on its own line.
+    ast-grep scan \
+        --config "$HOME/.config/ast-grep/sgconfig.yml" \
+        --rule "$HOME/.config/ast-grep/todo.yml" \
+        $hidden $ignore \
+        --globs '!.git' \
+        --json=stream \
+        "$@" |
+    jq -r '
+        .file as $file | .range.start as $start
+        | .text | split("\n") | to_entries[]
+        | select(.value | test("^\\s*(#|//|/\\*|\\*|--(\\[=*\\[)?|<!--)?\\s*(TODO|FIXME|XXX)\\b"))
+        | (if .key == 0 then $start.column else (.value | match("^\\s*").length) end) as $col
+        | "\($file):\($start.line + .key + 1):\($col + 1): \(.value | sub("^\\s+"; ""))"
+    '
+    # Without a path rg searches stdin instead of the cwd whenever stdin is not a terminal.
+    rg --json --type md --no-messages ${hidden:+--hidden} ${ignore:+--no-ignore} --glob '!.git' \
+        '^\s*([-*+]|[0-9]+[.)]) \[ \] ' "$@" </dev/null |
+    jq -r '
+        select(.type == "match") | .data
+        | (.lines.text | rtrimstr("\n")) as $line
+        | "\(.path.text | ltrimstr("./")):\(.line_number):\($line | match("^\\s*").length + 1): \($line | sub("^\\s+"; ""))"
+    '
+} |
 sort -t: -k1,1 -k2,2n |
 if [ -t 1 ]; then
     open='become(nvim "+call cursor({2},{3})" "+normal! zz" -- {1})'
