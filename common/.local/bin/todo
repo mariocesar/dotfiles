@@ -1,15 +1,18 @@
 #!/bin/sh
 # List TODO-style comments as file:line:col: text, found by ast-grep in real comment nodes.
-#   todo [-H|--hidden] [<path>...] [ast-grep scan options]    no path: the current directory
+#   todo [-H|--hidden] [-I|--no-ignore] [<path>...] [ast-grep scan options]    no path: the current directory
 #   -H, --hidden    also search hidden files and directories
+#   -I, --no-ignore also search files skipped by .gitignore, .ignore and git excludes
 # On a terminal the list opens in fzf; Enter or double-click opens nvim at the line.
 set -eu
 
 hidden=
+ignore=
 for arg; do
     shift
     case $arg in
         -H|--hidden) hidden=--no-ignore=hidden ;;
+        -I|--no-ignore) ignore='--no-ignore=vcs --no-ignore=exclude --no-ignore=global --no-ignore=parent --no-ignore=dot' ;;
         *) set -- "$@" "$arg" ;;
     esac
 done
@@ -18,7 +21,7 @@ done
 ast-grep scan \
     --config "$HOME/.config/ast-grep/sgconfig.yml" \
     --rule "$HOME/.config/ast-grep/todo.yml" \
-    $hidden \
+    $hidden $ignore \
     --globs '!.git' \
     --json=stream \
     "$@" |
