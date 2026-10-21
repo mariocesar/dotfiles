@@ -2,6 +2,14 @@
 # Launch (or focus) the default browser, optionally to a URL.
 set -eu
 
+# A bare host like github.com would otherwise open as a relative path.
+if [ $# -gt 0 ] && [ ! -e "$1" ]; then
+    case $1 in
+        *://*) ;;
+        *) url=https://$1; shift; set -- "$url" "$@" ;;
+    esac
+fi
+
 case "$(uname)" in
     Linux)
         # setsid: detach from this shell so closing the terminal doesn't kill it.
