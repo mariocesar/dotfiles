@@ -1,2 +1,4 @@
+# Parsers with the same comment syntax, for files ast-grep has none for.
 languageGlobs:
-  html: ["*.md"]
+  html: ["*.md", "*.svelte"]
+  bash: ["*.toml", ".zshrc", ".zprofile", ".aliases"]

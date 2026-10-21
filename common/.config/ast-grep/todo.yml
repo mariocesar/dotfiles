@@ -1,48 +1,40 @@
+# Rules only select comment nodes; the todo script filters them by tag.
 id: todo-python
 language: Python
-severity: info
-message: TODO comment
-rule:
-  kind: comment
-  regex: '(?m)^\s*#\s*(TODO|FIXME|LATER|NOTE|ISSUE|SLOW)\b'
+rule: {kind: comment}
 ---
 id: todo-javascript
 language: JavaScript
-severity: info
-message: TODO comment
-rule:
-  kind: comment
-  regex: '(?m)^\s*(//|/\*|\*)\s*(TODO|FIXME|LATER|NOTE|ISSUE|SLOW)\b'
+rule: {kind: comment}
 ---
 id: todo-typescript
 language: TypeScript
-severity: info
-message: TODO comment
-rule:
-  kind: comment
-  regex: '(?m)^\s*(//|/\*|\*)\s*(TODO|FIXME|LATER|NOTE|ISSUE|SLOW)\b'
+rule: {kind: comment}
 ---
-id: todo-shell
+id: todo-tsx
+language: Tsx
+rule: {kind: comment}
+---
+id: todo-bash
 language: Bash
-severity: info
-message: TODO comment
-rule:
-  kind: comment
-  regex: '(?m)^\s*#\s*(TODO|FIXME|LATER|NOTE|ISSUE|SLOW)\b'
+rule: {kind: comment}
 ---
 id: todo-lua
 language: Lua
-severity: info
-message: TODO comment
-rule:
-  kind: comment
-  regex: '(?m)^\s*(--(\[=*\[)?)?\s*(TODO|FIXME|LATER|NOTE|ISSUE|SLOW)\b'
+rule: {kind: comment}
 ---
-# Markdown has no built-in parser; sgconfig.yml maps *.md to Html for its <!-- --> comments.
-id: todo-markdown
+id: todo-html
 language: Html
-severity: info
-message: TODO comment
-rule:
-  kind: comment
-  regex: '(?m)^\s*(<!--)?\s*(TODO|FIXME|LATER|NOTE|ISSUE|SLOW)\b'
+rule: {kind: comment}
+---
+id: todo-css
+language: Css
+rule: {kind: comment}
+---
+id: todo-yaml
+language: Yaml
+rule: {kind: comment}
+---
+id: todo-hcl
+language: Hcl
+rule: {kind: comment}

@@ -28,7 +28,7 @@ ast-grep scan \
 jq -r '
     .file as $file | .range.start as $start
     | .text | split("\n") | to_entries[]
-    | select(.value | test("^\\s*(#|//|/\\*|\\*|--(\\[=*\\[)?|<!--)?\\s*(TODO|FIXME|LATER|NOTE|ISSUE|SLOW)\\b"))
+    | select(.value | test("^\\s*(#|//|/\\*|\\*|--(\\[=*\\[)?|<!--)?\\s*(TODO|FIXME|XXX)\\b"))
     | (if .key == 0 then $start.column else (.value | match("^\\s*").length) end) as $col
     | "\($file):\($start.line + .key + 1):\($col + 1): \(.value | sub("^\\s+"; ""))"
 ' |
