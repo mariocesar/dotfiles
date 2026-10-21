@@ -1,14 +1,24 @@
 #!/bin/sh
 # List TODO-style comments as file:line:col: text, found by ast-grep in real comment nodes.
-#   todo [<path>...] [ast-grep scan options]    no path: the current directory
+#   todo [-H|--hidden] [<path>...] [ast-grep scan options]    no path: the current directory
+#   -H, --hidden    also search hidden files and directories
 # On a terminal the list opens in fzf; Enter or double-click opens nvim at the line.
 set -eu
+
+hidden=
+for arg; do
+    shift
+    case $arg in
+        -H|--hidden) hidden=--no-ignore=hidden ;;
+        *) set -- "$@" "$arg" ;;
+    esac
+done
 
 # A block comment is one node, so each tagged line in it is reported on its own line.
 ast-grep scan \
     --config "$HOME/.config/ast-grep/sgconfig.yml" \
     --rule "$HOME/.config/ast-grep/todo.yml" \
-    --no-ignore hidden \
+    $hidden \
     --globs '!.git' \
     --json=stream \
     "$@" |
