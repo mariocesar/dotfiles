@@ -86,6 +86,20 @@ function fzfcopy() {
   fzf --multi | copy
 }
 
+function here() {
+  # Usage here -p|--project, return the project name based on path.
+  local dir="$PWD"
+
+  case "$1" in -p|--project)
+    while [ -n "$dir" ] && [ ! -e "$dir/.git" ]; do dir="${dir%/*}"; done ;;
+  esac
+
+  basename "${dir:-$PWD}"
+}
+
+function _here() { _arguments '(-p --project)'{-p,--project}'[return the projects name based on path]'; }
+compdef _here here
+
 # === Git ===
 
 alias gw='git worktree'
