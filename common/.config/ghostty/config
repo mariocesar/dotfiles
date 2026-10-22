@@ -42,6 +42,11 @@ scrollback-limit = 100000000
 
 # ── Behaviour ────────────────────────────────────────────────────────
 mouse-hide-while-typing = true
+# Reduce mouse and trackpad scrolling speed
+mouse-scroll-multiplier = precision:0.5,discrete:1
+# Keep mouse integration with tmux and Neovim
+mouse-reporting = true
+
 # macOS has no selection clipboard, so `true` there would clobber the system
 # clipboard on every drag. Linux overrides this in linux.conf.
 copy-on-select = false
