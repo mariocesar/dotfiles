@@ -105,12 +105,12 @@ brew "heroku/brew/heroku"
 
 cask "minecraft"
 cask "arc"
+cask "zen"  # zen browser
 cask "jordanbaird-ice"
 cask "slack"
 cask "1password"
 cask "wezterm"
 cask "ghostty"
-cask "claude-code" # .local/bin/ask calls it
 cask "appcleaner"
 cask "dbeaver-community"
 cask "meld"
