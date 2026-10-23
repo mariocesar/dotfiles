@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
-import os
 import re
 import sys
 import argparse
-import subprocess
 from collections.abc import Callable, Generator
 from functools import partial
+import os
 from pathlib import Path
+import subprocess
 
 
 ROOT_DIR = Path(__file__).parent.resolve()
