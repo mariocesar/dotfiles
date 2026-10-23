@@ -2,9 +2,10 @@
 # UserPromptSubmit hook: after a long idle the prompt cache is cold, so suggest /clear.
 # Must stay 3.9-compatible; it runs under the system python3.
 
-import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+import json
+
 
 IDLE_MINUTES = 60
 
@@ -34,7 +35,7 @@ def main():
     if since is None:
         return
 
-    idle = (datetime.now(timezone.utc) - since).total_seconds() / 60
+    idle = (datetime.now(UTC) - since).total_seconds() / 60
     if idle >= IDLE_MINUTES:
         message = f"Idle {idle / 60:.1f}h, the cache is cold. Consider /clear if this is a new task."
         print(json.dumps({"systemMessage": message}))

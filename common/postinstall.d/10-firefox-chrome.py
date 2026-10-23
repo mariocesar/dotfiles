@@ -2,10 +2,10 @@
 # Links ~/.config/firefox/{chrome,user.js} into the default Firefox profile.
 # The profile dir name is random per machine, so it is resolved from profiles.ini.
 
-import configparser
-import os
 import sys
+import configparser
 from pathlib import Path
+
 
 HOME = Path.home()
 SOURCE = HOME / ".config" / "firefox"
