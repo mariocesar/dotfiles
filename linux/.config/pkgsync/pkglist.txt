@@ -39,7 +39,6 @@ plocate
 reflector
 pkgfile
 yay
-paru
 pacman-contrib  # paccache, used by sysupgrade
 sshx          # Replace tmate
 tmux
@@ -56,12 +55,14 @@ cmake
 ninja
 graphviz
 meld
+ast-grep
 
 firefox         # default browser in mimeapps.list; 10-firefox-chrome.py links its profile
+ghostty
 
 # The niri + DMS desktop
 niri
-dms-shell
+dux-shell
 nautilus                # dockTrashFileManager in update-preferences
 sound-theme-freedesktop # useSystemSoundTheme in update-preferences
 power-profiles-daemon   # osdPowerProfileEnabled in update-preferences
@@ -74,7 +75,6 @@ docker
 docker-compose
 aws-cli-v2
 terraform
-opencode                # The opensource coding agent
 
 tailscale       # 48-tailscale.sh enables tailscaled; login stays manual: sudo tailscale up
 syncthing       # 49-syncthing.sh enables the user service
@@ -95,3 +95,8 @@ lcov            # Show coverage info
 
 spotify-launcher
 playerctl
+
+graphicsmagick
+mosh
+wget
+yq

@@ -6,12 +6,10 @@ flutter-bin                          # join the `flutter` group, or it COW-mount
 fzf-tab
 google-chrome
 leaf-markdown-viewer-bin             # Same as glow
-matugen-bin
 minecraft-launcher
 neovide-nightly-bin                  # 0.16.2 cannot parse 0.13 api-info (neovide#3530)
 neovim-git                           # multiple cursors are 0.13-only
 quickshell-git
-rapidraw                             # RAW image editor
 slack-desktop-wayland-jetm           # Slack Native to Wayland
 ttf-material-icons-git
 ttf-material-symbols-variable-git
@@ -19,3 +17,4 @@ visual-studio-code-bin
 woff2-material-symbols-variable-git
 zoom
 zen-browser-bin                      # Firefox based Browser
+1password
