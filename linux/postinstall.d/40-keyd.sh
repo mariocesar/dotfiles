@@ -1,5 +1,5 @@
 #!/bin/sh
-# keyd runs as root and reads /etc/keyd only; the link targets $HOME, not the repo, so a bucket move can't strand it.
+# Copied, not linked: keyd runs as root and so does its command(), so root must not read a file the user can write.
 set -eu
 
 command -v keyd >/dev/null 2>&1 || { echo "No keyd, skipping"; exit 0; }
@@ -7,20 +7,22 @@ command -v keyd >/dev/null 2>&1 || { echo "No keyd, skipping"; exit 0; }
 src="${XDG_CONFIG_HOME:-$HOME/.config}/keyd/default.conf"
 dest=/etc/keyd/default.conf
 
-if [ -e "$dest" ] && [ ! -L "$dest" ]; then
-    echo "$dest is a real file, move it aside first" >&2
-    exit 1
+changed=0
+# -L: cmp follows the old link to $src and would call them equal.
+if [ -L "$dest" ] || ! cmp -s "$src" "$dest"; then
+    sudo install -Dm 644 "$src" "$dest"
+    changed=1
 fi
 
-relinked=0
-if [ "$(readlink "$dest" 2>/dev/null)" != "$src" ]; then
-    sudo install -d /etc/keyd
-    sudo ln -sfn "$src" "$dest"
-    relinked=1
+# Copied, not linked: systemd loads units before /home is mounted.
+dropin="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/system/keyd.service.d/exit-status.conf"
+if ! cmp -s "$dropin" /etc/systemd/system/keyd.service.d/exit-status.conf; then
+    sudo install -Dm 644 "$dropin" /etc/systemd/system/keyd.service.d/exit-status.conf
+    sudo systemctl daemon-reload
 fi
 
 if ! systemctl is-enabled --quiet keyd.service || ! systemctl is-active --quiet keyd.service; then
     sudo systemctl enable --now keyd.service
-elif [ "$relinked" -eq 1 ]; then
+elif [ "$changed" -eq 1 ]; then
     sudo keyd reload
 fi
