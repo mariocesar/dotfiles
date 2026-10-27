@@ -6,6 +6,7 @@ event=$(cat)
 session=$(printf '%s' "$event" | jq -r '.session_id')
 windowfile="${XDG_RUNTIME_DIR:-/tmp}/claude-window-$session"
 idfile="${XDG_RUNTIME_DIR:-/tmp}/claude-notification-$session"
+pidfile="${XDG_RUNTIME_DIR:-/tmp}/claude-notification-$session.pid"
 
 # Ghostty is single-instance, so the window can't be found by pid; remember the one focused when the session starts or a prompt is sent.
 if [ "$(printf '%s' "$event" | jq -r '.hook_event_name')" != Notification ]; then
@@ -27,6 +28,9 @@ esac
 id=$(cat "$idfile" 2>/dev/null || echo 0)
 set -- -p -r "$id" -u "$urgency" -a "Claude Code" -i claude "Claude Code · $project" "$message"
 
+# Neither a replace nor a DMS expiry closes a notification, so the previous waiter would block forever.
+[ -f "$pidfile" ] && pkill -P "$(cat "$pidfile")" -x notify-send || true
+
 if [ -z "$window" ]; then
     notify-send "$@" > "$idfile"
     exit 0
@@ -39,3 +43,4 @@ fi
         read -r action && [ "$action" = default ] && niri msg action focus-window --id "$window"
     }
 ) >/dev/null 2>&1 &
+echo $! > "$pidfile"
