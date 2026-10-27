@@ -1,5 +1,5 @@
 #!/bin/sh
-# niri rejects config.kdl until dms/windowrules.kdl exists; DMS only creates it with the first rule.
+# niri rejects config.kdl until dms/windowrules.kdl exists, and DMS only writes it once the shell is running.
 set -eu
 
 dir="${XDG_CONFIG_HOME:-$HOME/.config}/niri/dms"
