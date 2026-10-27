@@ -185,7 +185,7 @@ contents leaves a padding-only stub about 24 px wide, and `visibilityCommand`
 polls a shell command on a timer. `setVisibilityOverride` is not in the README
 and DMS's IPC widget show/hide shares it; both are acceptable here.
 
-**Check:** `bluetoothctl disconnect 6C:12:70:3C:5F:0D` → the pill disappears and
+**Check:** `bluetoothctl disconnect <airpods-mac>` → the pill disappears and
 the widgets beside it close up. Reconnect → it returns. Journal clean across
 both transitions.
 
