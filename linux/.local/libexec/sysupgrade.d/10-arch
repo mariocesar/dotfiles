@@ -9,7 +9,7 @@ if [ "$DRY" -eq 1 ]; then
     # Each check exits with the code shown when there is nothing to report; anything else is a failure.
     checkupdates || [ $? -eq 2 ]
     step "Pending AUR upgrades"
-    paru -Qua || [ $? -eq 1 ]
+    yay -Qua || [ $? -eq 1 ]
     step "Orphans"
     pacman -Qtdq || [ $? -eq 1 ]
     if has flatpak; then
@@ -20,7 +20,7 @@ if [ "$DRY" -eq 1 ]; then
 fi
 
 step "Upgrading repos and AUR"
-paru -Syu --skipreview
+yay -Syu --answerdiff None --answerclean None
 
 step "Removing orphans"
 orphans=$(pacman -Qtdq || [ $? -eq 1 ])
@@ -34,7 +34,7 @@ step "Pruning package caches"
 sudo paccache -rk2
 sudo paccache -ruk0
 # AUR clones keep every downloaded source and built package; all of it is rebuildable from the PKGBUILD
-for dir in ~/.cache/paru/clone/*/; do
+for dir in ~/.cache/yay/*/; do
     [ -d "$dir" ] && git -C "$dir" clean -fdxq
 done
 

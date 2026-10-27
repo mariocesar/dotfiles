@@ -32,7 +32,7 @@ fi
 step "Installing missing packages"
 # No -y: a database refresh without -u is a partial upgrade. A 404 means run sysupgrade first.
 [ -z "$native" ] || sudo pacman -S --needed -- $native
-[ -z "$aur" ] || paru -S --needed --skipreview -- $aur
+[ -z "$aur" ] || yay -S --needed --answerdiff None --answerclean None -- $aur
 
 if [ -n "$unlisted" ]; then
     step "Installed explicitly but on no list"
