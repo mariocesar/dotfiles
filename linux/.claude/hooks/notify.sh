@@ -8,8 +8,16 @@ windowfile="${XDG_RUNTIME_DIR:-/tmp}/claude-window-$session"
 idfile="${XDG_RUNTIME_DIR:-/tmp}/claude-notification-$session"
 pidfile="${XDG_RUNTIME_DIR:-/tmp}/claude-notification-$session.pid"
 
+hook=$(printf '%s' "$event" | jq -r '.hook_event_name')
+
+if [ "$hook" = SessionEnd ]; then
+    [ -f "$pidfile" ] && pkill -P "$(cat "$pidfile")" -x notify-send || true
+    rm -f "$windowfile" "$idfile" "$pidfile"
+    exit 0
+fi
+
 # Ghostty is single-instance, so the window can't be found by pid; remember the one focused when the session starts or a prompt is sent.
-if [ "$(printf '%s' "$event" | jq -r '.hook_event_name')" != Notification ]; then
+if [ "$hook" != Notification ]; then
     [ -n "${NIRI_SOCKET:-}" ] && niri msg --json focused-window | jq -r '.id // empty' > "$windowfile"
     exit 0
 fi
