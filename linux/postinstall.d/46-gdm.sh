@@ -21,3 +21,10 @@ if [ "$changed" -eq 1 ]; then
     sudo dconf update
     echo "gdm: the greeter reads this on start; restart gdm (kills a local session) or reboot"
 fi
+
+# Copied, not linked: systemd loads units before /home is mounted.
+dropin="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/system/gdm.service.d/after-accounts.conf"
+if ! cmp -s "$dropin" /etc/systemd/system/gdm.service.d/after-accounts.conf; then
+    sudo install -Dm 644 "$dropin" /etc/systemd/system/gdm.service.d/after-accounts.conf
+    sudo systemctl daemon-reload
+fi
