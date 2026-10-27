@@ -105,10 +105,10 @@ dms_pref acPostLockMonitorTimeout 300
 dms_pref currentThemeName blue
 dms_pref monoFontFamily "JetBrains Mono"
 dms_pref widgetBackgroundColor sth
-dms_pref cornerRadius 12
+# Strength 38 gives windows a 12px corner radius.
+dms_pref radiusStrength 38
 dms_pref textRenderType 1
-dms_pref animationSpeed 2
-dms_pref animationVariant 2
+dms_pref animationDuration 500
 dms_pref motionEffect 2
 dms_pref blurBorderEnabled false
 dms_pref barElevationEnabled false
@@ -120,22 +120,7 @@ dms_pref frameThickness 7
 dms_pref frameRounding 10
 dms_pref frameShowOnOverview true
 
-# Dock
-dms_pref showDock true
-dms_pref dockPosition 2
-dms_pref dockIconSize 24
-dms_pref dockMargin 5
-dms_pref dockBottomGap -100
-dms_pref dockOpenOnOverview true
-dms_pref dockUseOverlayLayer true
-dms_pref dockShowTrash true
-dms_pref dockTrashFileManager nautilus
-dms_pref appsDockColorizeActive true
-dms_pref appsDockHideIndicators true
-dms_pref runningAppsCurrentWorkspace false
-
 # Launcher
-dms_pref appLauncherViewMode grid
 dms_pref launcherUseOverlayLayer true
 dms_pref spotlightBarShowModeChips true
 
