@@ -5,6 +5,9 @@ global.mapleader = ","
 global.maplocalleader = "\\"
 
 global.loaded_python3_provider = 0
+global.loaded_ruby_provider = 0
+global.loaded_perl_provider = 0
+global.loaded_node_provider = 0
 global.loaded_nvim_dir_plugin = 1
 
 global.netrw_mousemaps = 0

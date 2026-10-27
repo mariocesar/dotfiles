@@ -29,4 +29,6 @@ require("lazy").setup({
   dev = { path = "~/Projects/@mariocesar", fallback = true },
   -- automatically check for plugin updates
   checker = { enabled = false },
+  -- no plugin needs luarocks
+  rocks = { enabled = false },
 })
