@@ -52,6 +52,10 @@ load_if_exists ~/.cargo/env
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
+# golang
+command -v go && \
+  export PATH="$PATH:$(go env GOBIN):$(go env GOPATH)/bin"
+
 # Guarded: a machine missing one of these should still get a working shell
 command -v direnv >/dev/null && eval "$(direnv hook zsh)"
 command -v mise >/dev/null && eval "$(mise activate zsh)"

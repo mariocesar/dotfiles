@@ -17,6 +17,7 @@ npm
 python
 uv
 ollama-cuda     # local models for llm (llm-ollama)
+go              # go-lang
 
 fd              # vim-clap dotfiles provider
 fzf
