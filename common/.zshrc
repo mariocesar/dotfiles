@@ -43,6 +43,7 @@ command -v fzf >/dev/null && source <(fzf --zsh)
 source ~/.config/zsh/zshcompletion.zsh
 source ~/.config/zsh/zshfzftab.zsh
 
+source ~/.config/zsh/worktree.zsh
 load_if_exists ~/.aliases
 load_if_exists ~/.zshrc.$(hostname)
 load_if_exists ~/.cargo/env

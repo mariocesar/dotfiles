@@ -102,7 +102,6 @@ compdef _here here
 
 # === Git ===
 
-alias gw='git worktree'
 alias gitk-branches='gitk --all --simplify-by-decoration'
 
 function amend() {
