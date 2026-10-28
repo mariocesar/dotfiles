@@ -13,6 +13,7 @@ global.loaded_nvim_dir_plugin = 1
 global.netrw_mousemaps = 0
 global.netrw_banner = 0
 global.netrw_liststyle = 3 -- tree
+global.netrw_list_hide = [[^\.git/$,^\.venv/$,^\..*_cache/$]]
 
 require("config.lazy")
 
@@ -77,6 +78,16 @@ if not global.vscode then
   opt.signcolumn = "yes"
   opt.list = true
   opt.listchars = { tab = "▸ ", trail = "·", extends = ">", precedes = "<", nbsp = "␣" }
+
+  -- Show In the status bar:
+  --  - branch from gitsigns
+  --  - problem counts
+  --  - LSP progress
+  opt.statusline = "%<%f %h%m%r %{get(b:, 'gitsigns_head', '')}%=%{v:lua.vim.diagnostic.status()} %{v:lua.vim.lsp.status()} %-14.(%l,%c%V%) %P"
+
+  -- Window title in the form: "file - project"
+  opt.title = true
+  opt.titlestring = "%{expand('%:t') != '' ? expand('%:t') .. ' - ' : ''}%{fnamemodify(getcwd(), ':t')}"
 
   require("tokyonight").setup({
     -- vim-clap only derives its own colors for groups that don't exist yet
@@ -167,12 +178,14 @@ map("n", "<C-]>", "<cmd>cnext<CR>zz", { desc = "Focus on the next quickfix item"
 map("n", "<C-[>", "<cmd>cprev<CR>zz", { desc = "Focus on the previous quickfix item" })
 
 -- Lexplore's own size is a percentage; a tree reads better at a fixed width
-map("n", "<leader>e", function()
+local function explorer()
   vim.cmd.Lexplore()
   if vim.api.nvim_get_current_buf() == vim.t.netrw_lexbufnr then
     vim.cmd("vertical resize 30")
   end
-end, { desc = "Toggle the file tree sidebar" })
+end
+
+map("n", "<leader>e", explorer, { desc = "Toggle the file tree sidebar" })
 
 -- :terminal takes the rest of the line as its command, so `| startinsert` can't chain
 map("n", "<leader>t", function()
@@ -222,6 +235,13 @@ function results.handler()
   vim.cmd.cwindow()
 end
 
+-- progress messages only reach the statusline on a redraw
+local progress = au("user_lsp_progress")
+
+function progress.LspProgress()
+  vim.cmd.redrawstatus()
+end
+
 -- skip syntax highlighting for large files
 local bigfile = au("user_bigfile")
 
@@ -268,6 +288,15 @@ if global.neovide then
 
   -- Instead of :q, close the buffer keep the window open.
   map("n", "<leader>q", "<cmd>bdelete<cr>", { desc = "Close buffer" })
+
+  -- Show the explorer by default
+  if vim.fn.argc() == 0 then
+    local project = au("user_project")
+    function project.VimEnter()
+      explorer()
+      vim.cmd.wincmd("p")
+    end
+  end
 
   global.neovide_hide_mouse_when_typing = true
   global.neovide_remember_window_size = true

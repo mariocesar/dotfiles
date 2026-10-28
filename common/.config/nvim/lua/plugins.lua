@@ -38,6 +38,14 @@ return {
     end
   },
   {
+    'lewis6991/satellite.nvim', -- scrollbar marking git hunks, diagnostics and search matches
+    cond = not vim.g.vscode,
+    event = { 'BufReadPre', 'BufNewFile' },
+    opts = {
+      excluded_filetypes = { 'netrw' },
+    },
+  },
+  {
     'lewis6991/gitsigns.nvim',
     cond = not vim.g.vscode,
     config = function()
