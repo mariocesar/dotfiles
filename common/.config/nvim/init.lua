@@ -79,11 +79,9 @@ if not global.vscode then
   opt.list = true
   opt.listchars = { tab = "▸ ", trail = "·", extends = ">", precedes = "<", nbsp = "␣" }
 
-  -- Show In the status bar:
-  --  - branch from gitsigns
-  --  - problem counts
-  --  - LSP progress
-  opt.statusline = "%<%f %h%m%r %{get(b:, 'gitsigns_head', '')}%=%{v:lua.vim.diagnostic.status()} %{v:lua.vim.lsp.status()} %-14.(%l,%c%V%) %P"
+  -- The default bar already shows problem counts and the ruler; add the branch and LSP progress
+  local statusline = vim.api.nvim_get_option_info2("statusline", {}).default
+  opt.statusline = (statusline:gsub("%%=", "%%( %%{get(b:, 'gitsigns_head', '')}%%)%%=%%( %%{v:lua.vim.lsp.status()}%%)", 1))
 
   -- Window title in the form: "file - project"
   opt.title = true
@@ -142,6 +140,9 @@ cmd("Config", "edit $MYVIMRC", { desc = "Edit init.lua" })
 cmd("Reload", "source $MYVIMRC", { desc = "Source init.lua" })
 cmd("Cheat", "tabnew " .. vim.fn.stdpath("config") .. "/cheatsheet.md", { desc = "Open the keybinding cheat sheet" })
 cmd("Grep", "silent grep! <args>", { nargs = "+", desc = "Grep into quickfix without jumping to the first match" })
+cmd("Changed", function()
+  require("gitsigns").setqflist("all")
+end, { desc = "Quickfix list of every changed hunk in the repo" })
 cmd("WriterMode", function()
   vim.opt_local.wrap = true
   vim.opt_local.linebreak = true
@@ -176,6 +177,14 @@ map("n", "n", "nzzzv", { desc = "Jumps to the next match and center" })
 map("n", "N", "Nzzzv", { desc = "Jumps to the previous match and center" })
 map("n", "<C-]>", "<cmd>cnext<CR>zz", { desc = "Focus on the next quickfix item" })
 map("n", "<C-[>", "<cmd>cprev<CR>zz", { desc = "Focus on the previous quickfix item" })
+
+map("n", "<leader>l", function()
+  if vim.fn.getqflist({ winid = 0 }).winid ~= 0 then
+    vim.cmd.cclose()
+  else
+    vim.cmd.copen()
+  end
+end, { desc = "Toggle the quickfix list" })
 
 -- Lexplore's own size is a percentage; a tree reads better at a fixed width
 local function explorer()

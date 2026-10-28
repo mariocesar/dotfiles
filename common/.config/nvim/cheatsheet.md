@@ -46,6 +46,8 @@ Full message expands under the cursor line automatically, with rule code and
 | `,d` | Fuzzy-find a dotfile |
 | `]b` `[b` | Buffers |
 | `]q` `[q` · `]l` `[l` | Quickfix · location list |
+| `,l` | Show / hide the quickfix list |
+| `:Changed` | Every changed hunk in the repo into the quickfix list |
 | `gx` | Open URL/path under cursor |
 | `:Cwd` | cwd to current file's dir |
 
