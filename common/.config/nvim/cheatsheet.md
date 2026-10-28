@@ -136,6 +136,8 @@ Case-insensitive until you type a capital. `:%s` previews live in a split.
 
 `y` and `p` use the system clipboard. `<C-c>` copies a selection, `<D-v>` pastes.
 
+`:CopyRef` copies `path:54`; from a selection (`:'<,'>CopyRef`) it copies `path:54-80`.
+
 ## Git
 
 `]c` `[c` next / previous hunk · `:Gitsigns preview_hunk` · `blame_line` · `diffthis`

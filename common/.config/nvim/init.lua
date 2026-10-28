@@ -140,9 +140,24 @@ cmd("Config", "edit $MYVIMRC", { desc = "Edit init.lua" })
 cmd("Reload", "source $MYVIMRC", { desc = "Source init.lua" })
 cmd("Cheat", "tabnew " .. vim.fn.stdpath("config") .. "/cheatsheet.md", { desc = "Open the keybinding cheat sheet" })
 cmd("Grep", "silent grep! <args>", { nargs = "+", desc = "Grep into quickfix without jumping to the first match" })
+
+cmd("CopyRef", function(o)
+  -- Copies in normal mode buffer path and line number, in visual mode does the line range, example:
+  -- nvim/init.lua:54
+  -- nvim/init.lua:10-12
+
+  local ref = vim.fn.expand("%:.") .. ":" .. o.line1
+  if o.line2 ~= o.line1 then
+    ref = ref .. "-" .. o.line2
+  end
+  vim.fn.setreg("+", ref)
+  vim.notify("Copied " .. ref)
+end, { range = true, desc = "Copy path:line, or path:start-end for a selection" })
+
 cmd("Changed", function()
   require("gitsigns").setqflist("all")
 end, { desc = "Quickfix list of every changed hunk in the repo" })
+
 cmd("WriterMode", function()
   vim.opt_local.wrap = true
   vim.opt_local.linebreak = true
