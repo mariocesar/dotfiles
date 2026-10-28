@@ -266,6 +266,9 @@ if global.neovide then
     vim.api.nvim_paste(vim.fn.getreg("+"), true, -1)
   end, { desc = "Paste" })
 
+  -- Instead of :q, close the buffer keep the window open.
+  map("n", "<leader>q", "<cmd>bdelete<cr>", { desc = "Close buffer" })
+
   global.neovide_hide_mouse_when_typing = true
   global.neovide_remember_window_size = true
   global.neovide_fullscreen = false
