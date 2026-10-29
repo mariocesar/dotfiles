@@ -148,7 +148,7 @@ li(code("launcher") + "has an entry in the app launcher") >> stdout
 h2("Tools installed with mise") >> stdout
 th("tool", "", "mise backend") >> stdout
 
-tools = tomllib.loads((ROOT_DIR / "common/.config/mise/config.toml").read_text())["tools"]
+tools = tomllib.loads((ROOT_DIR / "common/.config/mise/conf.d/dotfiles.toml").read_text())["tools"]
 
 for key, version in tools.items():
     name = key.removeprefix("pypi:")
