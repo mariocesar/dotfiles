@@ -79,6 +79,7 @@ brew "tree-sitter-cli" # nvim-treesitter builds parsers with it
 brew "fnm" # Faster alternative to nvm
 brew "optipng"
 brew "pandoc"
+brew "poppler"
 brew "pnpm"
 brew "leaf-markdown-viewer"
 
@@ -97,6 +98,7 @@ brew "terraform"
 brew "terraform-docs"
 
 brew "sshx" # replaces tmate
+brew "mosh"
 brew "tmux"
 brew "tree"
 brew "viu"
@@ -159,6 +161,7 @@ cask "spotify"
 cask "sublime-text"
 cask "virtualbox"
 cask "visual-studio-code"
+cask "zed"
 cask "vlc"
 cask "zoom"
 cask "docker-desktop"
