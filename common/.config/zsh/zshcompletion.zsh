@@ -38,4 +38,4 @@ zstyle ':completion:*:*:*:*:processes' command 'ps -u $USER -o pid,user,comm -w'
 zstyle ':completion:*:(rm|kill|diff):*' ignore-line other   # don't re-offer an argument already on the line
 
 # aws ships no _aws; upstream hooks it as a bash-style external completer
-command -v aws_completer >/dev/null && { autoload -Uz bashcompinit && bashcompinit; complete -C aws_completer aws }
+command_exists aws_completer && { autoload -Uz bashcompinit && bashcompinit; complete -C aws_completer aws }
