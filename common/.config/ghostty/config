@@ -72,6 +72,9 @@ shell-integration-features = cursor,sudo,title,ssh-env,ssh-terminfo
 # Multiline input in Claude Code and friends.
 keybind = shift+enter=text:\n
 
+# Ghostty's default ctrl+enter fullscreen eats the send key in Claude Code.
+keybind = ctrl+enter=unbind
+
 keybind = ctrl+shift+k=clear_screen
 
 # Default resize_split chord (super+ctrl+shift+arrow) collides with
