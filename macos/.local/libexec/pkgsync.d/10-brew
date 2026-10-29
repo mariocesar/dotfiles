@@ -11,7 +11,17 @@ brewfile="${XDG_CONFIG_HOME:-$HOME/.config}/homebrew/Brewfile"
 # Compare bare names; the Brewfile and brew may disagree on tap-qualifying them.
 names() { sed 's|.*/||' | sort -u; }
 
-listed=$( { brew bundle list --formula --file="$brewfile"; brew bundle list --cask --file="$brewfile"; } | names)
+# The Brewfile may name an alias (gpg is gnupg); falls back to the names as written when a tap is still missing.
+canonical() {
+    local kind=$1; shift
+    [ $# -gt 0 ] || return 0
+    brew info --json=v2 "$kind" "$@" 2>/dev/null | jq -r '.formulae[].name, .casks[].token' || printf '%s\n' "$@"
+}
+
+listed=$( {
+    canonical --formula $(brew bundle list --formula --file="$brewfile")
+    canonical --cask $(brew bundle list --cask --file="$brewfile")
+} | names)
 missing=$(comm -23 <(printf '%s\n' "$listed") <( { brew list --formula -1; brew list --cask -1; } | names))
 unlisted=$(comm -23 <( { brew leaves --installed-on-request; brew list --cask -1; } | names) <(printf '%s\n' "$listed"))
 
