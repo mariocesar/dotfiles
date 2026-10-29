@@ -1,5 +1,5 @@
 export EDITOR=nvim
-export DOCKER_SCAN_SUGGEST=false
+export DOCKER_CLI_HINTS=false
 
 function load_if_exists() { if [ -f "$1" ]; then source "$1"; fi; }
 function command_exists() { command -v "$1" >/dev/null; }
