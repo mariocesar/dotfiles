@@ -1,166 +1,1043 @@
-#!/usr/bin/env bash
-# Read-only top for Claude Code: live sessions > workflows > workflow agents, with a live transcript preview.
-set -euo pipefail
-shopt -s nullglob
+#!/usr/bin/env -S uv run --quiet --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["textual>=8.2"]
+# ///
+# vim: set filetype=python :
 
-CLAUDE_DIR=${CLAUDE_CONFIG_DIR:-$HOME/.claude}
-now=$(date +%s)
+# TODO(mariocesar): usage view: per-session and per-day tokens (assistant usage, cost-state
+#   records) and most-used tools, in the info bar or a summary screen.
+# TODO(mariocesar): export the selected transcript to markdown in the current mode, as a
+#   separate command so cctop itself stays read-only.
+"""Read-only top for Claude Code: live and recent sessions, their subagents and workflows,
+with a following transcript."""
 
-if [[ $(uname) == Darwin ]]; then
-  mtime() { stat -f %m "$1"; }
-else
-  mtime() { stat -c %Y "$1"; }
-fi
+import re
+import argparse
+from collections import deque
+from collections.abc import Iterator
+from dataclasses import dataclass, field
+from datetime import datetime
+import json
+import os
+from pathlib import Path
+import shlex
+import time
 
-age() {
-  local s=$((now - $1))
-  ((s < 0)) && s=0
-  if ((s < 60)); then echo "${s}s"
-  elif ((s < 3600)); then echo "$((s / 60))m"
-  elif ((s < 86400)); then echo "$((s / 3600))h"
-  else echo "$((s / 86400))d"; fi
-}
+from rich.console import RenderableType
+from rich.markdown import Markdown
+from rich.padding import Padding
+from rich.syntax import Syntax
+from rich.table import Table
+from rich.text import Text
+from textual.app import App, ComposeResult
+from textual.binding import Binding
+from textual.containers import Horizontal, Vertical
+from textual.events import Resize
+from textual.message import Message
+from textual.reactive import reactive
+from textual.timer import Timer
+from textual.widgets import Footer, Header, Input, RichLog, Static, Tree
+from textual.widgets.tree import TreeNode
 
-bold=$'\e[1m' dim=$'\e[2m' red=$'\e[31m' green=$'\e[32m' yellow=$'\e[33m' reset=$'\e[0m'
 
-list_workflow() {
-  local dir=${1%/} proj=$2 id total done_n aid label phase mt a state color
-  id=${dir##*/}
-  [[ -f $dir/journal.jsonl ]] || return 0
-  read -r total done_n < <(jq -rs '[(map(select(.type=="started"))|length),(map(select(.type=="result"))|length)]|@tsv' "$dir/journal.jsonl")
-  mt=$(mtime "$dir/journal.jsonl")
-  # finished workflows fade out after an hour
-  if ((total == done_n)) && ((now - mt > 3600)) && [[ -z ${CCTOP_ALL:-} ]]; then return 0; fi
+CLAUDE_DIR = Path(os.environ.get("CLAUDE_CONFIG_DIR") or Path.home() / ".claude")
+# transcripts carry multi-MB request blobs; only the tail is ever read
+TAIL_BYTES = 4_000_000
+MAX_RECORDS = 600
+RUNNING_SECS = 120
+FADE_SECS = 3600
+INLINE_MAX = 60
+# cheap prefilter before json.loads; escaped quotes inside blobs never match
+WANTED = re.compile(rb'"type":\s*"(?:assistant|user|ai-title)"')
 
-  local scripts=("$proj"/workflows/scripts/*-"$id".js) name=$id
-  if ((${#scripts[@]})); then
-    name=${scripts[0]##*/}
-    name=${name%-"$id".js}
-  fi
-  state=running color=$yellow
-  if ((total == done_n)); then state=done color=$green; fi
-  printf 'W:%s\t  %s▸%s %-26s %s%-8s%s %s/%s agents  %s\n' "$dir" "$bold" "$reset" "$name" "$color" "$state" "$reset" "$done_n" "$total" "$(age "$mt")"
+STATUS_STYLE = {"busy": "green", "idle": "yellow"}
+STATE_STYLE = {"running": "yellow", "done": "green", "quiet": "dim"}
 
-  local done_ids
-  done_ids=$'\n'$(jq -r 'select(.type=="result")|.agentId' "$dir/journal.jsonl")$'\n'
-  while IFS=$'\t' read -r aid label phase; do
-    local f=$dir/agent-$aid.jsonl
-    if [[ $done_ids == *$'\n'"$aid"$'\n'* ]]; then
-      state=done color=$green
-    elif [[ -f $f ]] && ((now - $(mtime "$f") < 120)); then
-      state=running color=$yellow
-    else
-      state=quiet color=$dim
-    fi
-    a="-"
-    [[ -f $f ]] && a=$(age "$(mtime "$f")")
-    printf 'A:%s\t      └─ %-32s %-12s %s%-8s%s %s\n' "$f" "$label" "$phase" "$color" "$state" "$reset" "$a"
-  done < <(jq -r 'select(.type=="started")|[.agentId,(.label // .agentId),(.phase // "-")]|@tsv' "$dir/journal.jsonl")
-}
 
-list() {
-  local f pid sid cwd kind status name updated proj color w
-  for f in "$CLAUDE_DIR"/sessions/*.json; do
-    IFS=$'\t' read -r pid sid cwd kind status name updated < <(
-      jq -r '[.pid,.sessionId,.cwd,.kind,(.status // "?"),(.name // (.cwd|split("/")|last)),((.statusUpdatedAt // .updatedAt // 0)/1000|floor)]|@tsv' "$f")
-    kill -0 "$pid" 2>/dev/null || continue
-    proj=$CLAUDE_DIR/projects/${cwd//[^A-Za-z0-9]/-}/$sid
-    case $status in
-      busy) color=$green ;;
-      idle) color=$yellow ;;
-      *) color=$red ;;
-    esac
-    printf 'S:%s.jsonl\t%s●%s %-6s %s%-28s%s %-11s %4s  %s%s%s\n' \
-      "${CLAUDE_DIR}/projects/${cwd//[^A-Za-z0-9]/-}/$sid" "$color" "$reset" "$status" "$bold" "$name" "$reset" "$kind" "$(age "$updated")" "$dim" "${cwd/#"$HOME"/\~}" "$reset"
-    for w in "$proj"/subagents/workflows/wf_*/; do
-      list_workflow "$w" "$proj"
-    done
-  done
-}
+def age(ts: float) -> str:
+    s = max(0, int(time.time() - ts))
+    if s < 60:
+        return f"{s}s"
+    if s < 3600:
+        return f"{s // 60}m"
+    if s < 86400:
+        return f"{s // 3600}h"
+    return f"{s // 86400}d"
 
-render_transcript() {
-  local file=$1
-  [[ -f $file ]] || { echo "no transcript yet"; return 0; }
-  # bounded read: transcripts hold big request blobs, so grep the tail only
-  tail -c 4000000 "$file" | tail -n +2 | grep -E '"type":"(assistant|user)"' | tail -n 80 | jq -r '
-    def clip($n): tostring | gsub("\\s+"; " ") | if length > $n then .[0:$n] + "…" else . end;
-    def tool_arg:
-      (.input // {}) as $i
-      | if .name == "Bash" then $i.command
-        elif (.name == "Read" or .name == "Edit" or .name == "Write") then $i.file_path
-        elif (.name == "Grep" or .name == "Glob") then "\($i.pattern // "")\(if $i.path then "  in \($i.path)" else "" end)"
-        elif .name == "WebFetch" then $i.url
-        elif .name == "WebSearch" then $i.query
-        elif .name == "Agent" then $i.description
-        else $i | to_entries | map("\(.key)=\(.value | clip(60))") | join(" ") end
-      | . // "";
-    select(.type == "assistant" or .type == "user") | .type as $r | (.timestamp // "")[11:19] as $t
-    | (if (.message.content | type) == "string" then [{type: "text", text: .message.content}] else (.message.content // []) end)[]
-    | if .type == "text" then
-        (if $r == "user" then "\u001b[36m\($t) ▶ \(.text | clip(400))\u001b[0m" else "\u001b[1m\($t) ◀\u001b[0m \(.text)" end)
-      elif .type == "tool_use" then "\u001b[33m\($t) ⏺ \(.name)\u001b[0m \(tool_arg | clip(300))"
-      elif .type == "tool_result" then
-        "\u001b[\(if .is_error then "31" else "2" end)m           ↳ \(.content | if type == "array" then map(.text? // tostring) | join(" ") else . end | clip(200))\u001b[0m"
-      else empty end' 2>/dev/null || true
-}
 
-render_workflow() {
-  local dir=$1 id=${1##*/}
-  local scripts=("${dir%/subagents/workflows/*}"/workflows/scripts/*-"$id".js)
-  if ((${#scripts[@]})); then
-    sed -n '/^export const meta/,/^}/p' "${scripts[0]}"
-    echo
-  fi
-  jq -rs '
-    def lines($ind): tostring | split("\n")[] | $ind + .;
-    def val($ind):
-      if type == "array" then .[] | if type == "string" then "\($ind)• \(.)" else "\($ind)• \(tostring)" end
-      elif type == "object" then to_entries[] | "\($ind)\u001b[1m\(.key)\u001b[0m", (.value | val($ind + "  "))
-      else lines($ind) end;
-    (map(select(.type == "started")) | map({(.agentId): .}) | add // {}) as $s
-    | (map(select(.type == "result")) | map(.agentId)) as $done
-    | (.[] | select(.type == "started" and ([.agentId] | inside($done) | not))
-        | "\u001b[33m… \(.label // .agentId)\u001b[0m (\(.phase // "-")) running"),
-      (.[] | select(.type == "result")
-        | "\u001b[32m✔ \($s[.agentId].label // .agentId)\u001b[0m (\($s[.agentId].phase // "-"))",
-          (.result | val("  ")), "")' \
-    "$dir/journal.jsonl"
-}
+def clip(value: object, n: int) -> str:
+    s = " ".join(str(value).split())
+    return s if len(s) <= n else s[: n - 1] + "…"
 
-preview() {
-  case ${1%%:*} in
-    W) render_workflow "${1#*:}" ;;
-    *) render_transcript "${1#*:}" ;;
-  esac
-}
 
-run() {
-  command -v fzf >/dev/null && command -v jq >/dev/null || { echo "cctop: needs fzf and jq" >&2; exit 1; }
-  local self=${BASH_SOURCE[0]}
-  [[ $self == /* ]] || self=$PWD/$self
-  self=$(printf %q "$self")
-  # an external ticker, not a load:reload(sleep) loop: that keeps fzf in "loading" and starves input
-  local port=$((20000 + RANDOM % 20000)) ticker
-  export FZF_API_KEY=$(od -An -N8 -tx1 /dev/urandom | tr -d ' \n')
-  (while kill -0 $$ 2>/dev/null; do
-    sleep 2
-    curl -s -m 2 -X POST -H "x-api-key: $FZF_API_KEY" "localhost:$port" -d "reload-sync($self --list)+refresh-preview" >/dev/null || true
-  done) &
-  ticker=$!
-  trap 'kill "$ticker" 2>/dev/null' EXIT
-  list | fzf --ansi --no-sort --layout=reverse --delimiter=$'\t' --with-nth=2.. \
-    --track --id-nth=1 --listen="$port" \
-    --header $'enter: full view · ctrl-/: preview · refreshes every 2s · read-only' \
-    --preview "$self --preview {1}" --preview-window 'right,60%,wrap,follow' \
-    --bind "enter:execute($self --view {1})" \
-    --bind 'ctrl-/:toggle-preview'
-}
+def tilde(path: str) -> str:
+    home = str(Path.home())
+    return "~" + path[len(home) :] if path.startswith(home) else path
 
-[[ ${1:-} == -a ]] && { export CCTOP_ALL=1; shift; }
-case ${1:-} in
-  --list) list ;;
-  --preview) preview "$2" ;;
-  --view) preview "$2" | less -R +G ;;
-  "") run ;;
-  *) echo "usage: cctop [-a]    (-a keeps finished workflows listed)" >&2; exit 2 ;;
-esac
+
+def mtime(path: Path) -> float | None:
+    try:
+        return path.stat().st_mtime
+    except OSError:
+        return None
+
+
+def alive(pid: object) -> bool:
+    if not isinstance(pid, int):
+        return False
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def read_json(path: Path) -> dict:
+    try:
+        data = json.loads(path.read_text())
+    except (OSError, ValueError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def read_jsonl(path: Path) -> list[dict]:
+    try:
+        lines = path.read_bytes().splitlines()
+    except OSError:
+        return []
+    out = []
+    for line in lines:
+        try:
+            rec = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(rec, dict):
+            out.append(rec)
+    return out
+
+
+@dataclass
+class Item:
+    key: str
+    kind: str  # group | session | subagent | workflow | agent
+    label: Text
+    path: Path
+    info: dict = field(default_factory=dict)
+    children: list["Item"] = field(default_factory=list)
+    expand: bool = True
+
+
+def row(*cells: tuple[str, str]) -> Text:
+    return Text.assemble(*cells, no_wrap=True, overflow="ellipsis")
+
+
+def state_cell(state: str) -> tuple[str, str]:
+    return (f"{state:<8}", STATE_STYLE.get(state, ""))
+
+
+def scan_subagents(base: Path, *, show_all: bool) -> list[Item]:
+    items = []
+    for f in sorted((base / "subagents").glob("agent-*.jsonl"), key=lambda p: mtime(p) or 0):
+        mt = mtime(f) or 0
+        if time.time() - mt > FADE_SECS and not show_all:
+            continue
+        meta = read_json(f.with_name(f.stem + ".meta.json"))
+        desc = meta.get("description") or f.stem
+        state = "running" if time.time() - mt < RUNNING_SECS else "quiet"
+        label = row(
+            ("◇ ", "cyan"), (f"{clip(desc, 30):<31}", ""), state_cell(state), (age(mt), "dim")
+        )
+        items.append(Item(f"A:{f}", "subagent", label, f, {"title": desc, "state": state, **meta}))
+    return items
+
+
+def workflow_name(base: Path, wid: str) -> tuple[str, Path | None]:
+    for script in (base / "workflows" / "scripts").glob(f"*-{wid}.js"):
+        return script.name.removesuffix(f"-{wid}.js"), script
+    return wid, None
+
+
+def scan_workflows(base: Path, *, show_all: bool) -> list[Item]:
+    items = []
+    for d in sorted((base / "subagents" / "workflows").glob("wf_*")):
+        journal = d / "journal.jsonl"
+        mt = mtime(journal)
+        if mt is None:
+            continue
+        events = read_jsonl(journal)
+        started = [e for e in events if e.get("type") == "started"]
+        done = {e.get("agentId") for e in events if e.get("type") == "result"}
+        finished = len(started) == len(done)
+        if finished and time.time() - mt > FADE_SECS and not show_all:
+            continue
+        name, script = workflow_name(base, d.name)
+        state = "done" if finished else "running"
+        label = row(
+            ("▸ ", "bold magenta"),
+            (f"{clip(name, 22):<23}", "bold"),
+            state_cell(state),
+            (f"{len(done)}/{len(started)}  ", ""),
+            (age(mt), "dim"),
+        )
+        wf = Item(f"W:{d}", "workflow", label, d, {"title": name, "state": state, "script": script})
+        for e in started:
+            aid = e.get("agentId")
+            f = d / f"agent-{aid}.jsonl"
+            amt = mtime(f)
+            if aid in done:
+                astate = "done"
+            elif amt and time.time() - amt < RUNNING_SECS:
+                astate = "running"
+            else:
+                astate = "quiet"
+            alabel = e.get("label") or aid
+            phase = e.get("phase") or "-"
+            wf.children.append(
+                Item(
+                    f"A:{f}",
+                    "agent",
+                    row(
+                        (f"{clip(alabel, 28):<29}", ""),
+                        (f"{clip(phase, 10):<11}", "dim"),
+                        state_cell(astate),
+                        (age(amt) if amt else "-", "dim"),
+                    ),
+                    f,
+                    {
+                        "title": alabel,
+                        "phase": phase,
+                        "state": astate,
+                        **read_json(d / f"agent-{aid}.meta.json"),
+                    },
+                )
+            )
+        items.append(wf)
+    return items
+
+
+# both ends of a transcript: titles get rewritten through the session, cwd is near the start
+META_BYTES = 256_000
+META_LINE = re.compile(rb'^\{"type":"(?:custom-title|ai-title|last-prompt)"')
+CWD = re.compile(rb'"cwd":"((?:[^"\\]|\\.)*)"')
+MODEL = re.compile(rb'"model":"(claude-[^"]+)"')
+RECENT_MAX = 100
+
+_meta_cache: dict[Path, tuple[tuple[int, float], dict]] = {}
+_children_cache: dict[Path, tuple[float, list[Item]]] = {}
+
+
+def transcript_meta(path: Path) -> dict:
+    try:
+        st = path.stat()
+    except OSError:
+        return {}
+    stamp = (st.st_size, st.st_mtime)
+    if (hit := _meta_cache.get(path)) and hit[0] == stamp:
+        return hit[1]
+    try:
+        with path.open("rb") as f:
+            head = f.read(META_BYTES)
+            f.seek(max(len(head), st.st_size - META_BYTES))
+            tail = f.read()
+    except OSError:
+        return {}
+    meta: dict = {"mtime": st.st_mtime}
+    if m := CWD.search(head) or CWD.search(tail):
+        meta["cwd"] = json.loads(b'"' + m.group(1) + b'"')
+    if models := MODEL.findall(tail) or MODEL.findall(head):
+        meta["model"] = models[-1].decode()
+    for raw in (head + b"\n" + tail).splitlines():
+        if not META_LINE.match(raw):
+            continue
+        try:
+            rec = json.loads(raw)
+        except ValueError:
+            continue
+        for key in ("customTitle", "aiTitle", "lastPrompt"):
+            if rec.get(key):
+                meta[key] = rec[key]
+    _meta_cache[path] = (stamp, meta)
+    return meta
+
+
+def walk(items: list[Item]) -> Iterator[Item]:
+    for item in items:
+        yield item
+        yield from walk(item.children)
+
+
+def search_text(item: Item) -> str:
+    i = item.info
+    parts = [i.get("title"), i.get("aiTitle"), i.get("lastPrompt"), i.get("cwd")]
+    parts += [c.info.get("title") for c in item.children]
+    return " ".join(str(p) for p in parts if p).casefold()
+
+
+def scan_live(*, show_all: bool) -> list[Item]:
+    sessions = []
+    for f in (CLAUDE_DIR / "sessions").glob("*.json"):
+        s = read_json(f)
+        if not alive(s.get("pid")) or "sessionId" not in s:
+            continue
+        sid = s["sessionId"]
+        cwd = s.get("cwd", "")
+        base = CLAUDE_DIR / "projects" / re.sub(r"[^A-Za-z0-9]", "-", cwd) / sid
+        status = s.get("status") or "?"
+        updated = (s.get("statusUpdatedAt") or s.get("updatedAt") or 0) / 1000
+        name = s.get("name") or Path(cwd).name
+        kind = s.get("kind", "")
+        label = row(
+            ("● ", STATUS_STYLE.get(status, "red")),
+            (f"{clip(name, 24):<25}", "bold"),
+            (f"{status:<6} ", STATUS_STYLE.get(status, "red")),
+            (f"{'' if kind == 'interactive' else kind:<4}", "dim"),
+            (age(updated), "dim"),
+        )
+        item = Item(f"S:{sid}", "session", label, base.with_suffix(".jsonl"))
+        meta = transcript_meta(item.path)
+        item.info = {
+            **meta,
+            "title": name,
+            "sid": sid,
+            "cwd": cwd,
+            "status": status,
+            "kind": kind,
+            "live": True,
+        }
+        item.children = scan_subagents(base, show_all=show_all) + scan_workflows(
+            base, show_all=show_all
+        )
+        sessions.append((s.get("startedAt", 0), item))
+    return [item for _, item in sorted(sessions, key=lambda p: p[0])]
+
+
+def scan_recent(live: set[str]) -> list[Item]:
+    files = []
+    for f in (CLAUDE_DIR / "projects").glob("*/*.jsonl"):
+        if f.stem not in live and (mt := mtime(f)):
+            files.append((mt, f))
+    items = []
+    for mt, f in sorted(files, reverse=True)[:RECENT_MAX]:
+        meta = transcript_meta(f)
+        cwd = meta.get("cwd", "")
+        title = meta.get("customTitle") or meta.get("aiTitle") or meta.get("lastPrompt") or f.stem
+        label = row(
+            ("○ ", "dim"),
+            (f"{clip(title, 34):<35}", ""),
+            (f"{clip(Path(cwd).name, 14):<15}", "dim"),
+            (age(mt), "dim"),
+        )
+        item = Item(f"S:{f.stem}", "session", label, f, expand=False)
+        item.info = {**meta, "title": title, "sid": f.stem, "status": "closed", "live": False}
+        # finished sessions do not change, so their subtree is built once per transcript write
+        hit = _children_cache.get(f)
+        if not hit or hit[0] != mt:
+            base = f.with_suffix("")
+            hit = (mt, scan_subagents(base, show_all=True) + scan_workflows(base, show_all=True))
+            _children_cache[f] = hit
+        item.children = hit[1]
+        items.append(item)
+    return items
+
+
+def scan(*, show_all: bool, query: str) -> list[Item]:
+    live = scan_live(show_all=show_all)
+    recent = scan_recent({i.info["sid"] for i in live})
+    terms = query.casefold().split()
+    groups = []
+    for key, name, style, sessions in (
+        ("live", "live", "bold green", live),
+        ("recent", "recent", "bold", recent),
+    ):
+        shown = [s for s in sessions if all(t in search_text(s) for t in terms)]
+        count = f"{len(shown)}" if not terms else f"{len(shown)}/{len(sessions)}"
+        label = row((name.upper(), style), (f"  {count}", "dim"))
+        groups.append(Item(f"G:{key}", "group", label, CLAUDE_DIR, {"total": len(sessions)}, shown))
+    return groups
+
+
+# ── transcript rendering ────────────────────────────────────────────────────
+
+
+def hms(ts: str | None) -> str:
+    if not ts:
+        return "        "
+    try:
+        return datetime.fromisoformat(ts).astimezone().strftime("%H:%M:%S")
+    except ValueError:
+        return ts[11:19]
+
+
+def tool_arg(name: str, i: dict) -> str:
+    match name:
+        case "Bash":
+            return i.get("command", "")
+        case "Read" | "Edit" | "Write" | "NotebookEdit":
+            return tilde(i.get("file_path") or i.get("notebook_path") or "")
+        case "Grep" | "Glob":
+            where = f"  in {tilde(i['path'])}" if i.get("path") else ""
+            return f"{i.get('pattern', '')}{where}"
+        case "WebFetch":
+            return i.get("url", "")
+        case "WebSearch":
+            return i.get("query", "")
+        case "Agent" | "Task":
+            return i.get("description", "")
+        case "Skill":
+            return i.get("skill", "")
+        case "Workflow":
+            m = re.search(r"name:\s*['\"]([^'\"]+)", i.get("script") or "")
+            return i.get("name") or (m and m.group(1)) or i.get("scriptPath") or ""
+        case _:
+            return " ".join(f"{k}={clip(v, 60)}" for k, v in i.items())
+
+
+def result_text(content: object) -> str:
+    if isinstance(content, list):
+        content = " ".join(
+            b.get("text", "") if b.get("type") == "text" else f"[{b.get('type')}]"
+            for b in content
+            if isinstance(b, dict)
+        )
+    return re.sub(r"</?tool_use_error>", "", str(content or ""))
+
+
+def tag(text: str, name: str) -> str | None:
+    m = re.search(rf"<{name}>(.*?)</{name}>", text, re.DOTALL)
+    return m.group(1).strip() if m else None
+
+
+def line(ts: str, glyph: str, style: str, body: RenderableType = "", body_style: str = "") -> Table:
+    # a grid, so wrapped lines keep a hanging indent under the timestamp gutter
+    grid = Table.grid(padding=(0, 1), expand=True)
+    grid.add_column(width=8, style="dim")
+    grid.add_column(width=1)
+    grid.add_column(ratio=1)
+    grid.add_row(ts, Text(glyph, style), Text(body, body_style) if isinstance(body, str) else body)
+    return grid
+
+
+def user_text(ts: str, text: str, *, chatter: bool) -> Iterator[RenderableType]:
+    s = text.strip()
+    if s.startswith(("<system-reminder>", "<local-command-caveat>")):
+        return
+    if (cmd := tag(s, "command-name")) is not None:
+        yield line(ts, "❯", "bold magenta", f"{cmd} {tag(s, 'command-args') or ''}", "magenta")
+    elif (cmd := tag(s, "bash-input")) is not None:
+        yield line(ts, "!", "bold magenta", cmd, "magenta")
+    elif not chatter:
+        if not s.startswith(("<", "[Request interrupted")):
+            yield line(ts, "❯", "bold cyan", s, "cyan")
+    elif "<bash-stdout>" in s or "<local-command-stdout>" in s:
+        out = tag(s, "local-command-stdout") or tag(s, "bash-stdout") or ""
+        err = tag(s, "bash-stderr") or ""
+        if out.strip():
+            yield line("", "↳", "dim", excerpt(out, 8), "dim")
+        if err.strip():
+            yield line("", "↳", "red", excerpt(err, 8), "red")
+    elif "<task-notification>" in s:
+        summary = tag(s, "summary") or tag(s, "status") or "task notification"
+        yield line(ts, "⚑", "blue", clip(summary, 300), "dim")
+    elif s.startswith("[Request interrupted"):
+        yield line(ts, "✗", "red", s, "red")
+    else:
+        yield line(ts, "❯", "bold cyan", clip(s, 2000), "cyan")
+
+
+MODES = ("full", "compact", "chat", "prompts")
+
+
+def excerpt(value: object, lines: int, chars: int = 2000) -> str:
+    rows = str(value).strip().splitlines()
+    out = "\n".join(rows[:lines])[:chars]
+    more = len(rows) - lines
+    return out + (f"\n… {more} more lines" if more > 0 else "")
+
+
+def render_record(rec: dict, mode: str) -> Iterator[RenderableType]:
+    role = rec.get("type")
+    if rec.get("isMeta") or role not in ("user", "assistant"):
+        return
+    full, tools = mode == "full", mode in ("full", "compact")
+    ts = hms(rec.get("timestamp"))
+    content = (rec.get("message") or {}).get("content")
+    if isinstance(content, str):
+        content = [{"type": "text", "text": content}]
+    for b in content or []:
+        if not isinstance(b, dict):
+            continue
+        match role, b.get("type"):
+            case "user", "text":
+                yield from user_text(ts, b.get("text", ""), chatter=tools)
+            case "user", "image":
+                yield line(ts, "❯", "bold cyan", "[image]", "cyan")
+            case "user", "tool_result" if full or (tools and b.get("is_error")):
+                style = "red" if b.get("is_error") else "dim"
+                body = result_text(b.get("content"))
+                yield line("", "↳", style, excerpt(body, 8) if full else clip(body, 160), style)
+            case "assistant", "text" if mode != "prompts" and b.get("text", "").strip():
+                yield Text("")
+                yield line(ts, "◆", "bold magenta", Markdown(b["text"]))
+                yield Text("")
+            case "assistant", "thinking" if full and b.get("thinking", "").strip():
+                yield line(ts, "✻", "dim italic", excerpt(b["thinking"], 6), "dim italic")
+            case "assistant", "tool_use" if tools:
+                name = b.get("name", "?")
+                arg = tool_arg(name, b.get("input") or {})
+                head = Text.assemble((name, "bold yellow"), " ")
+                if full:
+                    head.append(excerpt(arg, 12))
+                else:
+                    head.append(clip(arg, 300))
+                    head.no_wrap, head.overflow = True, "ellipsis"
+                yield line(ts, "⏺", "bold yellow", head)
+
+
+def render_value(v: object, indent: int = 2) -> Iterator[RenderableType]:
+    if isinstance(v, dict):
+        for k, x in v.items():
+            if isinstance(x, dict | list) or len(str(x)) > INLINE_MAX or "\n" in str(x):
+                yield Padding(Text(str(k), "bold"), (0, 0, 0, indent))
+                yield from render_value(x, indent + 2)
+            else:
+                yield Padding(Text.assemble((str(k), "bold"), "  ", str(x)), (0, 0, 0, indent))
+    elif isinstance(v, list):
+        for x in v:
+            if isinstance(x, dict | list):
+                yield Padding(Text("•", "dim"), (0, 0, 0, indent))
+                yield from render_value(x, indent + 2)
+            else:
+                yield Padding(Text.assemble(("• ", "dim"), str(x)), (0, 0, 0, indent))
+    else:
+        yield Padding(Text(str(v)), (0, 0, 0, indent))
+
+
+def script_meta(script: Path | None) -> str | None:
+    if not script:
+        return None
+    try:
+        src = script.read_text()
+    except OSError:
+        return None
+    m = re.search(r"^export const meta = \{.*?^\}", src, re.DOTALL | re.MULTILINE)
+    return m.group(0) if m else None
+
+
+# ── widgets ─────────────────────────────────────────────────────────────────
+
+
+class SessionTree(Tree[Item]):
+    BINDINGS = [
+        Binding("j", "cursor_down", "Down", show=False),
+        Binding("k", "cursor_up", "Up", show=False),
+    ]
+
+
+class FollowChanged(Message):
+    pass
+
+
+class Feed(RichLog):
+    """Scrolling back pauses following; reaching the bottom resumes it."""
+
+    BINDINGS = [
+        Binding("j", "scroll_down", "Down", show=False),
+        Binding("k", "scroll_up", "Up", show=False),
+        Binding("g", "scroll_home", "Top", show=False),
+        Binding("G", "scroll_end", "Bottom", show=False),
+    ]
+
+    follow: reactive[bool] = reactive(True)
+
+    def watch_follow(self, follow: bool) -> None:
+        self.auto_scroll = follow
+        if follow:
+            self.scroll_end(animate=False, immediate=True)
+        self.post_message(FollowChanged())
+
+    def _unfollow(self) -> None:
+        self.follow = False
+
+    def action_scroll_up(self) -> None:
+        self._unfollow()
+        super().action_scroll_up()
+
+    def action_page_up(self) -> None:
+        self._unfollow()
+        super().action_page_up()
+
+    def action_scroll_home(self) -> None:
+        self._unfollow()
+        super().action_scroll_home()
+
+    def action_scroll_end(self) -> None:
+        self.follow = True
+
+    def on_mouse_scroll_up(self) -> None:
+        self._unfollow()
+
+    def on_mouse_scroll_down(self) -> None:
+        self.call_after_refresh(self._refollow)
+
+    def action_scroll_down(self) -> None:
+        super().action_scroll_down()
+        self.call_after_refresh(self._refollow)
+
+    def action_page_down(self) -> None:
+        super().action_page_down()
+        self.call_after_refresh(self._refollow)
+
+    def _refollow(self) -> None:
+        if self.is_vertical_scroll_end:
+            self.follow = True
+
+
+def kilo(n: int) -> str:
+    return f"{n / 1000:.0f}k" if n >= 1000 else str(n)
+
+
+class Transcript:
+    """Incremental reader of a transcript's tail; only complete lines are consumed."""
+
+    def __init__(self, path: Path) -> None:
+        self.path = path
+        self._reset()
+
+    def _reset(self) -> None:
+        self.pos = 0
+        self.ino = 0
+        self.records: deque[dict] = deque(maxlen=MAX_RECORDS)
+        self.model = ""
+        self.context = 0
+        self.ai_title = ""
+
+    def read(self) -> list[dict] | None:
+        """New renderable records, or None when the file was replaced and must be redrawn."""
+        try:
+            st = self.path.stat()
+        except OSError:
+            return []
+        if st.st_ino != self.ino or st.st_size < self.pos:
+            replaced = bool(self.records)
+            self._reset()
+            self.ino = st.st_ino
+            if replaced:
+                self.read()
+                return None
+        if st.st_size == self.pos:
+            return []
+        try:
+            with self.path.open("rb") as f:
+                start = self.pos
+                if start == 0 and st.st_size > TAIL_BYTES:
+                    f.seek(st.st_size - TAIL_BYTES)
+                    f.readline()
+                    start = f.tell()
+                else:
+                    f.seek(start)
+                data = f.read()
+        except OSError:
+            return []
+        cut = data.rfind(b"\n") + 1
+        self.pos = start + cut
+        new = []
+        for raw in data[:cut].splitlines():
+            if not WANTED.search(raw):
+                continue
+            try:
+                rec = json.loads(raw)
+            except ValueError:
+                continue
+            if isinstance(rec, dict) and self.absorb(rec):
+                new.append(rec)
+        self.records.extend(new)
+        return new
+
+    def absorb(self, rec: dict) -> bool:
+        if rec.get("type") == "ai-title":
+            self.ai_title = rec.get("aiTitle", "")
+            return False
+        msg = rec.get("message") or {}
+        if rec.get("type") == "assistant" and (usage := msg.get("usage")):
+            self.model = msg.get("model") or self.model
+            self.context = sum(
+                usage.get(k) or 0
+                for k in ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens")
+            )
+        return True
+
+
+class Viewer(Vertical):
+    ALLOW_MAXIMIZE = True
+
+    def __init__(self) -> None:
+        super().__init__(id="viewer")
+        self.item: Item | None = None
+        self.transcript: Transcript | None = None
+        self.journal_mtime: float | None = None
+        self.mode = MODES[0]
+        self._width = 0
+        self._resize_timer: Timer | None = None
+
+    def compose(self) -> ComposeResult:
+        yield Static(id="info")
+        yield Feed(id="feed", wrap=True, max_lines=8000)
+
+    @property
+    def feed(self) -> Feed:
+        return self.query_one(Feed)
+
+    def open(self, item: Item) -> None:
+        self.item = item
+        self.transcript = None if item.kind == "workflow" else Transcript(item.path)
+        self.journal_mtime = None
+        self.feed.clear()
+        self.feed.follow = True
+        self.feed.border_title = {"workflow": "workflow", "session": "transcript"}.get(
+            item.kind, "agent transcript"
+        )
+        self.poll(initial=True)
+        self.update_info()
+
+    def update_item(self, item: Item) -> None:
+        self.item = item
+        self.update_info()
+
+    def poll(self, *, initial: bool = False) -> None:
+        if self.item is None:
+            return
+        if self.transcript is None:
+            mt = mtime(self.item.path / "journal.jsonl")
+            if mt != self.journal_mtime:
+                self.journal_mtime = mt
+                self.rerender()
+            return
+        new = self.transcript.read()
+        if initial or new is None:
+            self.rerender()
+        elif new:
+            for rec in new:
+                for r in render_record(rec, self.mode):
+                    self.feed.write(r, expand=True)
+        else:
+            return
+        self.update_info()
+
+    def rerender(self) -> None:
+        feed = self.feed
+        scroll_y = feed.scroll_y
+        feed.clear()
+        if self.item is None:
+            return
+        renderables = (
+            self.render_workflow(self.item)
+            if self.transcript is None
+            else (r for rec in self.transcript.records for r in render_record(rec, self.mode))
+        )
+        for r in renderables:
+            feed.write(r, expand=True, scroll_end=False)
+        if self.transcript is not None and not self.transcript.records:
+            feed.write(Text("no transcript yet", "dim"))
+        if feed.follow:
+            feed.call_after_refresh(feed.scroll_end, animate=False)
+        else:
+            feed.call_after_refresh(feed.scroll_to, y=scroll_y, animate=False)
+
+    def render_workflow(self, item: Item) -> Iterator[RenderableType]:
+        events = read_jsonl(item.path / "journal.jsonl")
+        started = {e.get("agentId"): e for e in events if e.get("type") == "started"}
+        results = [e for e in events if e.get("type") == "result"]
+        if meta := script_meta(item.info.get("script")):
+            yield Syntax(meta, "javascript", theme="ansi_dark", background_color="default")
+            yield Text("")
+        table = Table(box=None, pad_edge=False, show_header=True, header_style="dim")
+        for col in ("agent", "phase", "state"):
+            table.add_column(col)
+        done = {e.get("agentId") for e in results}
+        for aid, e in started.items():
+            state = "done" if aid in done else "running"
+            table.add_row(
+                e.get("label") or aid, e.get("phase") or "-", Text(state, STATE_STYLE[state])
+            )
+        yield table
+        for e in results:
+            s = started.get(e.get("agentId"), {})
+            yield Text("")
+            yield Text.assemble(
+                ("✔ ", "green"),
+                (s.get("label") or e.get("agentId") or "?", "bold green"),
+                (f"  {s.get('phase') or '-'}", "dim"),
+            )
+            yield from render_value(e.get("result"))
+
+    def update_info(self) -> None:
+        it = self.item
+        if it is None:
+            return
+        left = Text(it.info.get("title", ""), "bold")
+        if self.transcript and self.transcript.ai_title not in ("", it.info.get("title")):
+            left.append(f"  {self.transcript.ai_title}", "italic")
+        facts = []
+        match it.kind:
+            case "session":
+                facts += [
+                    it.info.get("status", ""),
+                    it.info.get("kind", ""),
+                    tilde(it.info.get("cwd", "")),
+                ]
+            case "subagent" | "agent":
+                facts += [it.info.get("agentType", ""), it.info.get("phase", "")]
+            case "workflow":
+                facts += [tilde(str(it.info.get("script") or it.path))]
+        if t := self.transcript:
+            if t.model:
+                facts.append(t.model)
+            if t.context:
+                facts.append(f"ctx {kilo(t.context)}")
+        left.append("\n")
+        left.append("  ·  ".join(f for f in facts if f and f != "-"), "dim")
+        follow = self.feed.follow
+        right = Text.assemble(
+            ("● FOLLOW" if follow else "‖ PAUSED", "bold green" if follow else "bold yellow"),
+            "\n",
+            (" ".join(m if m != self.mode else f"[{m}]" for m in MODES), "dim"),
+            justify="right",
+        )
+        grid = Table.grid(expand=True)
+        grid.add_column(ratio=1)
+        grid.add_column(justify="right")
+        grid.add_row(left, right)
+        self.query_one("#info", Static).update(grid)
+
+    def on_follow_changed(self) -> None:
+        self.update_info()
+
+    def on_resize(self, event: Resize) -> None:
+        if event.size.width == self._width:
+            return
+        self._width = event.size.width
+        if self._resize_timer:
+            self._resize_timer.stop()
+        self._resize_timer = self.set_timer(0.15, self.rerender)
+
+    def set_mode(self, mode: str) -> None:
+        self.mode = mode
+        self.rerender()
+        self.update_info()
+
+
+class Cctop(App):
+    TITLE = "cctop"
+    ESCAPE_TO_MINIMIZE = False
+    CSS = """
+    #main { height: 1fr; }
+    #left { width: 66; max-width: 50%; }
+    #filter { display: none; border: round $accent; height: 3; }
+    #filter.active { display: block; }
+    SessionTree {
+        height: 1fr;
+        border: round $panel-lighten-2;
+        border-title-color: $text-muted;
+        padding: 0 1;
+    }
+    SessionTree:focus { border: round $accent; }
+    #viewer { width: 1fr; }
+    #info { height: auto; padding: 0 1; background: $boost; }
+    Feed {
+        height: 1fr;
+        border: round $panel-lighten-2;
+        border-title-color: $text-muted;
+        padding: 0 1;
+        scrollbar-size-vertical: 1;
+    }
+    Feed:focus { border: round $accent; }
+    """
+    BINDINGS = [
+        Binding("q", "quit", "Quit"),
+        Binding("z", "fullscreen", "Zoom"),
+        Binding("escape", "leave", "Back", show=False, priority=True),
+        Binding("f", "follow", "Follow"),
+        Binding("m", "mode", "Mode"),
+        Binding("1", "mode('full')", show=False),
+        Binding("2", "mode('compact')", show=False),
+        Binding("3", "mode('chat')", show=False),
+        Binding("4", "mode('prompts')", show=False),
+        Binding("a", "all", "Show finished"),
+        Binding("slash", "filter", "Filter"),
+        Binding("r", "resume", "Resume"),
+        Binding("ctrl+d", "page('down')", "Page", show=False),
+        Binding("ctrl+u", "page('up')", "Page", show=False),
+    ]
+
+    def __init__(self, *, show_all: bool) -> None:
+        super().__init__()
+        self.show_all = show_all
+        self.query_text = ""
+        self._pending: Timer | None = None
+
+    def compose(self) -> ComposeResult:
+        yield Header(icon="◆")
+        with Horizontal(id="main"):
+            with Vertical(id="left"):
+                yield Input(id="filter", placeholder="filter by title, prompt or path")
+                tree: SessionTree = SessionTree("sessions")
+                tree.show_root = False
+                tree.auto_expand = False
+                tree.guide_depth = 3
+                tree.border_title = "sessions"
+                yield tree
+            yield Viewer()
+        yield Footer()
+
+    @property
+    def sessions(self) -> SessionTree:
+        return self.query_one(SessionTree)
+
+    @property
+    def viewer(self) -> Viewer:
+        return self.query_one(Viewer)
+
+    def on_mount(self) -> None:
+        self.refresh_tree()
+        self.sessions.focus()
+        first = next((s for g in self.sessions.root.children for s in g.children), None)
+        if first:
+            # node lines exist only after the first layout
+            self.call_after_refresh(self.sessions.move_cursor, first)
+        self.set_interval(2, self.refresh_tree)
+        self.set_interval(0.5, self.viewer.poll)
+
+    def refresh_tree(self) -> None:
+        groups = scan(show_all=self.show_all, query=self.query_text)
+        self.sync(self.sessions.root, groups)
+        flat = list(walk(groups))
+        running = sum(i.info.get("state") == "running" for i in flat)
+        live = groups[0].info["total"]
+        self.sub_title = f"{live} live sessions · {running} running"
+        current = self.viewer.item
+        if current:
+            match = next((i for i in flat if i.key == current.key), None)
+            if match:
+                self.viewer.update_item(match)
+
+    def sync(self, parent: TreeNode[Item], items: list[Item]) -> None:
+        existing = {n.data.key: n for n in parent.children if n.data}
+        for item in items:
+            node = existing.pop(item.key, None)
+            if node is None:
+                if item.kind in ("group", "session", "workflow"):
+                    node = parent.add(item.label, item, expand=item.expand)
+                else:
+                    node = parent.add_leaf(item.label, item)
+            else:
+                node.data = item
+                node.set_label(item.label)
+            if node.allow_expand:
+                self.sync(node, item.children)
+        for node in existing.values():
+            node.remove()
+
+    def show(self, item: Item | None, delay: float) -> None:
+        current = self.viewer.item
+        if item is None or item.kind == "group" or (current and current.key == item.key):
+            return
+        if self._pending:
+            self._pending.stop()
+        if delay:
+            self._pending = self.set_timer(delay, lambda: self.viewer.open(item))
+        else:
+            self.viewer.open(item)
+
+    def on_tree_node_highlighted(self, event: Tree.NodeHighlighted[Item]) -> None:
+        # debounce, so holding j does not parse every transcript on the way
+        self.show(event.node.data, 0.12)
+
+    def on_tree_node_selected(self, event: Tree.NodeSelected[Item]) -> None:
+        event.stop()
+        self.show(event.node.data, 0)
+
+    def action_fullscreen(self) -> None:
+        if self.screen.maximized:
+            self.action_leave()
+        else:
+            self.screen.maximize(self.viewer, container=False)
+            self.viewer.feed.focus()
+
+    def action_leave(self) -> None:
+        if self.screen.maximized:
+            self.screen.minimize()
+        elif self.query_text or self.focused is self.filter:
+            self.filter.value = ""
+            self.filter.remove_class("active")
+        self.sessions.focus()
+
+    @property
+    def filter(self) -> Input:
+        return self.query_one("#filter", Input)
+
+    def action_filter(self) -> None:
+        self.screen.minimize()
+        self.filter.add_class("active")
+        self.filter.focus()
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        self.query_text = event.value
+        self.refresh_tree()
+
+    def on_input_submitted(self) -> None:
+        self.sessions.focus()
+
+    def action_resume(self) -> None:
+        node = self.sessions.cursor_node
+        while node and node.data and node.data.kind != "session":
+            node = node.parent
+        if not node or not node.data:
+            return
+        info = node.data.info
+        if info.get("live"):
+            self.notify("that session is still running", severity="warning")
+        elif not info.get("cwd"):
+            self.notify("no working directory recorded for it", severity="error")
+        else:
+            self.exit((info["cwd"], info["sid"]))
+
+    def action_follow(self) -> None:
+        self.viewer.feed.follow = not self.viewer.feed.follow
+
+    def action_mode(self, mode: str | None = None) -> None:
+        current = self.viewer.mode
+        self.viewer.set_mode(mode or MODES[(MODES.index(current) + 1) % len(MODES)])
+
+    def action_all(self) -> None:
+        self.show_all = not self.show_all
+        self.notify("showing finished work" if self.show_all else "hiding finished work")
+        self.refresh_tree()
+
+    def action_page(self, direction: str) -> None:
+        feed = self.viewer.feed
+        feed.action_page_down() if direction == "down" else feed.action_page_up()
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "-a", "--all", action="store_true", help="also list finished workflows and idle subagents"
+    )
+    args = parser.parse_args()
+    resume = Cctop(show_all=args.all).run()
+    if not resume:
+        return
+    cwd, sid = resume
+    print(f"cd {shlex.quote(cwd)} && claude --resume {sid}")
+    try:
+        os.chdir(cwd)
+    except OSError as e:
+        raise SystemExit(f"cctop: {e}") from e
+    os.execvp("claude", ["claude", "--resume", sid])  # noqa: S606, S607
+
+
+if __name__ == "__main__":
+    main()
