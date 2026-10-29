@@ -1,0 +1,166 @@
+#!/usr/bin/env bash
+# Read-only top for Claude Code: live sessions > workflows > workflow agents, with a live transcript preview.
+set -euo pipefail
+shopt -s nullglob
+
+CLAUDE_DIR=${CLAUDE_CONFIG_DIR:-$HOME/.claude}
+now=$(date +%s)
+
+if [[ $(uname) == Darwin ]]; then
+  mtime() { stat -f %m "$1"; }
+else
+  mtime() { stat -c %Y "$1"; }
+fi
+
+age() {
+  local s=$((now - $1))
+  ((s < 0)) && s=0
+  if ((s < 60)); then echo "${s}s"
+  elif ((s < 3600)); then echo "$((s / 60))m"
+  elif ((s < 86400)); then echo "$((s / 3600))h"
+  else echo "$((s / 86400))d"; fi
+}
+
+bold=$'\e[1m' dim=$'\e[2m' red=$'\e[31m' green=$'\e[32m' yellow=$'\e[33m' reset=$'\e[0m'
+
+list_workflow() {
+  local dir=${1%/} proj=$2 id total done_n aid label phase mt a state color
+  id=${dir##*/}
+  [[ -f $dir/journal.jsonl ]] || return 0
+  read -r total done_n < <(jq -rs '[(map(select(.type=="started"))|length),(map(select(.type=="result"))|length)]|@tsv' "$dir/journal.jsonl")
+  mt=$(mtime "$dir/journal.jsonl")
+  # finished workflows fade out after an hour
+  if ((total == done_n)) && ((now - mt > 3600)) && [[ -z ${CCTOP_ALL:-} ]]; then return 0; fi
+
+  local scripts=("$proj"/workflows/scripts/*-"$id".js) name=$id
+  if ((${#scripts[@]})); then
+    name=${scripts[0]##*/}
+    name=${name%-"$id".js}
+  fi
+  state=running color=$yellow
+  if ((total == done_n)); then state=done color=$green; fi
+  printf 'W:%s\t  %s▸%s %-26s %s%-8s%s %s/%s agents  %s\n' "$dir" "$bold" "$reset" "$name" "$color" "$state" "$reset" "$done_n" "$total" "$(age "$mt")"
+
+  local done_ids
+  done_ids=$'\n'$(jq -r 'select(.type=="result")|.agentId' "$dir/journal.jsonl")$'\n'
+  while IFS=$'\t' read -r aid label phase; do
+    local f=$dir/agent-$aid.jsonl
+    if [[ $done_ids == *$'\n'"$aid"$'\n'* ]]; then
+      state=done color=$green
+    elif [[ -f $f ]] && ((now - $(mtime "$f") < 120)); then
+      state=running color=$yellow
+    else
+      state=quiet color=$dim
+    fi
+    a="-"
+    [[ -f $f ]] && a=$(age "$(mtime "$f")")
+    printf 'A:%s\t      └─ %-32s %-12s %s%-8s%s %s\n' "$f" "$label" "$phase" "$color" "$state" "$reset" "$a"
+  done < <(jq -r 'select(.type=="started")|[.agentId,(.label // .agentId),(.phase // "-")]|@tsv' "$dir/journal.jsonl")
+}
+
+list() {
+  local f pid sid cwd kind status name updated proj color w
+  for f in "$CLAUDE_DIR"/sessions/*.json; do
+    IFS=$'\t' read -r pid sid cwd kind status name updated < <(
+      jq -r '[.pid,.sessionId,.cwd,.kind,(.status // "?"),(.name // (.cwd|split("/")|last)),((.statusUpdatedAt // .updatedAt // 0)/1000|floor)]|@tsv' "$f")
+    kill -0 "$pid" 2>/dev/null || continue
+    proj=$CLAUDE_DIR/projects/${cwd//[^A-Za-z0-9]/-}/$sid
+    case $status in
+      busy) color=$green ;;
+      idle) color=$yellow ;;
+      *) color=$red ;;
+    esac
+    printf 'S:%s.jsonl\t%s●%s %-6s %s%-28s%s %-11s %4s  %s%s%s\n' \
+      "${CLAUDE_DIR}/projects/${cwd//[^A-Za-z0-9]/-}/$sid" "$color" "$reset" "$status" "$bold" "$name" "$reset" "$kind" "$(age "$updated")" "$dim" "${cwd/#"$HOME"/\~}" "$reset"
+    for w in "$proj"/subagents/workflows/wf_*/; do
+      list_workflow "$w" "$proj"
+    done
+  done
+}
+
+render_transcript() {
+  local file=$1
+  [[ -f $file ]] || { echo "no transcript yet"; return 0; }
+  # bounded read: transcripts hold big request blobs, so grep the tail only
+  tail -c 4000000 "$file" | tail -n +2 | grep -E '"type":"(assistant|user)"' | tail -n 80 | jq -r '
+    def clip($n): tostring | gsub("\\s+"; " ") | if length > $n then .[0:$n] + "…" else . end;
+    def tool_arg:
+      (.input // {}) as $i
+      | if .name == "Bash" then $i.command
+        elif (.name == "Read" or .name == "Edit" or .name == "Write") then $i.file_path
+        elif (.name == "Grep" or .name == "Glob") then "\($i.pattern // "")\(if $i.path then "  in \($i.path)" else "" end)"
+        elif .name == "WebFetch" then $i.url
+        elif .name == "WebSearch" then $i.query
+        elif .name == "Agent" then $i.description
+        else $i | to_entries | map("\(.key)=\(.value | clip(60))") | join(" ") end
+      | . // "";
+    select(.type == "assistant" or .type == "user") | .type as $r | (.timestamp // "")[11:19] as $t
+    | (if (.message.content | type) == "string" then [{type: "text", text: .message.content}] else (.message.content // []) end)[]
+    | if .type == "text" then
+        (if $r == "user" then "\u001b[36m\($t) ▶ \(.text | clip(400))\u001b[0m" else "\u001b[1m\($t) ◀\u001b[0m \(.text)" end)
+      elif .type == "tool_use" then "\u001b[33m\($t) ⏺ \(.name)\u001b[0m \(tool_arg | clip(300))"
+      elif .type == "tool_result" then
+        "\u001b[\(if .is_error then "31" else "2" end)m           ↳ \(.content | if type == "array" then map(.text? // tostring) | join(" ") else . end | clip(200))\u001b[0m"
+      else empty end' 2>/dev/null || true
+}
+
+render_workflow() {
+  local dir=$1 id=${1##*/}
+  local scripts=("${dir%/subagents/workflows/*}"/workflows/scripts/*-"$id".js)
+  if ((${#scripts[@]})); then
+    sed -n '/^export const meta/,/^}/p' "${scripts[0]}"
+    echo
+  fi
+  jq -rs '
+    def lines($ind): tostring | split("\n")[] | $ind + .;
+    def val($ind):
+      if type == "array" then .[] | if type == "string" then "\($ind)• \(.)" else "\($ind)• \(tostring)" end
+      elif type == "object" then to_entries[] | "\($ind)\u001b[1m\(.key)\u001b[0m", (.value | val($ind + "  "))
+      else lines($ind) end;
+    (map(select(.type == "started")) | map({(.agentId): .}) | add // {}) as $s
+    | (map(select(.type == "result")) | map(.agentId)) as $done
+    | (.[] | select(.type == "started" and ([.agentId] | inside($done) | not))
+        | "\u001b[33m… \(.label // .agentId)\u001b[0m (\(.phase // "-")) running"),
+      (.[] | select(.type == "result")
+        | "\u001b[32m✔ \($s[.agentId].label // .agentId)\u001b[0m (\($s[.agentId].phase // "-"))",
+          (.result | val("  ")), "")' \
+    "$dir/journal.jsonl"
+}
+
+preview() {
+  case ${1%%:*} in
+    W) render_workflow "${1#*:}" ;;
+    *) render_transcript "${1#*:}" ;;
+  esac
+}
+
+run() {
+  command -v fzf >/dev/null && command -v jq >/dev/null || { echo "cctop: needs fzf and jq" >&2; exit 1; }
+  local self=${BASH_SOURCE[0]}
+  [[ $self == /* ]] || self=$PWD/$self
+  self=$(printf %q "$self")
+  # an external ticker, not a load:reload(sleep) loop: that keeps fzf in "loading" and starves input
+  local port=$((20000 + RANDOM % 20000)) ticker
+  export FZF_API_KEY=$(od -An -N8 -tx1 /dev/urandom | tr -d ' \n')
+  (while kill -0 $$ 2>/dev/null; do
+    sleep 2
+    curl -s -m 2 -X POST -H "x-api-key: $FZF_API_KEY" "localhost:$port" -d "reload-sync($self --list)+refresh-preview" >/dev/null || true
+  done) &
+  ticker=$!
+  trap 'kill "$ticker" 2>/dev/null' EXIT
+  list | fzf --ansi --no-sort --layout=reverse --delimiter=$'\t' --with-nth=2.. \
+    --track --id-nth=1 --listen="$port" \
+    --header $'enter: full view · ctrl-/: preview · refreshes every 2s · read-only' \
+    --preview "$self --preview {1}" --preview-window 'right,60%,wrap,follow' \
+    --bind "enter:execute($self --view {1})" \
+    --bind 'ctrl-/:toggle-preview'
+}
+
+[[ ${1:-} == -a ]] && { export CCTOP_ALL=1; shift; }
+case ${1:-} in
+  --list) list ;;
+  --preview) preview "$2" ;;
+  --view) preview "$2" | less -R +G ;;
+  "") run ;;
+  *) echo "usage: cctop [-a]    (-a keeps finished workflows listed)" >&2; exit 2 ;;
+esac
