@@ -53,7 +53,7 @@ export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
 # golang
-command -v go && \
+command -v go >/dev/null && \
   export PATH="$PATH:$(go env GOBIN):$(go env GOPATH)/bin"
 
 # Guarded: a machine missing one of these should still get a working shell
