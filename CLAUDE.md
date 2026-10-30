@@ -73,5 +73,7 @@ Same for code: no docstring on an obvious function, no narrating the next statem
 ## Conventions
 
 - Repo path == home path, under whichever bucket applies. New tool config goes where it'd live under `$HOME`.
-- Shell scripts in `*/.local/bin/` start with `set -eu`/`-euo pipefail`. A command whose per-OS implementations share nothing is two files of the same name, one per platform bucket — see `update-preferences`. One built from per-OS steps, like `sysupgrade` and `pkgsync`, is a `common/` runner over a `<name>.d/` whose parts sit in the buckets they apply to; a part sharing `linux/` with another distro's checks `/etc/os-release` and exits 0.
+- Scripts in `*/.local/bin/` follow `docs/scripts.md`: names, the line-2 sentence, language, ruff, code shape. Read it before writing or editing one.
+- A web page a script serves or generates follows `docs/ui.md`: calm TUI look, Azulejo Brutalism colors, keys.
+- A command whose per-OS implementations share nothing is two files of the same name, one per platform bucket — see `update-preferences`. One built from per-OS steps, like `sysupgrade` and `pkgsync`, is a `common/` runner over a `<name>.d/` whose parts sit in the buckets they apply to; a part sharing `linux/` with another distro's checks `/etc/os-release` and exits 0.
 - No tests. Sanity-check with `python3.13 install.py --fake`, or reload the tool directly (`source ~/.zshrc`, `:source %`).
