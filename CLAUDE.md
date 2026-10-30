@@ -49,7 +49,7 @@ python3.13 install.py --help     # all options
 
 It never prompts.
 
-After linking it runs every executable in the active buckets' `postinstall.d/` in name order, so `common/postinstall.d/10-…` precedes `linux/postinstall.d/20-…`. A platform hook with the same name as a common one replaces it, same rule as the links. Hooks are for anything a symlink can't express — resolving a per-machine path, for example. A hook in a platform bucket needs no OS guard; being there is the guard. They must be idempotent, exit non-zero on failure, and are skipped under `--fake`. `.py` hooks run with the same interpreter as `install.py`.
+After linking it runs every executable in the active buckets' `postinstall.d/` in name order, so `common/postinstall.d/10-…` precedes `linux/postinstall.d/20-…`. A platform hook with the same name as a common one replaces it, same rule as the links. Hooks are for anything a symlink can't express — resolving a per-machine path, for example. A hook in a platform bucket needs no OS guard; being there is the guard. A hook reads config from its installed path under `$HOME`, not the repo, so it sees what the active buckets actually linked. They must be idempotent, exit non-zero on failure, and are skipped under `--fake`. `.py` hooks run with the same interpreter as `install.py`.
 
 Confirm a new link landed — the arrow must point into `.dotfiles`:
 

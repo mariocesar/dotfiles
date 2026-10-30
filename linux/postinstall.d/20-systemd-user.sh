@@ -3,11 +3,12 @@
 set -eu
 
 command -v systemctl >/dev/null 2>&1 || { echo "No systemctl, skipping"; exit 0; }
-root=${DOTFILES_ROOT:-$(dirname "$0")/..}
+dir="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
 
 units=""
-for unit in "$root"/.config/systemd/user/*.service "$root"/.config/systemd/user/*.timer; do
-    [ -f "$unit" ] || continue
+for unit in "$dir"/*.service "$dir"/*.timer; do
+    # Only units linked from this repo; other tools write real files here too.
+    case "$(readlink -f "$unit")" in "${DOTFILES_ROOT:?}"/*) ;; *) continue ;; esac
     # Only units with [Install] are enabled; the rest are pulled in by those.
     grep -q '^\[Install\]' "$unit" && units="$units $(basename "$unit")"
 done
