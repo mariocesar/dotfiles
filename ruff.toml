@@ -2,6 +2,7 @@ exclude        = ["docs/*", "*/migrations/*", ".git/*"]
 line-length    = 100
 indent-width   = 4
 target-version = "py311"
+per-file-target-version = { "install.py" = "py310" }
 
 [lint]
     select = [

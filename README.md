@@ -40,14 +40,13 @@ python3 install.py --fake
 For additional options, run: `python3 install.py --help`
 
 ```
-usage: install.py [-h] [--interactive] [--force] [--fake] [--prune]
+usage: install.py [-h] [--force] [--fake] [--prune]
 
 Install dotfiles
 
 options:
-  -h, --help     show this help message and exit
-  --interactive  Run with interactive prompts
-  --force        Replace existing files, keeping the original as .bak
-  --fake         Simulate actions without making changes
-  --prune        Also remove links for config belonging to the other OS
+  -h, --help  show this help message and exit
+  --force     Replace existing files, keeping the original as .bak
+  --fake      Simulate actions without making changes
+  --prune     Also remove links for config belonging to the other OS
 ```

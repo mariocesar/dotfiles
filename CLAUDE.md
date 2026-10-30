@@ -30,7 +30,7 @@ macos/.local/bin/update-preferences    ->  ~/.local/bin/update-preferences
 
 `common/` is installed everywhere; `linux/` and `macos/` add what only that OS can use. Put a file in the wrong bucket and it lands on the wrong machine — but there is no list to forget to update.
 
-Nothing outside a bucket is ever walked, so `install.py`, `README.md`, `ruff.toml` and friends need no exclusion. `DotfileMapper.EXCLUDE_PATTERNS` is down to junk that can appear *inside* a bucket (`.DS_Store`, `*.pyc`, `*~`); `postinstall.d` is skipped structurally, as part of a bucket's shape, not as a denylist entry.
+Nothing outside a bucket is ever walked, so `install.py`, `README.md`, `ruff.toml` and friends need no exclusion. Inside a bucket, `git ls-files` decides: tracked files plus new ones git doesn't ignore, so junk (`.DS_Store`, `*.pyc`, `*~`) is kept out by `.gitignore`, and a file it ignores never gets linked. `postinstall.d` is skipped structurally, as part of a bucket's shape, not as a denylist entry.
 
 The platform bucket is installed after `common/`, so a path present in both is **deliberately** won by the platform — the run prints `… from common overridden by macos`. That is the supported way to keep a mostly-shared config with one OS-specific variant. Two files of the same name in `linux/` and `macos/` never collide, since only one bucket is ever active: that is how `update-preferences` is one command with two implementations.
 
@@ -38,7 +38,7 @@ Skipping is not unlinking: a file moved between buckets leaves its old symlink b
 
 Package manifests are config, not repo files: `macos/.config/homebrew/Brewfile` (where `brew bundle --global` looks) and `linux/.config/pkgsync/pkglist*.txt`. They get symlinked like anything else, which is why they need no exclusion. `pkgsync` reads the *installed* copy, so `install.py` has to run before it.
 
-Needs Python 3.10+ (`Path | None` annotations). System `python3` is 3.9 and crashes on import; there is no `python` on `PATH`:
+Needs Python 3.10+, stdlib only; `ruff.toml` checks it against 3.10. macOS system `python3` is 3.9 and there is no `python` on `PATH`:
 
 ```
 python3.13 install.py            # create the symlinks
@@ -47,7 +47,7 @@ python3.13 install.py --prune    # also unlink config for the other OS
 python3.13 install.py --help     # all options
 ```
 
-Non-interactive by default: it auto-confirms and links without prompting.
+It never prompts.
 
 After linking it runs every executable in the active buckets' `postinstall.d/` in name order, so `common/postinstall.d/10-…` precedes `linux/postinstall.d/20-…`. A platform hook with the same name as a common one replaces it, same rule as the links. Hooks are for anything a symlink can't express — resolving a per-machine path, for example. A hook in a platform bucket needs no OS guard; being there is the guard. They must be idempotent, exit non-zero on failure, and are skipped under `--fake`. `.py` hooks run with the same interpreter as `install.py`.
 
@@ -73,7 +73,8 @@ Same for code: no docstring on an obvious function, no narrating the next statem
 ## Conventions
 
 - Repo path == home path, under whichever bucket applies. New tool config goes where it'd live under `$HOME`.
-- Scripts in `*/.local/bin/` follow `docs/scripts.md`: names, the line-2 sentence, language, ruff, code shape. Read it before writing or editing one.
+- Scripts in `*/.local/bin/` follow `docs/scripts.md`: names, the line-2 sentence, shebang, behavior. Read it before writing or editing one.
+- Python anywhere in the repo, `install.py` and the hooks included, follows `docs/python.md`: stdlib first, ruff, code shape. Read it before writing or editing any.
 - A web page a script serves or generates follows `docs/ui.md`: calm TUI look, Azulejo Brutalism colors, keys.
 - A command whose per-OS implementations share nothing is two files of the same name, one per platform bucket — see `update-preferences`. One built from per-OS steps, like `sysupgrade` and `pkgsync`, is a `common/` runner over a `<name>.d/` whose parts sit in the buckets they apply to; a part sharing `linux/` with another distro's checks `/etc/os-release` and exits 0.
 - No tests. Sanity-check with `python3.13 install.py --fake`, or reload the tool directly (`source ~/.zshrc`, `:source %`).
