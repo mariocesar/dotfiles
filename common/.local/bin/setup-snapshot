@@ -1,5 +1,5 @@
 #!/usr/bin/env -S uv run --quiet --script
-# Record this machine's hardware, from fastfetch, in `machines/<name>.json` of the dotfiles repo.
+# Record this machine's hardware, from fastfetch, in the dotfiles repo under `uses/machines/`.
 # /// script
 # requires-python = ">=3.12"
 # ///
@@ -130,7 +130,7 @@ def main() -> None:
         print(text, end="")
         return
 
-    path = ROOT / "machines" / f"{name}.json"
+    path = ROOT / "uses/machines" / f"{name}.json"
     if path.is_file() and path.read_text() == text:
         print(f"{path.relative_to(ROOT)}: unchanged")
         return

@@ -46,7 +46,7 @@ hr = lambda: Text("\n---") >> stdout
 
 h2("Machines") >> stdout
 
-for path in sorted((ROOT_DIR / "machines").glob("*.json")):
+for path in sorted((ROOT_DIR / "uses/machines").glob("*.json")):
     manifest = json.loads(path.read_text())
     host, board, cpu = manifest["host"], manifest["board"], manifest["cpu"]
 
