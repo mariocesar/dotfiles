@@ -30,7 +30,7 @@ macos/.local/bin/update-preferences    ->  ~/.local/bin/update-preferences
 
 `common/` is installed everywhere; `linux/` and `macos/` add what only that OS can use. Put a file in the wrong bucket and it lands on the wrong machine — but there is no list to forget to update.
 
-Nothing outside a bucket is ever walked, so `install.py`, `README.md`, `ruff.toml` and friends need no exclusion. Inside a bucket, `git ls-files` decides: tracked files plus new ones git doesn't ignore, so junk (`.DS_Store`, `*.pyc`, `*~`) is kept out by `.gitignore`, and a file it ignores never gets linked. `postinstall.d` is skipped structurally, as part of a bucket's shape, not as a denylist entry.
+Nothing outside a bucket is ever walked, so `install.py`, `README.md`, `ruff.toml` and friends need no exclusion. Inside a bucket, `git ls-files` decides: tracked files plus new ones git doesn't ignore, so junk (`.DS_Store`, `*.pyc`, `*~`) is kept out by `.gitignore`, and a file it ignores never gets linked.
 
 The platform bucket is installed after `common/`, so a path present in both is **deliberately** won by the platform — the run prints `… from common overridden by macos`. That is the supported way to keep a mostly-shared config with one OS-specific variant. Two files of the same name in `linux/` and `macos/` never collide, since only one bucket is ever active: that is how `update-preferences` is one command with two implementations.
 
@@ -49,7 +49,7 @@ python3.13 install.py --help     # all options
 
 It never prompts.
 
-After linking it runs every executable in the active buckets' `postinstall.d/` in name order, so `common/postinstall.d/10-…` precedes `linux/postinstall.d/20-…`. A platform hook with the same name as a common one replaces it, same rule as the links. Hooks are for anything a symlink can't express — resolving a per-machine path, for example. A hook in a platform bucket needs no OS guard; being there is the guard. A hook reads config from its installed path under `$HOME`, not the repo, so it sees what the active buckets actually linked. They must be idempotent, exit non-zero on failure, and are skipped under `--fake`. `.py` hooks run with the same interpreter as `install.py`.
+After linking it runs every executable in `postinstall/<bucket>/` for the active buckets, in name order, so `postinstall/common/10-…` precedes `postinstall/linux/20-…`. A platform hook with the same name as a common one replaces it, same rule as the links. Hooks are for anything a symlink can't express — resolving a per-machine path, for example. A platform hook needs no OS guard; its directory is the guard. A hook reads config from its installed path under `$HOME`, not the repo, so it sees what the active buckets actually linked. They must be idempotent, exit non-zero on failure, and are skipped under `--fake`. `.py` hooks run with the same interpreter as `install.py`.
 
 Confirm a new link landed — the arrow must point into `.dotfiles`:
 

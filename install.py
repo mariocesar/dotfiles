@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Symlink common/ and this OS's bucket into $HOME, then run their postinstall.d hooks.
+# Symlink common/ and this OS's bucket into $HOME, then run their postinstall hooks.
 
 import re
 import sys
@@ -10,6 +10,7 @@ import subprocess
 
 
 ROOT_DIR = Path(__file__).parent.resolve()
+HOOKS_DIR = ROOT_DIR / "postinstall"
 HOME_DIR = Path.home()
 PLATFORM = "macos" if sys.platform == "darwin" else "linux"
 # Shared first, platform second: a path in both is deliberately won by the platform.
@@ -32,7 +33,7 @@ def act(message: str, *, fake: bool) -> bool:
 def bucket_files(bucket: str) -> list[str]:
     # What git tracks or would track, so ignored junk (.DS_Store, *~) never gets linked.
     listing = subprocess.run(
-        ["git", "ls-files", "-zco", "--exclude-standard", "--", ".", ":!postinstall.d"],  # noqa: S607
+        ["git", "ls-files", "-zco", "--exclude-standard"],  # noqa: S607
         cwd=ROOT_DIR / bucket,
         capture_output=True,
         text=True,
@@ -113,9 +114,7 @@ def run_hooks(*, fake: bool) -> int:
     """Returns how many hooks failed."""
     # Keyed by name, so a platform hook replaces a same-named common one.
     hooks = {
-        hook.name: hook
-        for bucket in ACTIVE_BUCKETS
-        for hook in (ROOT_DIR / bucket / "postinstall.d").glob("*")
+        hook.name: hook for bucket in ACTIVE_BUCKETS for hook in (HOOKS_DIR / bucket).glob("*")
     }
     failed = 0
 

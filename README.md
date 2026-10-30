@@ -28,7 +28,7 @@ macos/    macOS only
 
 Each mirrors your home directory, so `common/.config/nvim/init.lua` is symlinked to
 `~/.config/nvim/init.lua`. `install.py` links `common/` plus the bucket for the OS it is
-running on, then runs the `postinstall.d/` hooks those buckets carry. Anything outside a
+running on, then runs the matching hooks in `postinstall/`. Anything outside a
 bucket — this file, the installer itself — is never linked.
 
 To see the plan without touching anything:

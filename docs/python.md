@@ -1,10 +1,10 @@
 # Python
 
-How Python is written anywhere in this repo: `install.py`, the `postinstall.d` hooks, `uses/`, and the scripts in `*/.local/bin/`. What makes a command (name, header, shebang) is in `docs/scripts.md`.
+How Python is written anywhere in this repo: `install.py`, the `postinstall/` hooks, `uses/`, and the scripts in `*/.local/bin/`. What makes a command (name, header, shebang) is in `docs/scripts.md`.
 
 ## Language
 
-- Stdlib first: a dependency has to earn its place. Code that bootstraps a machine, like `install.py` and the `postinstall.d` hooks, stays stdlib.
+- Stdlib first: a dependency has to earn its place. Code that bootstraps a machine, like `install.py` and the `postinstall/` hooks, stays stdlib.
 - Code passes `ruff check` and `ruff format` (repo `ruff.toml`) when written or edited. A deliberate pattern gets a one-line `# noqa: CODE` on its line; a rule that flags a smell, like `global`, gets the established fix instead. Older code is fixed when touched for another reason.
 
 ## Code shape
