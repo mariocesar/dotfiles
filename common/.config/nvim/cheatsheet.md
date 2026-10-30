@@ -23,6 +23,7 @@ Leader `,` · localleader `\` · visual-multi leader `\\` · reopen with `:Cheat
 | `grn` | Rename symbol across files |
 | `,f` | Format buffer |
 | `<C-W>d` | Float listing every diagnostic on the line |
+| `,x` | Hide / show inline diagnostics; signs stay |
 
 Full message expands under the cursor line automatically, with rule code and
 `help:` hint. So `]d` is all you need to read a truncated warning.

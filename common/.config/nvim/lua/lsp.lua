@@ -43,6 +43,18 @@ vim.diagnostic.config {
   severity_sort = true
 }
 
+-- Hide inline diagnostics while working; signs stay, the saved config comes back as-is.
+local saved_diagnostics
+vim.keymap.set('n', '<leader>x', function()
+  if saved_diagnostics then
+    vim.diagnostic.config(saved_diagnostics)
+    saved_diagnostics = nil
+  else
+    saved_diagnostics = vim.diagnostic.config()
+    vim.diagnostic.config { virtual_text = false, virtual_lines = false, underline = false }
+  end
+end, { desc = 'Toggle inline diagnostics' })
+
 -- Neovim already binds grn/gra/grr/gri/grt/grx/gO, K on attach, and ]d/[d.
 local lsp = require('au')('lsp')
 
