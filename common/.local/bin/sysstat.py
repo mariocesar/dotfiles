@@ -1,4 +1,5 @@
 #!/usr/bin/env -S uv run --script
+# Print CPU, memory and load for a status bar, colored for tmux, ANSI or plain text.
 # /// script
 # requires-python = ">=3.14"
 # dependencies = [

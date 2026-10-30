@@ -1,4 +1,5 @@
 #!/usr/bin/env -S uv run --quiet --script
+# Read-only top for Claude Code: live and recent sessions, subagents, workflows, transcripts.
 # /// script
 # requires-python = ">=3.12"
 # dependencies = ["textual>=8.2"]
