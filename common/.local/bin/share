@@ -1,0 +1,1634 @@
+#!/usr/bin/env -S uv run --quiet --script
+# Share a directory read-only as a web file browser, a safer `python -m http.server`.
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["starlette>=1.0", "uvicorn>=0.34", "pathspec>=0.12"]
+# ///
+# vim: set filetype=python :
+
+import re
+import argparse
+import codecs
+import contextlib
+import gzip
+import html
+import ipaddress
+import json
+import logging
+import mimetypes
+import os
+from pathlib import Path
+import socket
+import stat
+import time
+from urllib.parse import quote, urlsplit
+
+import pathspec
+from starlette.applications import Starlette
+from starlette.exceptions import HTTPException
+from starlette.responses import HTMLResponse, PlainTextResponse, Response, StreamingResponse
+from starlette.routing import Route
+import uvicorn
+
+
+# ── what stays hidden ───────────────────────────────────────────────────────
+
+# Never listed or served, not even with --no-ignore.
+SECRETS = """
+    .git .hg .svn
+    .env* .netrc .pgpass .git-credentials .npmrc .pypirc
+    .ssh .gnupg .aws .azure .kube .docker .password-store
+    id_rsa* id_dsa* id_ecdsa* id_ed25519* *.pem *.key *.p12 *.pfx *.kdbx
+"""
+
+# Hidden like .gitignored files; --no-ignore shows them.
+NOISE = ".venv __pycache__ node_modules .*_cache .tox .nox .DS_Store"
+
+SECRET_SPEC = pathspec.GitIgnoreSpec.from_lines(SECRETS.split())
+NOISE_SPEC = pathspec.GitIgnoreSpec.from_lines(NOISE.split())
+
+
+# ── ignore rules ────────────────────────────────────────────────────────────
+
+SPEC_RECHECK = 2.0  # seconds
+spec_cache = {}  # path: (checked at, mtime_ns, spec)
+
+
+def read_spec(path):
+    now = time.monotonic()
+    cached = spec_cache.get(path)
+    if cached and now - cached[0] < SPEC_RECHECK:
+        return cached[2]
+
+    try:
+        st = path.stat()
+    except OSError:
+        st = None
+    mtime = st.st_mtime_ns if st else None
+    spec = cached[2] if cached and cached[1] == mtime else None
+
+    # a fifo named .gitignore would block open()
+    if spec is None and st and stat.S_ISREG(st.st_mode):
+        with contextlib.suppress(OSError, ValueError), path.open("rb") as f:
+            lines = f.read(1 << 20).decode("utf-8", "replace").splitlines()
+            spec = pathspec.GitIgnoreSpec.from_lines(lines)
+
+    spec_cache[path] = (now, mtime, spec)
+    return spec
+
+
+def ignored(parts, *, is_dir):
+    """Judges only the last part; hidden() walks the whole path."""
+    name = parts[-1]
+    if SECRET_SPEC.match_file(name):
+        return True
+    if not GITIGNORE:
+        return False
+    if NOISE_SPEC.match_file(name):
+        return True
+
+    tail = "/" if is_dir else ""
+    for i in range(len(parts) - 1, -1, -1):  # deepest .gitignore decides first, like git
+        spec = read_spec(ROOT.joinpath(*parts[:i], ".gitignore"))
+        if spec and (hit := spec.check_file("/".join(parts[i:]) + tail).include) is not None:
+            return hit
+
+    for prefix, source in EXCLUDES:
+        spec = read_spec(source)
+        if spec and (hit := spec.check_file(prefix + "/".join(parts) + tail).include) is not None:
+            return hit
+
+    return False
+
+
+def hidden(parts):
+    last = len(parts)
+    return any(
+        ignored(parts[:i], is_dir=i < last or ROOT.joinpath(*parts).is_dir())
+        for i in range(1, last + 1)
+    )
+
+
+# ── paths ───────────────────────────────────────────────────────────────────
+
+
+def under_root(path):
+    real = Path(os.path.realpath(path))
+    return list(real.relative_to(ROOT).parts) if real.is_relative_to(ROOT) else None
+
+
+def resolve(rel):
+    parts = [p for p in rel.split("/") if p not in ("", ".")]
+    if ".." in parts or any("\0" in p for p in parts) or hidden(parts):
+        raise HTTPException(404, "not found")
+
+    real = under_root(ROOT.joinpath(*parts))
+    if real is None or (real != parts and hidden(real)):
+        raise HTTPException(404, "not found")
+    return real
+
+
+def open_real(parts, *, directory=False):
+    """O_NOFOLLOW on every part, so a path swapped for a symlink after resolve() can't escape."""
+    fd = os.open(ROOT, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
+    try:
+        for i, name in enumerate(parts):
+            flags = os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC
+            if directory or i < len(parts) - 1:
+                flags |= os.O_DIRECTORY
+            else:  # opening a fifo or device can block or have side effects
+                if not stat.S_ISREG(os.stat(name, dir_fd=fd, follow_symlinks=False).st_mode):
+                    raise HTTPException(404, "not a regular file")
+                flags |= os.O_NONBLOCK
+
+            child = os.open(name, flags, dir_fd=fd)
+            os.close(fd)
+            fd = child
+
+        if not directory and not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise HTTPException(404, "not a regular file")
+        return fd
+    except BaseException:
+        os.close(fd)
+        raise
+
+
+# ── endpoints ───────────────────────────────────────────────────────────────
+
+
+def as_json(obj, status=200):
+    """ASCII-escaped, so undecodable file names can't break a response."""
+    return Response(json.dumps(obj), status, media_type="application/json")
+
+
+def page(request):
+    return HTMLResponse(PAGE.replace("__ROOT__", html.escape(ROOT.name)))
+
+
+KINDS = {
+    stat.S_IFDIR: "dir",
+    stat.S_IFREG: "file",
+    stat.S_IFLNK: "link",
+    stat.S_IFIFO: "fifo",
+    stat.S_IFSOCK: "socket",
+    stat.S_IFCHR: "char",
+    stat.S_IFBLK: "block",
+}
+
+
+def api_ls(request):
+    parts = resolve(request.query_params.get("path", ""))
+    entries, hidden_count = [], 0
+
+    fd = open_real(parts, directory=True)
+    try:
+        with os.scandir(fd) as it:
+            for entry in it:
+                try:
+                    st = entry.stat(follow_symlinks=False)
+                    target = os.readlink(entry.name, dir_fd=fd) if entry.is_symlink() else ""
+                except OSError:  # removed while listing
+                    continue
+
+                kind = KINDS.get(stat.S_IFMT(st.st_mode), "other")
+                child = [*parts, entry.name]
+                if ignored(child, is_dir=kind == "dir"):
+                    hidden_count += 1
+                    continue
+
+                item = {
+                    "name": entry.name,
+                    "kind": kind,
+                    "mode": stat.filemode(st.st_mode),
+                    "size": st.st_size,
+                    "mtime": int(st.st_mtime),
+                }
+                if kind == "link":
+                    item |= link_info(child, target)
+                elif kind in ("file", "dir"):
+                    need = os.R_OK | os.X_OK if kind == "dir" else os.R_OK
+                    if not os.access(entry.name, need, dir_fd=fd):
+                        item["noread"] = True
+                entries.append(item)
+    finally:
+        os.close(fd)
+
+    entries.sort(
+        key=lambda x: (x["kind"] != "dir" and x.get("link") != "dir", x["name"].casefold())
+    )
+    return as_json({"path": "/".join(parts), "entries": entries, "hidden": hidden_count})
+
+
+def link_info(parts, target):
+    """Followed only inside ROOT; an outside target is never named."""
+    real = under_root(ROOT.joinpath(*parts))
+    if real is None:
+        return {"link": "outside"}
+    if hidden(real):
+        return {"link": "hidden"}
+
+    try:
+        st = ROOT.joinpath(*real).stat()
+    except OSError:
+        return {"link": "broken", "target": target}
+
+    kind = KINDS.get(stat.S_IFMT(st.st_mode), "other")
+    return {
+        "link": kind if kind in ("file", "dir") else "other",
+        "target": target,
+        "real": "/".join(real),
+        "size": st.st_size,
+        "mtime": int(st.st_mtime),
+    }
+
+
+TEXT_LIMIT = 1 << 20
+
+# What the browser renders itself; anything else is shown as text or downloaded.
+PREVIEWABLE = """
+    image/png image/jpeg image/gif image/webp image/avif image/bmp image/svg+xml
+    image/x-icon image/vnd.microsoft.icon
+    audio/mpeg audio/ogg audio/opus audio/wav audio/x-wav audio/vnd.wave audio/flac
+    audio/aac audio/mp4 audio/webm
+    video/mp4 video/webm video/ogg video/quicktime
+    application/pdf
+""".split()  # noqa: SIM905
+
+# Not in Python 3.12's built-in table.
+mimetypes.add_type("image/webp", ".webp")
+mimetypes.add_type("audio/flac", ".flac")
+mimetypes.add_type("audio/mp4", ".m4a")
+mimetypes.add_type("audio/ogg", ".ogg")
+
+
+def api_file(request):
+    parts = resolve(request.query_params.get("path", ""))
+    fd = open_real(parts)
+    try:
+        st = os.fstat(fd)
+        mime = mimetypes.guess_type(parts[-1], strict=False)[0] or ""
+        info = {
+            "path": "/".join(parts),
+            "name": parts[-1],
+            "size": st.st_size,
+            "mtime": int(st.st_mtime),
+            "mode": stat.filemode(st.st_mode),
+            "mime": mime,
+        }
+        if mime in PREVIEWABLE:
+            kind = "pdf" if mime == "application/pdf" else mime.partition("/")[0]
+            return as_json(info | {"kind": kind})
+        if st.st_size == 0:
+            return as_json(info | {"kind": "empty"})
+
+        data = b""
+        while len(data) < TEXT_LIMIT and (chunk := os.read(fd, TEXT_LIMIT - len(data))):
+            data += chunk
+    finally:
+        os.close(fd)
+
+    truncated = st.st_size > len(data)
+    if b"\0" not in data:
+        with contextlib.suppress(UnicodeDecodeError):
+            # final=False holds back a character cut in half by TEXT_LIMIT instead of failing
+            text = codecs.getincrementaldecoder("utf-8")().decode(data, final=not truncated)
+            return as_json(info | {"kind": "text", "text": text, "truncated": truncated})
+    return as_json(info | {"kind": "binary"})
+
+
+def api_index(request):
+    if "gzip" in request.headers.get("accept-encoding", ""):
+        headers = {"Content-Encoding": "gzip", "Vary": "Accept-Encoding"}
+        return Response(INDEX_GZIP, media_type="application/json", headers=headers)
+    return Response(INDEX, media_type="application/json", headers={"Vary": "Accept-Encoding"})
+
+
+RANGE = re.compile(r"bytes=(\d*)-(\d*)")
+CHUNK = 1 << 16
+
+# Served files: an SVG or HTML opened on its own runs no script in this origin.
+RAW_CSP = "default-src 'none'; img-src 'self'; media-src 'self'; style-src 'unsafe-inline'; sandbox"
+
+
+def raw(request):
+    parts = resolve(request.query_params.get("path", ""))
+    fd = open_real(parts)
+    st = os.fstat(fd)
+    os.close(fd)
+
+    name, size = parts[-1], st.st_size
+    mime = mimetypes.guess_type(name, strict=False)[0]
+    inline = "dl" not in request.query_params and mime in PREVIEWABLE
+    disposition = "inline" if inline else "attachment"
+    headers = {
+        "Accept-Ranges": "bytes",
+        "Content-Disposition": f"{disposition}; filename*=UTF-8''{quote(name, safe='')}",
+        "Content-Security-Policy": RAW_CSP,
+    }
+    if inline and mime == "application/pdf":  # browser PDF viewers refuse sandboxed documents
+        headers["Content-Security-Policy"] = "frame-ancestors 'self'"
+        headers["X-Frame-Options"] = "SAMEORIGIN"
+
+    start, end, status = 0, size - 1, 200
+    rng = RANGE.fullmatch(request.headers.get("range", "").strip())
+    if rng and (rng[1] or rng[2]):
+        if rng[1]:
+            start, end = int(rng[1]), min(int(rng[2] or end), end)
+        else:  # suffix range: the last N bytes
+            start = max(0, size - int(rng[2]))
+        if start > end:
+            return Response(status_code=416, headers={"Content-Range": f"bytes */{size}"})
+        status = 206
+        headers["Content-Range"] = f"bytes {start}-{end}/{size}"
+    headers["Content-Length"] = str(end - start + 1)
+
+    def body():
+        fd = open_real(parts)  # opened here, so a response that never streams holds no descriptor
+        try:
+            now = os.fstat(fd)
+            if (now.st_dev, now.st_ino) != (st.st_dev, st.st_ino):
+                return
+            pos = start
+            while pos <= end and (chunk := os.pread(fd, min(CHUNK, end - pos + 1), pos)):
+                yield chunk
+                pos += len(chunk)
+        finally:
+            os.close(fd)
+
+    media_type = mime if inline else "application/octet-stream"
+    return StreamingResponse(body(), status, headers, media_type=media_type)
+
+
+async def on_error(request, exc):
+    if isinstance(exc, HTTPException):
+        return as_json({"error": exc.detail}, exc.status_code)
+    if isinstance(exc, PermissionError):
+        return as_json({"error": "permission denied"}, 403)
+    return as_json({"error": "not found"}, 404)
+
+
+# ── host check and headers ──────────────────────────────────────────────────
+
+LAN_SUFFIXES = (".local", ".lan", ".home", ".internal", ".home.arpa", ".ts.net")
+
+
+def host_allowed(host):
+    """DNS-rebinding guard: a hostile page reaches us under its own domain name."""
+    try:
+        name = (urlsplit(f"//{host}").hostname or "").rstrip(".")
+    except ValueError:  # e.g. an unclosed IPv6 bracket
+        return False
+    if not name:
+        return False
+
+    with contextlib.suppress(ValueError):
+        return ipaddress.ip_address(name).is_loopback or not LOOPBACK
+    if name == "localhost" or name.endswith(".localhost"):
+        return True
+    return not LOOPBACK and ("." not in name or name.endswith(LAN_SUFFIXES) or name in NAMES)
+
+
+CSP = (
+    "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; "
+    "img-src 'self' data:; media-src 'self'; frame-src 'self'; "
+    "base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+)
+
+HEADERS = {
+    "content-security-policy": CSP,
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY",
+    "referrer-policy": "no-referrer",
+    "cross-origin-opener-policy": "same-origin",
+    "cross-origin-resource-policy": "same-origin",
+    "cache-control": "no-store",
+}
+
+
+def guard(app):
+    async def guarded(scope, receive, send):
+        if scope["type"] != "http":
+            await app(scope, receive, send)
+            return
+
+        host = next((v.decode("latin-1") for k, v in scope["headers"] if k == b"host"), "")
+        if not host_allowed(host):
+            await PlainTextResponse("host not allowed\n", 403)(scope, receive, send)
+            return
+
+        async def send_secured(message):
+            if message["type"] == "http.response.start":
+                headers = list(message.get("headers", []))
+                present = {k.decode().lower() for k, _ in headers}
+                missing = [(k, v) for k, v in HEADERS.items() if k not in present]
+                message["headers"] = headers + [(k.encode(), v.encode()) for k, v in missing]
+            await send(message)
+
+        await app(scope, receive, send_secured)
+
+    return guarded
+
+
+app = guard(
+    Starlette(
+        routes=[
+            Route("/", page),
+            Route("/app.css", lambda request: Response(CSS, media_type="text/css")),
+            Route("/app.js", lambda request: Response(JS, media_type="text/javascript")),
+            Route("/api/ls", api_ls),
+            Route("/api/file", api_file),
+            Route("/api/index", api_index),
+            Route("/raw", raw),
+        ],
+        exception_handlers={HTTPException: on_error, OSError: on_error},
+    )
+)
+
+
+# ── main ────────────────────────────────────────────────────────────────────
+
+INDEX_LIMIT = 200_000
+
+
+def parse_bind(value):
+    host, port = "127.0.0.1", "8000"
+    if value.startswith("["):
+        host, _, rest = value[1:].partition("]")
+        port = rest.removeprefix(":") or port
+    elif value.isdigit():
+        port = value
+    elif value.count(":") == 1:
+        h, p = value.split(":")
+        host, port = h or host, p or port
+    elif value:
+        host = value
+
+    if not port.isdigit() or int(port) not in range(1, 65536):
+        raise argparse.ArgumentTypeError(f"invalid port: {port}")
+    return host, int(port)
+
+
+def main():  # noqa: C901, PLR0915
+    global ROOT, GITIGNORE, EXCLUDES, INDEX, INDEX_GZIP, LOOPBACK, NAMES  # noqa: PLW0603
+
+    # bootstrap: parse arguments, refuse unsafe roots
+    parser = argparse.ArgumentParser(
+        prog="share",
+        description="Share a directory read-only over HTTP; hides .gitignored and secret files.",
+    )
+    parser.add_argument(
+        "bind",
+        nargs="?",
+        default="",
+        type=parse_bind,
+        metavar="[HOST][:PORT]",
+        help="address to listen on (default 127.0.0.1:8000)",
+    )
+    parser.add_argument(
+        "-C", "--cwd", default=".", metavar="PATH", help="directory to serve (default: current)"
+    )
+    parser.add_argument(
+        "--no-ignore",
+        action="store_true",
+        help="also show .gitignored files and caches; secrets stay hidden",
+    )
+    args = parser.parse_args()
+    host, port = args.bind
+
+    ROOT = Path(args.cwd).resolve()
+    GITIGNORE = not args.no_ignore
+    if not ROOT.is_dir():
+        parser.error(f"not a directory: {args.cwd}")
+    if Path.home().resolve().is_relative_to(ROOT):
+        parser.error(f"refusing to serve {ROOT}: it holds your home directory; pass a subdirectory")
+    if any(SECRET_SPEC.match_file(p) for p in ROOT.parts):
+        parser.error(f"refusing to serve {ROOT}: it is a protected directory")
+
+    # prepare: ignore files from above ROOT, then the jump-to-file index
+    EXCLUDES = []  # (path prefix, ignore file), strongest first
+    prefix = ""
+    repo = next((d for d in [ROOT, *ROOT.parents] if (d / ".git").exists()), None)
+    if repo:
+        for d in ROOT.parents:
+            if not d.is_relative_to(repo):
+                break
+            EXCLUDES.append((f"{ROOT.relative_to(d)}/", d / ".gitignore"))
+        prefix = f"{ROOT.relative_to(repo)}/" if repo != ROOT else ""
+        EXCLUDES.append((prefix, repo / ".git" / "info" / "exclude"))
+    EXCLUDES.append((prefix, Path.home() / ".config" / "git" / "ignore"))
+
+    started = time.monotonic()
+    files, truncated = [], False
+    for top, dirs, names in ROOT.walk():  # symlinked directories are listed, not walked
+        parts = list(top.relative_to(ROOT).parts)
+        dirs[:] = sorted(d for d in dirs if not ignored([*parts, d], is_dir=True))
+        visible = [n for n in sorted(names) if not ignored([*parts, n], is_dir=False)]
+        files += ["/".join([*parts, n]) for n in visible]
+        if len(files) >= INDEX_LIMIT:
+            files, truncated = files[:INDEX_LIMIT], True
+            break
+    took = time.monotonic() - started
+
+    INDEX = json.dumps({"files": files, "truncated": truncated}).encode()
+    INDEX_GZIP = gzip.compress(INDEX, 6)
+
+    # config: who may connect, and the server
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        ip = None
+    LOOPBACK = ip.is_loopback if ip else host == "localhost"
+    NAMES = {socket.gethostname().lower(), socket.getfqdn().lower()}
+
+    config = uvicorn.Config(app, host=host, port=port, server_header=False, proxy_headers=False)
+    logging.getLogger("uvicorn.error").setLevel(logging.WARNING)  # after Config sets up logging
+
+    server = uvicorn.Server(config)
+    # Nothing is ever written, so there is nothing to shut down gracefully: stop at once, quietly.
+    server.handle_exit = lambda sig, frame: os._exit(0)
+
+    # run: print where to connect, then serve
+    urls = [host]
+    if ip and ip.is_unspecified:
+        urls = [socket.gethostname()]
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s, contextlib.suppress(OSError):
+            s.connect(("192.0.2.1", 9))  # UDP connect sends nothing; it picks the outgoing address
+            urls.append(s.getsockname()[0])
+    urls = [f"[{url}]" if ":" in url else url for url in urls]
+
+    limit = " (limit reached)" if truncated else ""
+    gitignore = "applied" if GITIGNORE else "not applied"
+    print(f"share: {ROOT} (read-only)")
+    print(f"  {len(files)} files indexed{limit} in {took:.1f}s, .gitignore {gitignore}")
+    for url in urls:
+        print(f"  http://{url}:{port}/")
+    if not LOOPBACK:
+        print("  reachable from other machines: anyone who can connect can read what is listed")
+
+    server.run()
+
+
+# ── page ────────────────────────────────────────────────────────────────────
+
+PAGE = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F3F0E8">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0C1030">
+<title>__ROOT__ — share</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/app.css">
+<script src="/app.js" defer></script>
+</head>
+<body data-root="__ROOT__">
+
+<header id="bar">
+  <button id="tree-btn" title="toggle tree (b)" aria-label="toggle tree">☰</button>
+  <nav id="crumbs" aria-label="path"></nav>
+  <button id="find-btn" title="jump to file (t)">find</button>
+  <button id="help-btn" title="keys (?)" aria-label="keys">?</button>
+</header>
+
+<main id="panes">
+  <aside id="tree" class="pane">
+    <div class="ph">tree</div>
+    <div id="tree-rows" class="scroll"></div>
+  </aside>
+
+  <section id="list" class="pane">
+    <div class="ph row">
+      <span class="name">name</span>
+      <span class="mode">mode</span>
+      <span class="size">size</span>
+      <span class="time">modified</span>
+    </div>
+    <div id="rows" class="scroll"></div>
+  </section>
+
+  <aside id="preview" class="pane" hidden>
+    <div class="ph pvh">
+      <button id="pv-close" title="close (esc)" aria-label="close preview">✕</button>
+      <span id="pv-name"></span>
+      <a id="pv-open" class="btn" target="_blank" rel="noopener" hidden>open</a>
+      <a id="pv-dl" class="btn" download hidden>download</a>
+    </div>
+    <div id="pv-meta"></div>
+    <div id="pv-body" class="scroll"></div>
+  </aside>
+</main>
+
+<footer id="status">
+  <span id="st-mode">list</span>
+  <span id="st-info"></span>
+  <span id="st-hint"></span>
+</footer>
+
+<div id="finder" class="overlay" hidden>
+  <div class="box">
+    <label class="fq">
+      <span>›</span>
+      <input id="fq" placeholder="jump to file" autocomplete="off" autocapitalize="off"
+             spellcheck="false" enterkeyhint="go">
+    </label>
+    <div id="fres"></div>
+    <div id="ffoot"></div>
+  </div>
+</div>
+
+<div id="help" class="overlay" hidden>
+  <div class="box">
+    <div class="ph">keys</div>
+    <dl>
+      <dt>j k ↓ ↑</dt>  <dd>move</dd>
+      <dt>l → ⏎</dt>    <dd>open directory, preview file</dd>
+      <dt>h ← ⌫ -</dt>  <dd>parent directory</dd>
+      <dt>g G</dt>      <dd>first, last</dd>
+      <dt>space</dt>    <dd>toggle preview</dd>
+      <dt>J K</dt>      <dd>scroll preview</dd>
+      <dt>d</dt>        <dd>download</dd>
+      <dt>t</dt>        <dd>jump to file</dd>
+      <dt>tab</dt>      <dd>switch tree / list</dd>
+      <dt>b</dt>        <dd>show / hide tree</dd>
+      <dt>~</dt>        <dd>root</dd>
+      <dt>esc</dt>      <dd>close</dd>
+    </dl>
+  </div>
+</div>
+
+</body>
+</html>
+"""
+
+# Azulejo Brutalism palette, github.com/VerticalHeretic/AzulejoBrutalism
+CSS = r"""
+:root {
+  color-scheme: light dark;
+  --bg: #F3F0E8; --bg-alt: #E8E4D9; --sel: #DDE2EF; --line: #D8D4C8;
+  --fg: #0C1030; --fg-dim: #3D4163; --muted: #5A5E78; --faint: #8A8DA3;
+  --primary: #1E2A9E; --ochre: #D49A1A;
+  --red: #B03A2E; --green: #2F6B3A; --purple: #6B2E80; --teal: #1D6E7E;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, "Cascadia Mono", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0C1030; --bg-alt: #10154A; --sel: #1A2466; --line: #1A2150;
+    --fg: #F3F0E8; --fg-dim: #C9CBE0; --muted: #8A8FB5; --faint: #5A5F88;
+    --primary: #9FB2E4;
+    --red: #E0705A; --green: #7CBF7A; --purple: #C08AD6; --teal: #6FC3CF;
+  }
+}
+
+
+/* ── base ──────────────────────────────────────────────────────────────── */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+
+body {
+  display: flex; flex-direction: column; height: 100dvh;
+  background: var(--bg); color: var(--fg);
+  font: 13.5px/1.65 var(--mono);
+  font-variant-ligatures: none;  /* show file content as written: >= stays >= */
+  -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent;
+}
+
+button, input { font: inherit; color: inherit; background: none; border: 0; border-radius: 0; }
+button, a { cursor: pointer; color: inherit; }
+::selection { background: var(--sel); }
+:focus-visible { outline: 1px solid var(--primary); outline-offset: -1px; }
+
+
+/* ── top bar ───────────────────────────────────────────────────────────── */
+
+#bar {
+  flex: none; display: flex; align-items: stretch;
+  padding-top: env(safe-area-inset-top);
+  color: var(--muted); border-bottom: 1px solid var(--line);
+}
+#bar button { padding: 0 1.5ch; min-height: 2.25rem; }
+#bar button:hover { color: var(--fg); }
+
+#crumbs {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: .6ch; padding: 0 .5ch;
+  overflow-x: auto; white-space: nowrap; scrollbar-width: none;
+}
+#crumbs a { text-decoration: none; }
+#crumbs a:hover, #crumbs a:last-child { color: var(--fg); }
+#crumbs .sep { color: var(--faint); }
+
+
+/* ── panes ─────────────────────────────────────────────────────────────── */
+
+#panes { flex: 1; min-height: 0; display: flex; position: relative; }
+.pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+
+#tree { display: none; flex: none; width: 16rem; border-right: 1px solid var(--line); }
+body.tree #tree { display: flex; }
+#list { flex: 1 1 0; container-type: inline-size; }
+#preview { flex: 1.25 1 0; border-left: 1px solid var(--line); }
+
+.ph {
+  flex: none; padding: 0 1ch; line-height: 2; white-space: nowrap; overflow: hidden;
+  font-size: .85em; color: var(--faint); border-bottom: 1px solid var(--line);
+}
+.pane.focus > .ph { color: var(--muted); }
+
+.scroll {
+  flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain;
+  scrollbar-width: thin; scrollbar-color: var(--line) transparent;
+}
+
+
+/* ── file list ─────────────────────────────────────────────────────────── */
+
+.row { display: flex; gap: 2ch; padding: 0 1ch; white-space: nowrap; cursor: pointer; }
+.row > * { flex: none; }
+.row .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.row .mode { width: 10ch; color: var(--faint); }
+.row .size { width: 6ch; text-align: right; color: var(--muted); }
+.row .time { width: 16ch; color: var(--faint); }
+.ph.row { cursor: default; }
+.ph.row > * { color: inherit; }
+
+.k-dir .n, .k-up .n { color: var(--primary); }
+.k-link .n { color: var(--teal); }
+.exec .n { color: var(--green); }
+.k-fifo .n, .k-socket .n, .k-char .n, .k-block .n, .k-other .n { color: var(--purple); }
+.bad .n, .bad .tgt { color: var(--red); }
+.noread .n { color: var(--faint); text-decoration: line-through; }
+.cls, .tgt { color: var(--faint); }
+
+@container (max-width: 46rem) { .row .mode { display: none; } }
+@container (max-width: 30rem) { .row .hm { display: none; } .row .time { width: 10ch; } }
+
+
+/* ── tree ──────────────────────────────────────────────────────────────── */
+
+.trow {
+  display: flex; gap: .6ch; padding: 0 1ch 0 calc(1ch + var(--depth, 0) * 2ch);
+  white-space: nowrap; cursor: pointer;
+}
+.trow .tw { flex: none; width: 1.5ch; text-align: center; color: var(--faint); }
+.trow .tn { overflow: hidden; text-overflow: ellipsis; color: var(--fg-dim); }
+.trow.here .tn { color: var(--primary); }
+
+
+/* ── cursor ────────────────────────────────────────────────────────────── */
+
+@media (hover: hover) { .row:hover, .trow:hover, .fr:hover { background: var(--bg-alt); } }
+.row.cur, .trow.cur { background: var(--bg-alt); }
+.focus .row.cur, .focus .trow.cur, .fr.cur {
+  background: var(--sel); box-shadow: inset 2px 0 0 var(--ochre);
+}
+
+
+/* ── preview ───────────────────────────────────────────────────────────── */
+
+.ph.pvh {
+  display: flex; align-items: stretch; gap: 1ch; padding: 0 1ch 0 0;
+  font-size: 1em; color: var(--fg);
+}
+.pvh button { padding: 0 1.5ch; color: var(--faint); }
+.pvh button:hover { color: var(--fg); }
+#pv-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; align-self: center; }
+
+.btn {
+  align-self: center; padding: 0 1ch; line-height: 1.7; font-size: .85em;
+  color: var(--muted); border: 1px solid var(--line); text-decoration: none;
+}
+.btn:hover { color: var(--fg); border-color: var(--faint); }
+
+#pv-meta {
+  flex: none; padding: .1em 1ch; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: .85em; color: var(--faint); border-bottom: 1px solid var(--line);
+}
+
+.code { display: flex; min-width: max-content; min-height: 100%; }
+.code pre { font: inherit; tab-size: 4; padding: .4em 1ch; }
+.gutter {
+  position: sticky; left: 0; text-align: right; user-select: none;
+  color: var(--faint); background: var(--bg); border-right: 1px solid var(--line);
+}
+.trunc {
+  position: sticky; left: 0; padding: .1em 1ch;
+  color: var(--muted); background: var(--bg-alt); border-bottom: 1px solid var(--line);
+}
+
+.media {
+  display: flex; align-items: center; justify-content: center; height: 100%; padding: 1rem;
+  background: repeating-conic-gradient(var(--bg-alt) 0 25%, var(--bg) 0 50%) 0 0 / 16px 16px;
+}
+.media img, .media video { max-width: 100%; max-height: 100%; object-fit: contain; }
+.media audio { width: min(100%, 36rem); }
+.media iframe { width: 100%; height: 100%; border: 1px solid var(--line); background: #fff; }
+
+.msg {
+  display: grid; place-content: center; gap: .3em; min-height: 100%; padding: 2rem;
+  text-align: center; color: var(--faint);
+}
+.msg .g { font-size: 2rem; line-height: 1.2; }
+.msg .t { color: var(--fg-dim); }
+.note { padding: 1em 1ch; color: var(--faint); }
+.note.err { color: var(--red); }
+
+
+/* ── status line ───────────────────────────────────────────────────────── */
+
+#status {
+  flex: none; display: flex; gap: 2ch; padding: 0 1ch env(safe-area-inset-bottom);
+  line-height: 2; white-space: nowrap; font-size: .85em;
+  color: var(--muted); border-top: 1px solid var(--line);
+}
+#st-mode { color: var(--primary); }
+#st-info { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+#st-info.err { color: var(--red); }
+#st-hint { color: var(--faint); }
+
+
+/* ── finder and keys ───────────────────────────────────────────────────── */
+
+.overlay {
+  position: fixed; inset: 0; z-index: 20;
+  display: flex; justify-content: center; align-items: flex-start; padding: 12vh 1rem 1rem;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+}
+.box {
+  width: min(44rem, 100%); max-height: 100%; display: flex; flex-direction: column;
+  background: var(--bg); border: 1px solid var(--line);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--fg) 10%, transparent);
+}
+
+.fq { display: flex; align-items: center; border-bottom: 1px solid var(--line); }
+.fq span { padding-left: 1.2ch; color: var(--ochre); }
+#fq { flex: 1; min-width: 0; padding: .7em 1ch; outline: none; }
+#fq::placeholder { color: var(--faint); }
+
+#fres { overflow: auto; max-height: 60vh; }
+.fr {
+  padding: 0 1ch; line-height: 1.9; cursor: pointer;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fr .d { color: var(--faint); }
+.fr .hit { color: var(--primary); }
+#ffoot {
+  padding: 0 1ch; line-height: 2; font-size: .85em;
+  color: var(--faint); border-top: 1px solid var(--line);
+}
+
+#help dl { display: grid; grid-template-columns: auto 1fr; gap: .2em 3ch; padding: 1em 2ch; }
+#help dt { color: var(--primary); }
+#help dd { color: var(--muted); }
+
+
+/* ── phones and touch ──────────────────────────────────────────────────── */
+
+@media (max-width: 760px) {
+  body { font-size: 15px; }
+  #tree {
+    position: absolute; inset: 0 auto 0 0; z-index: 10; width: min(85vw, 22rem);
+    background: var(--bg);
+    box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--bg) 60%, transparent);
+  }
+  #preview {
+    position: fixed; inset: 0; z-index: 15; border: 0; background: var(--bg);
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  }
+  .overlay { padding: 0; }
+  .box { width: 100%; height: 100%; border: 0; box-shadow: none; }
+  #fres { flex: 1; max-height: none; }
+  #help-btn, #st-hint { display: none; }
+}
+
+@media (pointer: coarse) {
+  .row, .trow, .fr { line-height: 2.8; }
+  #bar button, .pvh button { min-width: 2.75rem; min-height: 2.75rem; }
+}
+"""
+
+JS = r"""
+"use strict";
+
+const $ = (s) => document.querySelector(s);
+const el = (tag, cls, text) => {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+};
+
+const ROOT = document.body.dataset.root;
+const narrow = matchMedia("(max-width: 760px)");
+const MAX_HITS = 200;
+
+const S = {
+  dir: null, entries: [], cur: 0, hidden: 0, error: null,   // listing
+  focus: "list",                                           // or "tree"
+  pv: false, file: null, pushed: false,                    // preview
+  tree: { open: new Set([""]), kids: new Map(), rows: [], cur: 0 },
+  index: null, indexTruncated: false, found: [], fcur: 0,  // jump to file
+};
+
+const BAD = {
+  broken: "broken symlink",
+  outside: "symlink leaves the served directory",
+  hidden: "symlink to a protected file",
+};
+const SUFFIX = { dir: "/", up: "/", link: "@", fifo: "|", socket: "=" };
+const MEDIA = { image: "img", audio: "audio", video: "video", pdf: "iframe" };
+const HINTS = {
+  list: "j/k move  l open  h up  t find  ? keys",
+  tree: "j/k move  l open  h close  tab list",
+};
+
+
+// ── helpers ────────────────────────────────────────────────────────────────
+
+const join = (a, b) => (a ? a + "/" + b : b);
+const parent = (p) => p.slice(0, Math.max(0, p.lastIndexOf("/")));
+const base = (p) => p.slice(p.lastIndexOf("/") + 1);
+const enc = (p) => p.split("/").map(encodeURIComponent).join("/");
+const hashFor = (dir, file) =>
+  "#/" + (dir ? enc(dir) + "/" : "") + (file ? encodeURIComponent(file) : "");
+const rawUrl = (path, dl) => "/raw?" + new URLSearchParams(dl ? { path, dl: 1 } : { path });
+const dirNames = (entries) => entries.filter((e) => e.kind === "dir").map((e) => e.name);
+
+const isDir = (e) =>
+  e.kind === "dir" || e.kind === "up" || (e.kind === "link" && e.link === "dir");
+const readable = (e) =>
+  (e.kind === "file" && !e.noread) || (e.kind === "link" && e.link === "file");
+const suffix = (e) =>
+  e.kind === "file" ? (/x/.test(e.mode) ? "*" : "") : SUFFIX[e.kind] || "";
+
+function linkText(e) {
+  if (e.link === "outside") return " → outside root";
+  if (e.link === "hidden") return " → protected";
+  return " → " + e.target + (e.link === "broken" ? " (broken)" : "");
+}
+
+async function api(url, params) {
+  const r = await fetch(url + "?" + new URLSearchParams(params));
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(body.error || `${r.status} ${r.statusText}`);
+  return body;
+}
+
+function fmtSize(n) {
+  if (n < 1024) return n + "B";
+  let i = -1;
+  do { n /= 1024; i++; } while (n >= 1024 && i < 5);
+  return (n < 10 ? n.toFixed(1) : Math.round(n)) + "KMGTPE"[i];
+}
+
+const pad = (n) => String(n).padStart(2, "0");
+function fmtTime(t) {
+  const d = new Date(t * 1000);
+  return [
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+  ];
+}
+const stamp = (t) => fmtTime(t).join(" ");
+const metaLine = (...parts) => parts.filter(Boolean).join("  ·  ");
+
+
+// ── routing ────────────────────────────────────────────────────────────────
+
+// #/dir/ lists a directory, #/dir/file also previews a file
+
+function parseHash() {
+  const segs = (location.hash.slice(1) || "/").split("/").slice(1);
+  const last = segs.pop() || "";
+  try {
+    return {
+      dir: segs.filter(Boolean).map(decodeURIComponent).join("/"),
+      file: last ? decodeURIComponent(last) : null,
+    };
+  } catch {
+    return { dir: "", file: null };
+  }
+}
+
+const go = (dir) => { location.hash = hashFor(dir); };
+
+async function route() {
+  const { dir, file } = parseHash();
+  if (dir !== S.dir && !(await loadDir(dir))) return;
+  if (!file) return closePreview();
+
+  const i = S.entries.findIndex((e) => e.name === file);
+  if (i < 0) return closePreview();
+  setCursor(i, true);
+  if (!S.pv || S.file !== file) openPreview(S.entries[i]);
+}
+
+let dirSeq = 0;
+async function loadDir(dir) {
+  const seq = ++dirSeq;
+  let res;
+  let error = null;
+  try {
+    res = await api("/api/ls", { path: dir });
+  } catch (err) {
+    error = err.message;
+    res = { path: dir, entries: [], hidden: 0 };
+  }
+  if (seq !== dirSeq) return false;
+
+  const prev = S.dir;
+  Object.assign(S, { dir: res.path, hidden: res.hidden, error, pushed: false, cur: 0 });
+  if (res.path !== dir) history.replaceState(null, "", hashFor(res.path, parseHash().file));
+  S.entries = res.path ? [{ name: "..", kind: "up" }, ...res.entries] : res.entries;
+  if (!error) S.tree.kids.set(res.path, dirNames(res.entries));
+
+  // back up from a child directory: land on it
+  let cur = 0;
+  const fromChild = prev !== null && prev !== res.path
+    && (res.path === "" || prev.startsWith(res.path + "/"));
+  if (fromChild) {
+    const child = prev.slice(res.path ? res.path.length + 1 : 0).split("/")[0];
+    cur = Math.max(0, S.entries.findIndex((e) => e.name === child));
+  }
+
+  renderList();
+  setCursor(cur, true);
+  revealInTree(res.path);
+  return true;
+}
+
+
+// ── list ───────────────────────────────────────────────────────────────────
+
+function rowClass(e) {
+  let c = "row k-" + e.kind;
+  if (suffix(e) === "*") c += " exec";
+  if (BAD[e.link]) c += " bad";
+  if (e.noread) c += " noread";
+  return c;
+}
+
+function renderList() {
+  const frag = document.createDocumentFragment();
+  S.entries.forEach((e, i) => {
+    const name = el("span", "name");
+    name.append(el("span", "n", e.name), el("span", "cls", suffix(e)));
+    if (e.kind === "link") name.append(el("span", "tgt", linkText(e)));
+
+    const time = el("span", "time");
+    if (e.mtime) {
+      const [date, hm] = fmtTime(e.mtime);
+      time.append(date, el("span", "hm", " " + hm));
+    }
+
+    const size = e.kind === "up" || BAD[e.link] ? "" : isDir(e) ? "-" : fmtSize(e.size);
+    const row = el("div", rowClass(e));
+    row.dataset.i = i;
+    row.append(name, el("span", "mode", e.mode || ""), el("span", "size", size), time);
+    frag.append(row);
+  });
+
+  if (S.error) frag.append(el("div", "note err", S.error));
+  else if (!S.entries.some((e) => e.kind !== "up")) frag.append(el("div", "note", "empty"));
+  $("#rows").replaceChildren(frag);
+  renderCrumbs();
+  status();
+}
+
+function setCursor(i, quiet) {
+  if (!S.entries.length) return status();
+  const rows = $("#rows").children;
+  i = Math.max(0, Math.min(S.entries.length - 1, i));
+  rows[S.cur]?.classList.remove("cur");
+  S.cur = i;
+  rows[i].classList.add("cur");
+  rows[i].scrollIntoView({ block: "nearest" });
+  status();
+  if (S.pv && !quiet) follow();
+}
+
+// an open preview tracks the cursor
+let followTimer;
+function follow() {
+  clearTimeout(followTimer);
+  followTimer = setTimeout(() => {
+    const e = S.entries[S.cur];
+    if (!e || !S.pv || e.name === S.file) return;
+    if (!isDir(e)) history.replaceState(null, "", hashFor(S.dir, e.name));
+    openPreview(e);
+  }, 90);
+}
+
+function activate(e) {
+  if (!e) return;
+  if (e.kind === "up") return go(parent(S.dir));
+  if (e.kind === "dir") return go(join(S.dir, e.name));
+  if (e.kind === "link" && e.link === "dir") return go(e.real);
+  openFile(e);
+}
+
+function openFile(e) {
+  const h = hashFor(S.dir, e.name);
+  if (location.hash === h) return openPreview(e);
+  S.pushed = !S.pv;  // closing can then step back instead of stacking history
+  location.hash = h;
+}
+
+function renderCrumbs() {
+  const link = (label, path) => {
+    const a = el("a", null, label);
+    a.href = hashFor(path);
+    return a;
+  };
+  const parts = S.dir ? S.dir.split("/") : [];
+  const nav = $("#crumbs");
+  nav.replaceChildren(link(ROOT, ""));
+  parts.forEach((p, i) => {
+    nav.append(el("span", "sep", "/"), link(p, parts.slice(0, i + 1).join("/")));
+  });
+  nav.scrollLeft = nav.scrollWidth;
+  document.title = (parts.at(-1) || ROOT) + " — share";
+}
+
+function status() {
+  const n = S.entries.filter((e) => e.kind !== "up").length;
+  const items = `${n} ${n === 1 ? "item" : "items"}` + (S.hidden ? `, ${S.hidden} hidden` : "");
+  const info = $("#st-info");
+  info.className = S.error ? "err" : "";
+  info.textContent = S.error || `/${S.dir ?? ""}  ${items}`;
+  $("#st-mode").textContent = $("#finder").hidden ? S.focus : "find";
+  $("#st-hint").textContent = HINTS[S.focus];
+}
+
+
+// ── preview ────────────────────────────────────────────────────────────────
+
+let pvSeq = 0;
+
+function message(glyph, title, sub) {
+  const m = el("div", "msg");
+  m.append(el("div", "g", glyph), el("div", "t", title));
+  if (sub) m.append(el("div", null, sub));
+  $("#pv-body").replaceChildren(m);
+}
+
+async function openPreview(e) {
+  const seq = ++pvSeq;
+  const path = join(S.dir, e.name);
+  const target = e.kind === "link" ? linkText(e).trim() : "";
+  S.pv = true;
+  S.file = e.name;
+  document.body.classList.add("pv");
+  $("#preview").hidden = false;
+  $("#pv-name").textContent = e.name + suffix(e);
+  $("#pv-meta").textContent = metaLine(e.mode, e.mtime && stamp(e.mtime), target);
+  $("#pv-open").hidden = $("#pv-dl").hidden = true;
+
+  if (isDir(e)) return message("▣", "directory", "l or ⏎ opens it");
+  if (BAD[e.link]) return message("⊘", BAD[e.link], "blocked, nothing to show");
+  if (e.noread) return message("⊘", "permission denied");
+  if (!readable(e)) {
+    const what = e.kind === "link" ? "symlink to a special file" : `${e.kind} · special file`;
+    return message("◇", what, "never opened");
+  }
+
+  $("#pv-body").replaceChildren(el("div", "note", "loading…"));
+  let f;
+  try {
+    f = await api("/api/file", { path });
+  } catch (err) {
+    if (seq === pvSeq) message("✕", err.message);
+    return;
+  }
+  if (seq !== pvSeq) return;
+
+  $("#pv-meta").textContent = metaLine(fmtSize(f.size), f.mime, f.mode, stamp(f.mtime), target);
+  $("#pv-dl").href = rawUrl(path, true);
+  $("#pv-dl").hidden = false;
+
+  if (f.kind in MEDIA) {
+    $("#pv-open").href = rawUrl(path);
+    $("#pv-open").hidden = false;
+    showMedia(MEDIA[f.kind], rawUrl(path), f.name);
+  }
+  else if (f.kind === "text") showText(f);
+  else if (f.kind === "empty") message("∅", "empty file");
+  else message("▦", "binary file", "no preview, download it to open");
+}
+
+function showMedia(tag, src, name) {
+  const m = el(tag);
+  m.src = src;
+  if (tag === "img") m.alt = name;
+  if (tag === "iframe") m.title = name;
+  if (tag === "audio" || tag === "video") {
+    Object.assign(m, { controls: true, preload: "metadata", playsInline: true });
+  }
+  const box = el("div", "media");
+  box.append(m);
+  $("#pv-body").replaceChildren(box);
+}
+
+function showText(f) {
+  const lines = f.text.replace(/\r\n?/g, "\n").split("\n");
+  if (lines.length > 1 && lines.at(-1) === "") lines.pop();
+
+  const code = el("div", "code");
+  code.append(
+    el("pre", "gutter", lines.map((_, i) => i + 1).join("\n")),
+    el("pre", "text", lines.join("\n")),
+  );
+
+  const body = $("#pv-body");
+  body.replaceChildren();
+  if (f.truncated) {
+    const note = `showing the first ${fmtSize(f.text.length)} of ${fmtSize(f.size)}`;
+    body.append(el("div", "trunc", note));
+  }
+  body.append(code);
+  body.scrollTo(0, 0);
+}
+
+function closePreview() {
+  if (!S.pv) return;
+  S.pv = false;
+  S.file = null;
+  pvSeq++;
+  document.body.classList.remove("pv");
+  $("#preview").hidden = true;
+  $("#pv-body").replaceChildren();  // stops playing media
+}
+
+function dismissPreview() {
+  if (!S.pv) return;
+  const h = hashFor(S.dir);
+  if (S.pushed) {
+    S.pushed = false;
+    history.back();
+  }
+  else if ((location.hash || "#/") === h) closePreview();
+  else location.hash = h;
+}
+
+function togglePreview(e) {
+  if (S.pv) dismissPreview();
+  else if (e && isDir(e)) openPreview(e);
+  else if (e) openFile(e);
+}
+
+
+// ── tree ───────────────────────────────────────────────────────────────────
+
+async function fetchKids(path) {
+  try {
+    S.tree.kids.set(path, dirNames((await api("/api/ls", { path })).entries));
+  } catch {
+    S.tree.kids.set(path, []);
+  }
+}
+
+function renderTree() {
+  const t = S.tree;
+  const rows = [];
+  const walk = (path, depth) => {
+    rows.push({ path, depth });
+    if (t.open.has(path)) for (const n of t.kids.get(path) || []) walk(join(path, n), depth + 1);
+  };
+  walk("", 0);
+  t.rows = rows;
+  t.cur = Math.min(t.cur, rows.length - 1);
+
+  const frag = document.createDocumentFragment();
+  rows.forEach((r, i) => {
+    const kids = t.kids.get(r.path);
+    const twisty = kids && !kids.length ? "·" : kids && t.open.has(r.path) ? "▾" : "▸";
+    const row = el("div", "trow" + (r.path === S.dir ? " here" : "") + (i === t.cur ? " cur" : ""));
+    row.dataset.i = i;
+    row.style.setProperty("--depth", r.depth);
+    row.append(el("span", "tw", twisty), el("span", "tn", (r.path ? base(r.path) : ROOT) + "/"));
+    frag.append(row);
+  });
+  $("#tree-rows").replaceChildren(frag);
+}
+
+function setTreeCursor(i) {
+  const t = S.tree;
+  const rows = $("#tree-rows").children;
+  if (!rows.length) return;
+  i = Math.max(0, Math.min(t.rows.length - 1, i));
+  rows[t.cur]?.classList.remove("cur");
+  t.cur = i;
+  rows[i].classList.add("cur");
+  rows[i].scrollIntoView({ block: "nearest" });
+}
+
+async function toggleTree(path, open = !S.tree.open.has(path)) {
+  if (open) {
+    if (!S.tree.kids.has(path)) await fetchKids(path);
+    S.tree.open.add(path);
+  }
+  else S.tree.open.delete(path);
+  renderTree();
+}
+
+async function revealInTree(dir) {
+  const parts = dir ? dir.split("/") : [];
+  for (let i = 0; i < parts.length; i++) {
+    const p = parts.slice(0, i).join("/");
+    if (!S.tree.kids.has(p)) await fetchKids(p);
+    S.tree.open.add(p);
+  }
+  S.tree.open.add(dir);
+  if (dir !== S.dir) return;
+  renderTree();
+  setTreeCursor(S.tree.rows.findIndex((r) => r.path === dir));
+}
+
+const treeShown = () => document.body.classList.contains("tree");
+
+function setTree(on) {
+  document.body.classList.toggle("tree", on);
+  if (!on && S.focus === "tree") setFocus("list");
+}
+
+function setFocus(f) {
+  S.focus = f;
+  $("#tree").classList.toggle("focus", f === "tree");
+  $("#list").classList.toggle("focus", f === "list");
+  status();
+}
+
+
+// ── jump to file ───────────────────────────────────────────────────────────
+
+// fuzzy on the file name; on the whole path once the query has a slash
+
+async function loadIndex() {
+  try {
+    const r = await api("/api/index", {});
+    S.indexTruncated = r.truncated;
+    S.index = r.files.map((p) => {
+      const cut = p.lastIndexOf("/") + 1;
+      return { p, n: p.slice(cut), lp: p.toLowerCase(), ln: p.slice(cut).toLowerCase(), cut };
+    });
+  } catch {
+    S.index = [];
+  }
+  if (!$("#finder").hidden) runFinder();
+}
+
+// subsequence match in its tightest window, scored for runs, word starts and camelCase humps
+function fuzzy(q, s, orig) {
+  let qi = 0;
+  let end = -1;
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === q[qi] && ++qi === q.length) { end = i; break; }
+  }
+  if (end < 0) return null;
+
+  let start = end;
+  qi = q.length - 1;
+  for (let i = end; i >= 0; i--) {
+    if (s[i] === q[qi] && --qi < 0) { start = i; break; }
+  }
+
+  const pos = [];
+  let score = 0;
+  let prev = -2;
+  qi = 0;
+  for (let i = start; i <= end && qi < q.length; i++) {
+    if (s[i] !== q[qi]) continue;
+    const before = orig[i - 1];
+    let bonus = 1;
+    if (i === prev + 1) bonus += 4;
+    if (i === 0 || "/_-. ".includes(before)) bonus += 6;
+    else if (orig[i] !== s[i] && before === before.toLowerCase()) bonus += 4;
+    score += bonus;
+    pos.push(i);
+    prev = i;
+    qi++;
+  }
+  return { score: score - (end - start + 1 - q.length) * 0.5 - s.length * 0.02, pos };
+}
+
+function runFinder() {
+  const box = $("#fres");
+  const foot = $("#ffoot");
+  if (!S.index) {
+    box.replaceChildren(el("div", "note", "loading index…"));
+    foot.textContent = "";
+    return;
+  }
+
+  const q = $("#fq").value.toLowerCase().replace(/\s+/g, "");
+  const byPath = q.includes("/");
+  let found = [];
+  if (!q) {
+    found = S.index.slice(0, MAX_HITS).map((f) => ({ f, pos: [], off: 0 }));
+  } else {
+    for (const f of S.index) {
+      const m = byPath ? fuzzy(q, f.lp, f.p) : fuzzy(q, f.ln, f.n);
+      if (m) found.push({ f, pos: m.pos, off: byPath ? 0 : f.cut, score: m.score });
+    }
+    found.sort((a, b) => b.score - a.score || a.f.p.length - b.f.p.length);
+  }
+
+  const total = q ? found.length : S.index.length;
+  S.found = found.slice(0, MAX_HITS);
+  S.fcur = 0;
+
+  const frag = document.createDocumentFragment();
+  S.found.forEach((r, i) => frag.append(hitRow(r, i)));
+  if (!S.found.length) frag.append(el("div", "note", "no match"));
+  box.replaceChildren(frag);
+  box.scrollTop = 0;
+
+  const limit = S.indexTruncated ? " (index limit reached)" : "";
+  foot.textContent = `${total} / ${S.index.length} files${limit}   ↑↓ move  ⏎ open  esc close`;
+}
+
+function hitRow(r, i) {
+  const row = el("div", "fr" + (i === S.fcur ? " cur" : ""));
+  row.dataset.i = i;
+  const p = r.f.p;
+  const marks = new Set(r.pos.map((x) => x + r.off));
+  let run = "";
+  let cls = null;
+  const flush = () => { if (run) row.append(el("span", cls, run)); run = ""; };
+  for (let j = 0; j < p.length; j++) {
+    const c = (j < r.f.cut ? "d" : "b") + (marks.has(j) ? " hit" : "");
+    if (c !== cls) { flush(); cls = c; }
+    run += p[j];
+  }
+  flush();
+  return row;
+}
+
+function moveFound(delta) {
+  const rows = $("#fres").children;
+  if (!S.found.length) return;
+  rows[S.fcur].classList.remove("cur");
+  S.fcur = (S.fcur + delta + S.found.length) % S.found.length;
+  rows[S.fcur].classList.add("cur");
+  rows[S.fcur].scrollIntoView({ block: "nearest" });
+}
+
+function pickFound(i) {
+  const r = S.found[i];
+  if (!r) return;
+  closeFinder();
+  S.pushed = !S.pv;
+  location.hash = hashFor(r.f.p.slice(0, Math.max(0, r.f.cut - 1)), r.f.n);
+}
+
+function openFinder() {
+  $("#finder").hidden = false;
+  $("#fq").value = "";
+  $("#fq").focus();
+  runFinder();
+  status();
+}
+
+function closeFinder() {
+  $("#finder").hidden = true;
+  $("#fq").blur();
+  status();
+}
+
+const toggleHelp = (on) => { $("#help").hidden = !on; };
+
+
+// ── keys ───────────────────────────────────────────────────────────────────
+
+function globalKey(k) {
+  switch (k) {
+    case "t": openFinder(); break;
+    case "?": toggleHelp(true); break;
+    case "b": setTree(!treeShown()); break;
+    case "~": go(""); break;
+    case "Tab": setFocus(S.focus === "list" && treeShown() ? "tree" : "list"); break;
+    case "Escape":
+      if (narrow.matches && treeShown()) setTree(false);
+      else dismissPreview();
+      break;
+    case "J": case "K": {
+      const body = $("#pv-body");
+      body.scrollBy({ top: (k === "J" ? 0.4 : -0.4) * body.clientHeight });
+      break;
+    }
+    default: return false;
+  }
+  return true;
+}
+
+function listKey(k) {
+  const e = S.entries[S.cur];
+  switch (k) {
+    case "j": case "ArrowDown": setCursor(S.cur + 1); break;
+    case "k": case "ArrowUp": setCursor(S.cur - 1); break;
+    case "g": case "Home": setCursor(0); break;
+    case "G": case "End": setCursor(S.entries.length - 1); break;
+    case "l": case "ArrowRight": case "Enter": activate(e); break;
+    case "h": case "ArrowLeft": case "Backspace": case "-": if (S.dir) go(parent(S.dir)); break;
+    case " ": togglePreview(e); break;
+    case "d": if (e && readable(e)) location.href = rawUrl(join(S.dir, e.name), true); break;
+    default: return false;
+  }
+  return true;
+}
+
+function treeKey(k) {
+  const t = S.tree;
+  const r = t.rows[t.cur];
+  switch (k) {
+    case "j": case "ArrowDown": setTreeCursor(t.cur + 1); break;
+    case "k": case "ArrowUp": setTreeCursor(t.cur - 1); break;
+    case "g": case "Home": setTreeCursor(0); break;
+    case "G": case "End": setTreeCursor(t.rows.length - 1); break;
+    case "l": case "ArrowRight": toggleTree(r.path, true); go(r.path); break;
+    case "Enter": go(r.path); break;
+    case "h": case "ArrowLeft":
+      if (r.path && t.open.has(r.path) && t.kids.get(r.path)?.length) toggleTree(r.path, false);
+      else setTreeCursor(t.rows.findIndex((x) => x.path === parent(r.path)));
+      break;
+    default: return false;
+  }
+  return true;
+}
+
+document.addEventListener("keydown", (ev) => {
+  if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+  if (ev.target.matches("input") || !$("#finder").hidden) return;  // the finder has its own keys
+
+  if (!$("#help").hidden) {
+    toggleHelp(false);  // any key closes the help
+    ev.preventDefault();
+    return;
+  }
+  const handled = globalKey(ev.key) || (S.focus === "tree" ? treeKey(ev.key) : listKey(ev.key));
+  if (handled) ev.preventDefault();
+});
+
+$("#fq").addEventListener("keydown", (ev) => {
+  const k = ev.key;
+  const ctrl = ev.ctrlKey;
+  if (k === "Escape") closeFinder();
+  else if (k === "Enter") pickFound(S.fcur);
+  else if (k === "ArrowDown" || (ctrl && (k === "n" || k === "j"))) moveFound(1);
+  else if (k === "ArrowUp" || (ctrl && (k === "p" || k === "k"))) moveFound(-1);
+  else return;
+  ev.preventDefault();
+});
+$("#fq").addEventListener("input", runFinder);
+
+
+// ── pointer ────────────────────────────────────────────────────────────────
+
+$("#rows").addEventListener("click", (ev) => {
+  if (narrow.matches && treeShown()) return setTree(false);  // a tap beside the drawer closes it
+  const row = ev.target.closest(".row");
+  if (!row) return;
+  setFocus("list");
+  setCursor(+row.dataset.i, true);
+  activate(S.entries[S.cur]);
+});
+
+$("#tree-rows").addEventListener("click", (ev) => {
+  const row = ev.target.closest(".trow");
+  if (!row) return;
+  const r = S.tree.rows[+row.dataset.i];
+  setFocus("tree");
+  setTreeCursor(+row.dataset.i);
+  if (ev.target.classList.contains("tw")) return toggleTree(r.path);
+  go(r.path);
+  if (narrow.matches) setTree(false);
+});
+
+$("#finder").addEventListener("click", (ev) => {
+  if (ev.target.id === "finder") return closeFinder();
+  const row = ev.target.closest(".fr");
+  if (row) pickFound(+row.dataset.i);
+});
+
+$("#help").addEventListener("click", (ev) => { if (ev.target.id === "help") toggleHelp(false); });
+$("#pv-close").addEventListener("click", dismissPreview);
+$("#tree-btn").addEventListener("click", () => setTree(!treeShown()));
+$("#find-btn").addEventListener("click", openFinder);
+$("#help-btn").addEventListener("click", () => toggleHelp(true));
+
+
+// ── start ──────────────────────────────────────────────────────────────────
+
+window.addEventListener("hashchange", route);
+setTree(!narrow.matches);
+setFocus("list");
+route();
+loadIndex();
+"""
+
+
+if __name__ == "__main__":
+    main()
