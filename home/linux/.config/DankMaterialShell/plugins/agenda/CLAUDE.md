@@ -4,7 +4,7 @@ A DankMaterialShell (DMS) bar widget: the pill shows the current or next
 meeting; its popout lists today's agenda with Refresh and Settings rows. The
 repo root `CLAUDE.md` applies — edit here, never under `$HOME`.
 
-The widget is a front end for `linux/.local/bin/agenda`, which owns the JSON
+The widget is a front end for `home/linux/.local/bin/agenda`, which owns the JSON
 contract (`agenda --format json`: `headline`, `headline_when`, `today_label`,
 `now`, `current`, `next`, `today`) and the config file (`agenda config`). A change to the script's
 output and to the widget that parses it belong in one commit.
@@ -25,7 +25,7 @@ journalctl --user -u dms.service -o cat --since "HH:MM:SS"
 
 The popout cannot be opened headlessly, so event rows, link clicks, Refresh and
 Settings are tested by hand. Script changes: `uvx ruff check --config ruff.toml
-linux/.local/bin/agenda` and `agenda --format json | python3.13 -m json.tool`.
+home/linux/.local/bin/agenda` and `agenda --format json | python3.13 -m json.tool`.
 Exercise `agenda config` only with a stub `xdg-open` first on `PATH` and
 `XDG_CONFIG_HOME` pointed at a scratch dir — the real one opens an editor.
 

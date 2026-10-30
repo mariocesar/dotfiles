@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Symlink common/ and this OS's bucket into $HOME, then run their postinstall hooks.
+# Symlink home/common and this OS's bucket into $HOME, then run their postinstall hooks.
 
 import re
 import sys
@@ -10,6 +10,7 @@ import subprocess
 
 
 ROOT_DIR = Path(__file__).parent.resolve()
+BUCKETS_DIR = ROOT_DIR / "home"
 HOOKS_DIR = ROOT_DIR / "postinstall"
 HOME_DIR = Path.home()
 PLATFORM = "macos" if sys.platform == "darwin" else "linux"
@@ -34,13 +35,13 @@ def bucket_files(bucket: str) -> list[str]:
     # What git tracks or would track, so ignored junk (.DS_Store, *~) never gets linked.
     listing = subprocess.run(
         ["git", "ls-files", "-zco", "--exclude-standard"],  # noqa: S607
-        cwd=ROOT_DIR / bucket,
+        cwd=BUCKETS_DIR / bucket,
         capture_output=True,
         text=True,
         check=True,
     ).stdout
     # -c still lists a file deleted from the worktree until the deletion is staged.
-    return [name for name in listing.split("\0") if name and (ROOT_DIR / bucket / name).exists()]
+    return [name for name in listing.split("\0") if name and (BUCKETS_DIR / bucket / name).exists()]
 
 
 def link_active_buckets(*, force: bool, fake: bool) -> dict[Path, str]:  # noqa: C901, PLR0912
@@ -50,7 +51,7 @@ def link_active_buckets(*, force: bool, fake: bool) -> dict[Path, str]:  # noqa:
 
     for bucket in ACTIVE_BUCKETS:
         for name in bucket_files(bucket):
-            source, dest = ROOT_DIR / bucket / name, HOME_DIR / name
+            source, dest = BUCKETS_DIR / bucket / name, HOME_DIR / name
             if dest in owner:
                 puts(f"-- {dest} from {owner[dest]} overridden by {bucket} --")
             owner[dest] = bucket

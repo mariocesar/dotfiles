@@ -15,7 +15,7 @@ import socket
 import subprocess
 
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parents[4]
 TYPES = ("Host", "Chassis", "Board", "CPU", "GPU", "Memory", "Display", "OS")
 GIB = 1024**3
 

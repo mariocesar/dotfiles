@@ -18,18 +18,19 @@ cd ~/.dotfiles
 python3 install.py
 ```
 
-Config is split into three buckets, and where a file sits decides which machine gets it:
+Everything that gets installed lives in `home/`, split into three buckets, and where a
+file sits decides which machine gets it:
 
 ```
-common/   installed everywhere
-linux/    Arch only
-macos/    macOS only
+home/common/   installed everywhere
+home/linux/    Arch only
+home/macos/    macOS only
 ```
 
-Each mirrors your home directory, so `common/.config/nvim/init.lua` is symlinked to
-`~/.config/nvim/init.lua`. `install.py` links `common/` plus the bucket for the OS it is
-running on, then runs the matching hooks in `postinstall/`. Anything outside a
-bucket — this file, the installer itself — is never linked.
+Each mirrors your home directory, so `home/common/.config/nvim/init.lua` is symlinked to
+`~/.config/nvim/init.lua`. `install.py` links `home/common/` plus the bucket for the OS it
+is running on, then runs the matching hooks in `postinstall/`. Nothing outside `home/` is
+ever linked.
 
 To see the plan without touching anything:
 

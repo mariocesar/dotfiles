@@ -13,7 +13,7 @@ result. Settings creates and opens the TOML file with `xdg-open`, like Agenda.
 
 ## CLI and configuration
 
-The CLI lives at `common/.local/bin/worldclock` and installs on both macOS and
+The CLI lives at `home/common/.local/bin/worldclock` and installs on both macOS and
 Linux. It requires Python 3.11+ and the system timezone database; no Python
 packages, network, or DMS are needed. `worldclock config` uses macOS's `open` or
 Linux's `xdg-open`. Both platforms use the same configuration path and JSON format.

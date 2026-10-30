@@ -1,6 +1,6 @@
 # Scripts
 
-Conventions for commands in `*/.local/bin/`. Which bucket a script goes in is in `CLAUDE.md`; how its Python is written is in `docs/python.md`.
+Conventions for commands in `home/*/.local/bin/`. Which bucket a script goes in is in `CLAUDE.md`; how its Python is written is in `docs/python.md`.
 
 ## Names
 

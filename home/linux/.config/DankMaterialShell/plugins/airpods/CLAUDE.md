@@ -54,7 +54,7 @@ AvengeMedia/DankMaterialShell at the tag in its `VERSION` file.
 **Switch profiles by calling the `airpods` script. Never `pactl
 set-card-profile` directly.** A bare switch back to `a2dp-sink` while an SCO
 voice link is up is refused by these AirPods — that is the whole reason
-`linux/.local/bin/airpods` exists. It tears the link down with
+`home/linux/.local/bin/airpods` exists. It tears the link down with
 `wpctl set-profile <id> 0`, issues `ConnectProfile` on the A2DP UUID, retries,
 falls back to a full reconnect, and sets the default source in call mode. DMS's
 own `BluetoothService.switchCodec()` is a thin `pactl set-card-profile` wrapper
@@ -69,7 +69,7 @@ separate repo.
 **The session PATH comes from a zsh login shell, not `.zshrc`.** GDM spawns the
 session through a non-interactive login shell and `niri-session` imports its
 environment into the user manager, which is what `dms.service` and every niri
-spawn inherit. `PATH` is therefore exported in `common/.zprofile`; without it a
+spawn inherit. `PATH` is therefore exported in `home/common/.zprofile`; without it a
 bare `["airpods", …]` in `Proc.runCommand` fails with not found.
 `environment.d` cannot do this job: `import-environment` overrides generators.
 

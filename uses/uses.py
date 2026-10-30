@@ -85,9 +85,9 @@ for path in sorted((ROOT_DIR / "uses/machines").glob("*.json")):
 
 h2("My ~/.local/bin scripts") >> stdout
 
-niri = (ROOT_DIR / "linux/.config/niri/config.kdl").read_text().splitlines()
-units = ROOT_DIR / "linux/.config/systemd/user"
-launchers = ROOT_DIR / "linux/.local/share/applications"
+niri = (ROOT_DIR / "home/linux/.config/niri/config.kdl").read_text().splitlines()
+units = ROOT_DIR / "home/linux/.config/systemd/user"
+launchers = ROOT_DIR / "home/linux/.local/share/applications"
 
 # Each tag with the config text that runs a script that way.
 wiring = {
@@ -105,7 +105,7 @@ wiring = {
 for bucket, title in ("common", "common"), ("linux", "only linux"), ("macos", "only macos"):
     th(title, "", "") >> stdout
 
-    for path in sorted((ROOT_DIR / bucket / ".local/bin").iterdir()):
+    for path in sorted((ROOT_DIR / "home" / bucket / ".local/bin").iterdir()):
         shebang, about, *_ = path.read_text().splitlines()
 
         # No sentence on line 2, not listed.
@@ -148,7 +148,8 @@ li(code("launcher") + "has an entry in the app launcher") >> stdout
 h2("Tools installed with mise") >> stdout
 th("tool", "", "mise backend") >> stdout
 
-tools = tomllib.loads((ROOT_DIR / "common/.config/mise/conf.d/dotfiles.toml").read_text())["tools"]
+mise = ROOT_DIR / "home/common/.config/mise/conf.d/dotfiles.toml"
+tools = tomllib.loads(mise.read_text())["tools"]
 
 for key, version in tools.items():
     name = key.removeprefix("pypi:")

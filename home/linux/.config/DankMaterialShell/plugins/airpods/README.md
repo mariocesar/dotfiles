@@ -28,7 +28,7 @@ deliberately instead. That makes the profile a sticky, invisible mode — you
 discover which one you're in when a call has no microphone. This makes it
 visible and one click away.
 
-It is a front end for `linux/.local/bin/airpods` and does not reimplement
+It is a front end for `home/linux/.local/bin/airpods` and does not reimplement
 profile switching. `CLAUDE.md` explains why that matters.
 
 ## Install

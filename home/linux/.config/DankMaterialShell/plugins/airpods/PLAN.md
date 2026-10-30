@@ -50,7 +50,7 @@ then imports that shell's environment into the user manager, and the only
 `PATH` export lived in `.zshrc`, which login shells never read. So `dms.service`
 could not find `airpods` (`Proc.runCommand` runs its array with no shell), and
 niri worked around it three times with `$HOME/.local/bin/…`. The export now
-lives in `common/.zprofile`. An `environment.d` entry was tried first and is
+lives in `home/common/.zprofile`. An `environment.d` entry was tried first and is
 dead here: `import-environment` wins over environment generators.
 
 For the current session the user manager's PATH was set by hand; a re-login

@@ -1,6 +1,6 @@
 # Python
 
-How Python is written anywhere in this repo: `install.py`, the `postinstall/` hooks, `uses/`, and the scripts in `*/.local/bin/`. What makes a command (name, header, shebang) is in `docs/scripts.md`.
+How Python is written anywhere in this repo: `install.py`, the `postinstall/` hooks, `uses/`, and the scripts in `home/*/.local/bin/`. What makes a command (name, header, shebang) is in `docs/scripts.md`.
 
 ## Language
 

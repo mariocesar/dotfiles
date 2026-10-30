@@ -190,7 +190,7 @@ End by asking which item to work on.
 
 ## Neovim (both OSes)
 
-The config is `common/.config/nvim`, shared by both machines. `lazy-lock.json` is a real file in `~/.config/nvim`, not tracked, so each machine pins its own plugin commits.
+The config is `home/common/.config/nvim`, shared by both machines. `lazy-lock.json` is a real file in `~/.config/nvim`, not tracked, so each machine pins its own plugin commits.
 
 - Version: `nvim --version | head -1`. It is a nightly build; checkhealth reports how far behind it is.
 - Health, headless. Checkhealth is async on 0.12+, so wait for the buffer to stop growing before writing it:
@@ -222,7 +222,7 @@ The config is `common/.config/nvim`, shared by both machines. `lazy-lock.json` i
 
 ## Claude Code (both OSes)
 
-`~/.claude/settings.json` is a real file Claude rewrites; its `hooks` are owned by `common/.claude/hooks.json` and merged in by `postinstall/common/80-claude-hooks.sh`.
+`~/.claude/settings.json` is a real file Claude rewrites; its `hooks` are owned by `home/common/.claude/hooks.json` and merged in by `postinstall/common/80-claude-hooks.sh`.
 
 - Install: `claude --version`; `which -a claude`. The native installer links `~/.local/bin/claude` into `~/.local/share/claude/versions/`. A second real binary (e.g. `npm ls -g @anthropic-ai/claude-code` lists one) is a finding; the same path printed twice is not.
 - Model pins: `jq '.model, .env' ~/.claude/settings.json`. A `model` or `CLAUDE_CODE_SUBAGENT_MODEL` naming an older model than the latest of its family (the Environment section of your system prompt lists them) is a finding: tier 3, cheap.
