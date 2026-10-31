@@ -104,6 +104,8 @@ dms_pref acPostLockMonitorTimeout 300
 # Appearance
 dms_pref currentThemeName blue
 dms_pref monoFontFamily "JetBrains Mono"
+# Medium keeps white bar text legible over bright wallpapers.
+dms_pref fontWeight 500
 dms_pref widgetBackgroundColor sth
 # Strength 38 gives windows a 12px corner radius.
 dms_pref radiusStrength 38

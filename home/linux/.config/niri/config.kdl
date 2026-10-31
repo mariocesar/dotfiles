@@ -81,6 +81,19 @@ layer-rule {
     place-within-backdrop true
 }
 
+// Dark gradient behind the transparent bar: the shadow sits above the screen so only its fading edge shows.
+layer-rule {
+    match namespace="^dms:bar$"
+    shadow {
+        on
+        draw-behind-window true
+        softness 40
+        spread 0
+        offset x=0 y=-20
+        color "#000e"
+    }
+}
+
 overview {
     workspace-shadow {
         off
