@@ -14,6 +14,7 @@ brew "coreutils"
 brew "parallel"
 brew "fzf"
 brew "fzf-tab" # zshfzftab.zsh sources it
+brew "atuin"
 brew "eza"
 brew "bat" # fzf-tab file previews
 brew "ripgrep"

@@ -21,6 +21,7 @@ go              # go-lang
 
 fd              # vim-clap dotfiles provider
 fzf
+atuin
 ripgrep
 eza             # the `ls` alias, and fzf-tab dir previews
 bat             # fzf-tab file previews

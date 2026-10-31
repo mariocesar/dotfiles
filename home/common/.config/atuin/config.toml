@@ -1,0 +1,12 @@
+# pacman and brew update it
+update_check = false
+
+search_mode_shell_up_key_binding = "prefix"
+
+invert = true
+inline_height = 20
+inline_height_shell_up_key_binding = 20
+show_help = false
+show_tabs = false
+show_numeric_shortcuts = false
+style = "auto"
