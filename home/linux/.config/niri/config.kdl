@@ -212,6 +212,7 @@ window-rule {
     match app-id=r#"^com\.gabm\.satty$"#
     match app-id=r#"^Emulator$"#   // Android emulator
     match app-id=r#"^syncthingtray$"#
+    match app-id=r#"^dev\.duxlabs\.calendar$"#
     open-floating true
 }
 window-rule {
