@@ -202,6 +202,8 @@ map("n", "<leader>l", function()
 end, { desc = "Toggle the quickfix list" })
 
 map("n", "<leader>e", "<cmd>NvimTreeToggle<cr>", { desc = "Toggle the file tree sidebar" })
+map("n", "<leader>ve", "<cmd>Config<cr>", { desc = "Edit init.lua" })
+map("n", "<leader>vr", "<cmd>Reload<cr>", { desc = "Source init.lua" })
 
 -- :terminal takes the rest of the line as its command, so `| startinsert` can't chain
 map("n", "<leader>t", function()
@@ -209,6 +211,7 @@ map("n", "<leader>t", function()
   vim.cmd.startinsert()
 end, { desc = "Open a terminal below" })
 
+map("n", "<leader><leader>", "<cmd>Clap buffers<cr>", { desc = "Switch to an open buffer" })
 map("n", "<leader>p", "<cmd>Clap files<cr>", { desc = "Navigate files in the current working directory" })
 map("n", "<leader>d", "<cmd>Clap dotfiles<cr>", { desc = "Open some dotfile" })
 map("n", "<leader>b", "<cmd>Clap blines<cr>", { desc = "Search lines in the current buffer" })

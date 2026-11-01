@@ -43,6 +43,7 @@ Full message expands under the cursor line automatically, with rule code and
 
 | | |
 |---|---|
+| `,,` | Fuzzy-find an open buffer |
 | `,p` | Fuzzy-find in project |
 | `,d` | Fuzzy-find a dotfile |
 | `]b` `[b` | Buffers |
@@ -130,7 +131,7 @@ Case-insensitive until you type a capital. `:%s` previews live in a split.
 | `<C-w>` + `hjkl` | Move between splits |
 | `,s` `,q` | Save / quit (Neovide: close buffer) |
 | `,t` · `:below terminal` | Shell pane below |
-| `:Run` · `:Config` · `:Reload` | Run file · edit init.lua · source it |
+| `:Run` · `:Config` `,ve` · `:Reload` `,vr` | Run file · edit init.lua · source it |
 
 ## Clipboard
 
