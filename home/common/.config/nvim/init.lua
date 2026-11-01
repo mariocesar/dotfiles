@@ -137,7 +137,10 @@ local cmd = vim.api.nvim_create_user_command
 cmd("Cwd", "cd %:p:h", { desc = "Set cwd to the directory of the current file" })
 cmd("Run", '!"%:p"', { desc = "Execute the current file" })
 cmd("Config", "edit $MYVIMRC", { desc = "Edit init.lua" })
-cmd("Reload", "source $MYVIMRC", { desc = "Source init.lua" })
+cmd("Reload", function()
+  vim.cmd.source(vim.env.MYVIMRC)
+  vim.notify("Reloaded " .. vim.fn.fnamemodify(vim.env.MYVIMRC, ":~"))
+end, { desc = "Source init.lua" })
 cmd("Cheat", "tabnew " .. vim.fn.stdpath("config") .. "/cheatsheet.md", { desc = "Open the keybinding cheat sheet" })
 cmd("Grep", "silent grep! <args>", { nargs = "+", desc = "Grep into quickfix without jumping to the first match" })
 
