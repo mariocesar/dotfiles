@@ -65,7 +65,26 @@ function lsp.LspAttach(args)
 
   map('gd', vim.lsp.buf.definition, 'Go to definition')
   map('gD', vim.lsp.buf.declaration, 'Go to declaration')
-  map('<leader>f', function() vim.lsp.buf.format { async = true } end, 'Format buffer')
+  map('<leader>f', function()
+    -- ruff's formatter leaves import order to its organize-imports action, which needs a resolve for the edit
+    for _, ruff in ipairs(vim.lsp.get_clients { bufnr = args.buf, name = 'ruff' }) do
+      local params = vim.lsp.util.make_range_params(0, ruff.offset_encoding)
+      params.context = { only = { 'source.organizeImports' }, diagnostics = {} }
+      local actions = ruff:request_sync('textDocument/codeAction', params, 2000, args.buf)
+      for _, action in ipairs(actions and actions.result or {}) do
+        local resolved = ruff:request_sync('codeAction/resolve', action, 2000, args.buf)
+        if resolved and resolved.result and resolved.result.edit then
+          vim.lsp.util.apply_workspace_edit(resolved.result.edit, ruff.offset_encoding)
+        end
+      end
+    end
+
+    local formatters = vim.lsp.get_clients { bufnr = args.buf, method = 'textDocument/formatting' }
+    vim.lsp.buf.format { timeout_ms = 2000 }
+    if #formatters > 0 then
+      vim.notify('Formatted with ' .. table.concat(vim.tbl_map(function(c) return c.name end, formatters), ', '))
+    end
+  end, 'Sort imports and format buffer')
 
   -- Menu as you type, server items first; enable() also applies auto-imports on accept
   local client = vim.lsp.get_client_by_id(args.data.client_id)
