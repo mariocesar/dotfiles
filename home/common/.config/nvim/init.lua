@@ -305,9 +305,13 @@ if global.neovide then
   map("n", "<leader>q", "<cmd>bdelete<cr>", { desc = "Close buffer" })
 
   -- Start like `code .`: tree on the left, an empty editor focused beside it
-  if vim.fn.argc() == 0 or vim.fn.isdirectory(vim.fn.argv(0)) == 1 then
+  -- Absolute now: no argument resolves to the cwd, and nvim-tree has moved into a relative one by VimEnter
+  local start = vim.fn.fnamemodify(vim.fn.argv(0), ":p")
+  if vim.fn.isdirectory(start) == 1 then
     local project = au("user_project")
     function project.VimEnter()
+      -- nvim-tree only changes the window's directory; make the project global
+      vim.cmd.cd(start)
       local tree = require("nvim-tree.api").tree
       -- a directory argument has nvim-tree fill the window; close it so it reopens as the sidebar
       tree.close()
