@@ -51,6 +51,7 @@ return {
     lazy = false, -- `nvim some/dir` needs it loaded to show the directory
     dependencies = { 'nvim-tree/nvim-web-devicons' },
     opts = {
+      sync_root_with_cwd = true,
       renderer = { highlight_opened_files = 'name' },
       filters = {
         git_ignored = false,
