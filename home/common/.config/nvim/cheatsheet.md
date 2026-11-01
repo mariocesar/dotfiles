@@ -63,7 +63,7 @@ Full message expands under the cursor line automatically, with rule code and
 | `-` | Up a directory |
 | `B` | Show only files open in a buffer (open ones are highlighted anyway) |
 | `[c` `]c` | Previous / next file with git changes |
-| `U` | Show / hide the hidden entries (`.git`, `.venv`, caches) |
+| `U` | Show / hide the hidden entries (`.git`, `.venv`, caches, `__pycache__`) |
 | `a` | New file, or folder when the name ends in `/` |
 | `r` · `d` | Rename · delete |
 | `f` | Filter the tree as you type |

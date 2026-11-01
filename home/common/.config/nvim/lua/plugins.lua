@@ -55,7 +55,7 @@ return {
       renderer = { highlight_opened_files = 'name' },
       filters = {
         git_ignored = false,
-        custom = { '^\\.git$', '^\\.venv$', '^\\..*_cache$' },
+        custom = { '^\\.git$', '^\\.venv$', '^\\..*_cache$', '^__pycache__$' },
       },
     },
   },
