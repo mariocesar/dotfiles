@@ -1,0 +1,12 @@
+[Desktop Entry]
+# Overrides /usr/share: SDL falls back to XWayland on niri (no fifo-v1), where mouse look stays frozen.
+Type=Application
+Version=1.0
+Name=Minecraft Launcher
+GenericName=Minecraft Launcher
+Comment=Official Minecraft Launcher
+Exec=env SDL_VIDEO_DRIVER=wayland minecraft-launcher.sh
+Icon=minecraft-launcher
+Terminal=false
+Categories=Game;Application;
+StartupNotify=true
