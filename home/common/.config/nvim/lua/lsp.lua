@@ -96,5 +96,13 @@ function lsp.LspAttach(args)
     vim.bo[args.buf].complete = 'o,.,w,b,u,t'
     -- Without noselect the first item is inserted as you type, and backspace brings it back
     vim.bo[args.buf].completeopt = 'menu,menuone,noselect,popup,fuzzy'
+
+    -- VS Code keys while the menu is open; Enter only accepts once Tab has picked something
+    local function menu_key(lhs, rhs)
+      vim.keymap.set('i', lhs, rhs, { buffer = args.buf, expr = true })
+    end
+    menu_key('<Tab>', function() return vim.fn.pumvisible() == 1 and '<C-n>' or '<Tab>' end)
+    menu_key('<S-Tab>', function() return vim.fn.pumvisible() == 1 and '<C-p>' or '<S-Tab>' end)
+    menu_key('<CR>', function() return vim.fn.complete_info({ 'selected' }).selected ~= -1 and '<C-y>' or '<CR>' end)
   end
 end
