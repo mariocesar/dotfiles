@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Show the current or next meeting and today's agenda, from the dcal daemon.
+# Show today's current or next meeting and the agenda for today and tomorrow, from dcal.
 # Backend for bar widgets.
 import re
 import sys
@@ -17,7 +17,6 @@ from typing import NoReturn
 
 
 PROG = "agenda"
-LOOKAHEAD_DAYS = 7
 BUSY = "(busy)"
 
 RESET = "\033[0m"
@@ -58,8 +57,7 @@ class Selection:
     current: Event | None
     next: Event | None
     today: list[Event]
-    later_day: dt.date | None  # the headline's day when it is not today
-    later: list[Event]
+    tomorrow: list[Event]
 
 
 def die(msg: str, code: int = 1) -> NoReturn:
@@ -217,18 +215,15 @@ def on_day(events, day):
     return found
 
 
-def select(events, now, horizon):
+def select(events, now):
     today = on_day(events, now.date())
-    live = [e for e in today if not e.all_day and e.rsvp != "declined" and e.start <= now < e.end]
-    upcoming = [
-        e for e in events if not e.all_day and e.rsvp != "declined" and now < e.start < horizon
-    ]
+    meetings = [e for e in today if not e.all_day and e.rsvp != "declined"]
+    live = [e for e in meetings if e.start <= now < e.end]
+    upcoming = [e for e in meetings if now < e.start]
     current = max(live, key=lambda e: e.start, default=None)
     nxt = min(upcoming, key=lambda e: e.start, default=None)
-    head = current or nxt
-    later_day = head.start.date() if head and head.start.date() != now.date() else None
-    later = on_day(events, later_day) if later_day else []
-    return Selection(current, nxt, today, later_day, later)
+    tomorrow = on_day(events, now.date() + dt.timedelta(days=1))
+    return Selection(current, nxt, today, tomorrow)
 
 
 def headline(sel):
@@ -252,31 +247,21 @@ def headline_when(sel, now):
     if sel.current:
         left = humanize(sel.current.end - now)
         return f"ends {'now' if left == 'now' else 'in ' + left}"
-    ev = sel.next
-    if ev is None:
+    if sel.next is None:
         return None
-    until = humanize(ev.start - now)
-    when = "starts now" if until == "now" else f"in {until}"
-    if ev.start.date() != now.date():
-        tomorrow = ev.start.date() == now.date() + dt.timedelta(days=1)
-        day = "tomorrow" if tomorrow else ev.start.strftime("%a %-d %b")
-        when += f" ({day} {ev.start:%H:%M})"
-    return when
+    until = humanize(sel.next.start - now)
+    return "starts now" if until == "now" else f"in {until}"
 
 
 def headline_line(sel, now):
     ev = headline(sel)
     if ev is None:
-        return f"No meetings in the next {LOOKAHEAD_DAYS} days"
+        return "No more meetings today"
     return f"{ev.title} {headline_when(sel, now)}"
 
 
 def day_label(day, today):
-    if day == today:
-        return f"Today ({day:%a, %-d %b})"
-    if day == today + dt.timedelta(days=1):
-        return f"Tomorrow ({day:%a, %-d %b})"
-    return f"{day:%a, %-d %b}"
+    return f"{'Today' if day == today else 'Tomorrow'} ({day:%a, %-d %b})"
 
 
 def section(label, events, head, now, *, verbose):
@@ -302,10 +287,10 @@ def render_lines(sel, now, *, verbose):
     today = now.date()
     head = headline(sel)
     lines = [headline_line(sel, now)]
+    tomorrow = today + dt.timedelta(days=1)
     lines += section(day_label(today, today), sel.today, head, now, verbose=verbose)
-    if sel.later_day:
-        lines.append("")
-        lines += section(day_label(sel.later_day, today), sel.later, head, now, verbose=verbose)
+    lines.append("")
+    lines += section(day_label(tomorrow, today), sel.tomorrow, head, now, verbose=verbose)
     return lines
 
 
@@ -346,6 +331,8 @@ def render_json(sel, now):
         "current": enc(sel.current),
         "next": enc(sel.next),
         "today": [enc(e) for e in sel.today],
+        "tomorrow_label": day_label(now.date() + dt.timedelta(days=1), now.date()),
+        "tomorrow": [enc(e) for e in sel.tomorrow],
     }
     return json.dumps(doc, ensure_ascii=False, indent=2)
 
@@ -393,7 +380,7 @@ def do_config():
 def parse_args():
     p = argparse.ArgumentParser(
         prog=PROG,
-        description="Current or next meeting and today's agenda, from the dcal daemon.",
+        description="Today's current or next meeting and the agenda for today and tomorrow.",
         epilog=CONFIG_EXAMPLE,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -438,13 +425,13 @@ def main():
 
     now = dt.datetime.now().astimezone()
     day_start = local_midnight(now.date())
-    horizon = local_midnight(now.date() + dt.timedelta(days=1 + LOOKAHEAD_DAYS))
+    horizon = local_midnight(now.date() + dt.timedelta(days=2))
     emails = my_emails(calendars, cfg["emails"])
     raw = fetch_events(day_start - dt.timedelta(days=1), horizon)
     usable = (r for r in raw if r.get("start") and r.get("status") != "cancelled")
     parsed = (parse_event(r, calendars, emails) for r in usable)
     events = dedupe(e for e in parsed if visible(e, cfg, calendars))
-    sel = select(events, now, horizon)
+    sel = select(events, now)
 
     if args.command == "join":
         do_join(sel)

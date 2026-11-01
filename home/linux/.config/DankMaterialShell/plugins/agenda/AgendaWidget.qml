@@ -100,6 +100,102 @@ PluginComponent {
         }
     }
 
+    component DaySection: Column {
+        id: section
+
+        property string label: ""
+        property var events: []
+        signal linkOpened
+
+        width: parent.width
+        spacing: Theme.spacingXS
+
+        StyledText {
+            width: parent.width
+            leftPadding: Theme.spacingM
+            topPadding: Theme.spacingS
+            text: section.label
+            font.pixelSize: Theme.fontSizeSmall
+            font.weight: Font.Bold
+            color: Theme.surfaceVariantText
+            visible: text !== ""
+        }
+
+        Repeater {
+            model: section.events
+
+            StyledRect {
+                id: eventRow
+
+                readonly property string link: modelData.meeting_url || modelData.url || ""
+                readonly property bool declined: modelData.rsvp === "declined"
+                readonly property bool ended: !modelData.all_day && root.agenda !== null && new Date(modelData.end) <= new Date(root.agenda.now)
+                readonly property bool featured: root.featured !== null && modelData.uid === root.featured.uid && modelData.start === root.featured.start
+                readonly property color textColor: declined || ended ? Theme.surfaceVariantText : Theme.surfaceText
+
+                width: parent.width
+                height: root.rowHeight
+                radius: Theme.cornerRadius
+                color: link && eventArea.containsMouse ? Theme.surfaceContainerHighest : "transparent"
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: Theme.spacingM
+                    anchors.rightMargin: Theme.spacingM
+                    spacing: Theme.spacingS
+
+                    StyledText {
+                        Layout.preferredWidth: Theme.fontSizeSmall * 5
+                        text: modelData.all_day ? "All day" : Qt.formatTime(new Date(modelData.start), "HH:mm")
+                        font.pixelSize: Theme.fontSizeSmall
+                        font.strikeout: eventRow.declined
+                        color: eventRow.featured && !eventRow.declined ? Theme.primary : eventRow.textColor
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: modelData.title
+                        font.pixelSize: Theme.fontSizeMedium
+                        font.weight: eventRow.featured ? Font.Bold : Theme.fontWeight
+                        font.strikeout: eventRow.declined
+                        wrapMode: Text.NoWrap
+                        elide: Text.ElideRight
+                        color: eventRow.textColor
+                    }
+
+                    DankIcon {
+                        name: modelData.meeting_url ? "videocam" : "open_in_new"
+                        size: Theme.iconSizeSmall
+                        color: Theme.surfaceVariantText
+                        visible: eventRow.link !== ""
+                    }
+                }
+
+                MouseArea {
+                    id: eventArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    enabled: eventRow.link !== ""
+                    cursorShape: eventRow.link ? Qt.PointingHandCursor : Qt.ArrowCursor
+                    onClicked: {
+                        Quickshell.execDetached(["xdg-open", eventRow.link]);
+                        section.linkOpened();
+                    }
+                }
+            }
+        }
+
+        StyledText {
+            width: parent.width
+            height: root.rowHeight
+            leftPadding: Theme.spacingM
+            text: "No events"
+            font.pixelSize: Theme.fontSizeMedium
+            color: Theme.surfaceVariantText
+            visible: root.agenda !== null && section.events.length === 0
+        }
+    }
+
     horizontalBarPill: Component {
         Row {
             id: pill
@@ -121,7 +217,9 @@ PluginComponent {
             }
 
             ScrollingText {
-                text: root.featured ? root.featured.title : root.headline
+                // no meeting left today: icon only, the popout says so
+                text: root.featured ? root.featured.title : (root.agenda ? "" : root.headline)
+                visible: text !== ""
                 font.pixelSize: pill.textSize
                 color: root.failed && !root.agenda ? Theme.surfaceVariantText : Theme.surfaceText
                 active: pillHover.hovered
@@ -171,78 +269,15 @@ PluginComponent {
                 width: parent.width
                 spacing: Theme.spacingXS
 
-                Repeater {
-                    model: root.agenda ? root.agenda.today : []
-
-                    StyledRect {
-                        id: eventRow
-
-                        readonly property string link: modelData.meeting_url || modelData.url || ""
-                        readonly property bool declined: modelData.rsvp === "declined"
-                        readonly property bool ended: !modelData.all_day && root.agenda !== null && new Date(modelData.end) <= new Date(root.agenda.now)
-                        readonly property bool featured: root.featured !== null && modelData.uid === root.featured.uid && modelData.start === root.featured.start
-                        readonly property color textColor: declined || ended ? Theme.surfaceVariantText : Theme.surfaceText
-
-                        width: parent.width
-                        height: root.rowHeight
-                        radius: Theme.cornerRadius
-                        color: link && eventArea.containsMouse ? Theme.surfaceContainerHighest : "transparent"
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: Theme.spacingM
-                            anchors.rightMargin: Theme.spacingM
-                            spacing: Theme.spacingS
-
-                            StyledText {
-                                Layout.preferredWidth: Theme.fontSizeSmall * 5
-                                text: modelData.all_day ? "All day" : Qt.formatTime(new Date(modelData.start), "HH:mm")
-                                font.pixelSize: Theme.fontSizeSmall
-                                font.strikeout: eventRow.declined
-                                color: eventRow.featured && !eventRow.declined ? Theme.primary : eventRow.textColor
-                            }
-
-                            StyledText {
-                                Layout.fillWidth: true
-                                text: modelData.title
-                                font.pixelSize: Theme.fontSizeMedium
-                                font.weight: eventRow.featured ? Font.Bold : Theme.fontWeight
-                                font.strikeout: eventRow.declined
-                                wrapMode: Text.NoWrap
-                                elide: Text.ElideRight
-                                color: eventRow.textColor
-                            }
-
-                            DankIcon {
-                                name: modelData.meeting_url ? "videocam" : "open_in_new"
-                                size: Theme.iconSizeSmall
-                                color: Theme.surfaceVariantText
-                                visible: eventRow.link !== ""
-                            }
-                        }
-
-                        MouseArea {
-                            id: eventArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            enabled: eventRow.link !== ""
-                            cursorShape: eventRow.link ? Qt.PointingHandCursor : Qt.ArrowCursor
-                            onClicked: {
-                                Quickshell.execDetached(["xdg-open", eventRow.link]);
-                                popoutRoot.closePopout();
-                            }
-                        }
-                    }
+                DaySection {
+                    events: root.agenda ? root.agenda.today : []
+                    onLinkOpened: popoutRoot.closePopout()
                 }
 
-                StyledText {
-                    width: parent.width
-                    height: root.rowHeight
-                    leftPadding: Theme.spacingM
-                    text: "No events"
-                    font.pixelSize: Theme.fontSizeMedium
-                    color: Theme.surfaceVariantText
-                    visible: root.agenda !== null && root.agenda.today.length === 0
+                DaySection {
+                    label: root.agenda ? root.agenda.tomorrow_label : ""
+                    events: root.agenda ? root.agenda.tomorrow : []
+                    onLinkOpened: popoutRoot.closePopout()
                 }
 
                 Item {

@@ -1,7 +1,7 @@
 # Agenda
 
-A DankMaterialShell bar widget: the pill shows the current or next meeting,
-clicking it opens today's agenda. An event row opens its meeting link (or the
+A DankMaterialShell bar widget: the pill shows today's current or next meeting
+(just the icon once none is left), clicking it opens today's and tomorrow's agenda. An event row opens its meeting link (or the
 calendar link) with `xdg-open`; Refresh re-syncs dcal; Settings opens the
 script's config file.
 

@@ -1,12 +1,13 @@
 # CLAUDE.md
 
-A DankMaterialShell (DMS) bar widget: the pill shows the current or next
-meeting; its popout lists today's agenda with Refresh and Settings rows. The
+A DankMaterialShell (DMS) bar widget: the pill shows today's current or next
+meeting, or only its icon once none is left; its popout lists today's and
+tomorrow's agenda with Refresh and Settings rows. The
 repo root `CLAUDE.md` applies — edit here, never under `$HOME`.
 
 The widget is a front end for `home/linux/.local/bin/agenda`, which owns the JSON
 contract (`agenda --format json`: `headline`, `headline_when`, `today_label`,
-`now`, `current`, `next`, `today`) and the config file (`agenda config`). A change to the script's
+`now`, `current`, `next`, `today`, `tomorrow_label`, `tomorrow`) and the config file (`agenda config`). A change to the script's
 output and to the widget that parses it belong in one commit.
 
 ## Dev loop
