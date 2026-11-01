@@ -116,6 +116,7 @@ For symbols use `grn` instead — multi-cursor is for config, markup, columns.
 | `*` | Search word under cursor |
 | `<Esc><Esc>` | Clear highlight |
 | `:%s/old/new/g` | Replace in file |
+| `,S` | Replace the word under the cursor in the file |
 | `,g` | Live grep in project |
 | `,G` · `,g` (visual) | Grep word under cursor · selection |
 | `,b` | Search lines in this buffer — `'foo` exact, `^` `$` anchors, `!` negates |
