@@ -49,9 +49,11 @@ vim.keymap.set('n', '<leader>x', function()
   if saved_diagnostics then
     vim.diagnostic.config(saved_diagnostics)
     saved_diagnostics = nil
+    vim.notify('Inline diagnostics on')
   else
     saved_diagnostics = vim.diagnostic.config()
     vim.diagnostic.config { virtual_text = false, virtual_lines = false, underline = false }
+    vim.notify('Inline diagnostics off')
   end
 end, { desc = 'Toggle inline diagnostics' })
 
