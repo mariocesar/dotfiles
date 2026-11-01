@@ -87,6 +87,7 @@ if not global.vscode then
   opt.titlestring = "%{expand('%:t') != '' ? expand('%:t') .. ' - ' : ''}%{fnamemodify(getcwd(), ':t')}"
 
   require("tokyonight").setup({
+    styles = { sidebars = "transparent" },
     -- vim-clap only derives its own colors for groups that don't exist yet
     on_highlights = function(hl, c)
       hl.ClapInput = { bg = c.bg_highlight }
