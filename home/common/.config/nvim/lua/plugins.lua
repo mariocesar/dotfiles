@@ -42,7 +42,20 @@ return {
     cond = not vim.g.vscode,
     event = { 'BufReadPre', 'BufNewFile' },
     opts = {
-      excluded_filetypes = { 'netrw' },
+      excluded_filetypes = { 'NvimTree' },
+    },
+  },
+  {
+    'nvim-tree/nvim-tree.lua',
+    cond = not vim.g.vscode,
+    lazy = false, -- `nvim some/dir` needs it loaded to show the directory
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    opts = {
+      renderer = { highlight_opened_files = 'name' },
+      filters = {
+        git_ignored = false,
+        custom = { '^\\.git$', '^\\.venv$', '^\\..*_cache$' },
+      },
     },
   },
   {

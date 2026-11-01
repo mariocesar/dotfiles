@@ -58,16 +58,15 @@ Full message expands under the cursor line automatically, with rule code and
 |---|---|
 | `,e` | Toggle the tree on the left (Neovide opens it on a project start) |
 | `<CR>` · double-click | Open file beside the tree · expand / collapse folder |
-| `v` | Open in a vertical split beside the tree |
-| `t` | Open in a new tab |
+| `<C-v>` · `<C-x>` · `<C-t>` | Open in a vertical split · horizontal split · new tab |
 | `-` | Up a directory |
-| `gh` | Show / hide the hidden entries (`.git`, `.venv`, caches) |
-| `%` · `d` | New file · new folder |
-| `R` · `D` | Rename · delete |
-| `<F1>` | All netrw keys |
-
-No horizontal split from the tree — `o` splits the tree itself. Split the
-editor first with `,"`, then `<CR>` fills the top half.
+| `B` | Show only files open in a buffer (open ones are highlighted anyway) |
+| `[c` `]c` | Previous / next file with git changes |
+| `U` | Show / hide the hidden entries (`.git`, `.venv`, caches) |
+| `a` | New file, or folder when the name ends in `/` |
+| `r` · `d` | Rename · delete |
+| `f` | Filter the tree as you type |
+| `g?` | All tree keys |
 
 ## Wrap, change, comment
 

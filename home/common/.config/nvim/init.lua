@@ -10,10 +10,9 @@ global.loaded_perl_provider = 0
 global.loaded_node_provider = 0
 global.loaded_nvim_dir_plugin = 1
 
-global.netrw_mousemaps = 0
-global.netrw_banner = 0
-global.netrw_liststyle = 3 -- tree
-global.netrw_list_hide = [[^\.git/$,^\.venv/$,^\..*_cache/$]]
+-- nvim-tree replaces netrw, which would otherwise race it for directory buffers
+global.loaded_netrw = 1
+global.loaded_netrwPlugin = 1
 
 require("config.lazy")
 
@@ -201,15 +200,7 @@ map("n", "<leader>l", function()
   end
 end, { desc = "Toggle the quickfix list" })
 
--- Lexplore's own size is a percentage; a tree reads better at a fixed width
-local function explorer()
-  vim.cmd.Lexplore()
-  if vim.api.nvim_get_current_buf() == vim.t.netrw_lexbufnr then
-    vim.cmd("vertical resize 30")
-  end
-end
-
-map("n", "<leader>e", explorer, { desc = "Toggle the file tree sidebar" })
+map("n", "<leader>e", "<cmd>NvimTreeToggle<cr>", { desc = "Toggle the file tree sidebar" })
 
 -- :terminal takes the rest of the line as its command, so `| startinsert` can't chain
 map("n", "<leader>t", function()
@@ -313,12 +304,14 @@ if global.neovide then
   -- Instead of :q, close the buffer keep the window open.
   map("n", "<leader>q", "<cmd>bdelete<cr>", { desc = "Close buffer" })
 
-  -- Show the explorer by default
-  if vim.fn.argc() == 0 then
+  -- Start like `code .`: tree on the left, an empty editor focused beside it
+  if vim.fn.argc() == 0 or vim.fn.isdirectory(vim.fn.argv(0)) == 1 then
     local project = au("user_project")
     function project.VimEnter()
-      explorer()
-      vim.cmd.wincmd("p")
+      local tree = require("nvim-tree.api").tree
+      -- a directory argument has nvim-tree fill the window; close it so it reopens as the sidebar
+      tree.close()
+      tree.toggle({ focus = false })
     end
   end
 
