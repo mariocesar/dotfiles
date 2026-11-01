@@ -66,4 +66,14 @@ function lsp.LspAttach(args)
   map('gd', vim.lsp.buf.definition, 'Go to definition')
   map('gD', vim.lsp.buf.declaration, 'Go to declaration')
   map('<leader>f', function() vim.lsp.buf.format { async = true } end, 'Format buffer')
+
+  -- Menu as you type, server items first; enable() also applies auto-imports on accept
+  local client = vim.lsp.get_client_by_id(args.data.client_id)
+  if client and client:supports_method('textDocument/completion') then
+    vim.lsp.completion.enable(true, client.id, args.buf)
+    vim.bo[args.buf].autocomplete = true
+    vim.bo[args.buf].complete = 'o,.,w,b,u,t'
+    -- Without noselect the first item is inserted as you type, and backspace brings it back
+    vim.bo[args.buf].completeopt = 'menu,menuone,noselect,popup,fuzzy'
+  end
 end
