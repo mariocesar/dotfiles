@@ -26,6 +26,7 @@ text/x-lua=org.gnome.gitlab.somas.Apostrophe.desktop
 x-scheme-handler/codex=chatgpt.desktop
 application/pdf=org.gnome.Papers.desktop
 x-scheme-handler/slack=slack.desktop
+x-scheme-handler/bruno=bruno.desktop
 
 [Added Associations]
 application/x-extension-htm=firefox.desktop;zen.desktop;
