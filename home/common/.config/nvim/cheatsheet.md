@@ -35,7 +35,7 @@ Full message expands under the cursor line automatically, with rule code and
 | `<C-j>` `<C-k>` | Half page, recentred |
 | `%` | Matching bracket / tag / keyword |
 | `{` `}` | Previous / next blank line |
-| `` `` `` | Position before the last jump |
+| ` `` ` | Position before the last jump |
 | `an` `in` | Grow / shrink selection by syntax node |
 | `]n` `[n` · `]N` `[N` | Next node · next sibling |
 

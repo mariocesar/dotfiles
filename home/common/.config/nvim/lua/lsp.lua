@@ -34,7 +34,11 @@ vim.lsp.config('ruff', {
   end
 })
 
+-- Kept out of Mason so a project's mise-pinned dprint runs, and only where it has a dprint.json
+vim.lsp.config('dprint', { workspace_required = true })
+
 vim.lsp.enable(servers)
+vim.lsp.enable('dprint')
 
 -- Long messages truncate at the window edge, so expand them under the cursor line.
 vim.diagnostic.config {

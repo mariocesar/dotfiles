@@ -1,0 +1,11 @@
+{
+  "lineWidth": 80,
+  "markdown": {
+    "textWrap": "always",
+    "emphasisKind": "asterisks",
+    "strongKind": "asterisks"
+  },
+  "plugins": [
+    "npm:@dprint/markdown@0.28.2"
+  ]
+}
