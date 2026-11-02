@@ -80,6 +80,7 @@ Full message expands under the cursor line automatically, with rule code and
 | `S"` | Wrap selection (visual) |
 | `ysiw<em>` | Wrap in an HTML tag |
 | `gcc` · `gc` | Comment line · comment motion/selection |
+| `gqap` | Rewrap paragraph to `textwidth` (80 in `:WriterMode`, else 79) |
 
 `.` repeats any of these.
 
@@ -137,6 +138,7 @@ Case-insensitive until you type a capital. `:%s` previews live in a split.
 ## Clipboard
 
 `y` and `p` use the system clipboard. `<C-c>` copies a selection, `<D-v>` pastes.
+`:%y` copies the whole buffer.
 
 `:CopyRef` copies `path:54`; from a selection (`:'<,'>CopyRef`) it copies `path:54-80`.
 
