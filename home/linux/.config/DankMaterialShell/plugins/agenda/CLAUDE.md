@@ -2,13 +2,14 @@
 
 A DankMaterialShell (DMS) bar widget: the pill shows today's current or next
 meeting, or only its icon once none is left; its popout lists today's and
-tomorrow's agenda with Refresh and Settings rows. The
-repo root `CLAUDE.md` applies — edit here, never under `$HOME`.
+tomorrow's agenda with Refresh and Settings rows. The repo root `CLAUDE.md`
+applies — edit here, never under `$HOME`.
 
-The widget is a front end for `home/linux/.local/bin/agenda`, which owns the JSON
-contract (`agenda --format json`: `headline`, `headline_when`, `today_label`,
-`now`, `current`, `next`, `today`, `tomorrow_label`, `tomorrow`) and the config file (`agenda config`). A change to the script's
-output and to the widget that parses it belong in one commit.
+The widget is a front end for `home/linux/.local/bin/agenda`, which owns the
+JSON contract (`agenda --format json`: `headline`, `headline_when`,
+`today_label`, `now`, `current`, `next`, `today`, `tomorrow_label`, `tomorrow`)
+and the config file (`agenda config`). A change to the script's output and to
+the widget that parses it belong in one commit.
 
 ## Dev loop
 
@@ -26,9 +27,9 @@ journalctl --user -u dms.service -o cat --since "HH:MM:SS"
 
 The popout cannot be opened headlessly, so event rows, link clicks, Refresh and
 Settings are tested by hand. Script changes: `uvx ruff check --config ruff.toml
-home/linux/.local/bin/agenda` and `agenda --format json | python3.13 -m json.tool`.
-Exercise `agenda config` only with a stub `xdg-open` first on `PATH` and
-`XDG_CONFIG_HOME` pointed at a scratch dir — the real one opens an editor.
+home/linux/.local/bin/agenda` and `agenda --format json | python3.13 -m
+json.tool`. Exercise `agenda config` only with a stub `xdg-open` first on `PATH`
+and `XDG_CONFIG_HOME` pointed at a scratch dir — the real one opens an editor.
 
 ## Where the real documentation is
 
@@ -63,9 +64,10 @@ agenda` per bar and nothing else.
 dcal daemon"), with no completion signal short of a streaming subscription —
 hence the 3 s settle timer before the re-fetch.
 
-**Screenshots:** `grim` rejects `-o` together with `-g`; DP-1 is at logical
-0,0, so `grim -g "0,0 1920x64" bar.png` captures bar 0.
+**Screenshots:** `grim` rejects `-o` together with `-g`; DP-1 is at logical 0,0,
+so `grim -g "0,0 1920x64" bar.png` captures bar 0.
 
-**Ruff is only on `uvx`.** The repo's `ruff.toml` selects Bandit's `S603`/`S607`,
-which flag every argv-list `subprocess` call; the script and `install.py` both
-trip them at HEAD. Not suppressed here — that is a `ruff.toml` decision.
+**Ruff is only on `uvx`.** The repo's `ruff.toml` selects Bandit's
+`S603`/`S607`, which flag every argv-list `subprocess` call; the script and
+`install.py` both trip them at HEAD. Not suppressed here — that is a `ruff.toml`
+decision.

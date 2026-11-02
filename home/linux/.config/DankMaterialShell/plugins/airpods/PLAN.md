@@ -1,8 +1,8 @@
 # AirPods widget: build plan
 
 Build a DMS bar widget that shows the active AirPods audio profile and switches
-it from a click menu. Self-contained — everything needed to execute it is here or
-in `CLAUDE.md`.
+it from a click menu. Self-contained — everything needed to execute it is here
+or in `CLAUDE.md`.
 
 Target:
 
@@ -46,12 +46,12 @@ Settled decisions — do not relitigate these while building:
 
 Setup: done on 2026-09-10 — `~/.local/bin` is on the session PATH. It was not:
 GDM spawns the session through a non-interactive zsh login shell, `niri-session`
-then imports that shell's environment into the user manager, and the only
-`PATH` export lived in `.zshrc`, which login shells never read. So `dms.service`
-could not find `airpods` (`Proc.runCommand` runs its array with no shell), and
-niri worked around it three times with `$HOME/.local/bin/…`. The export now
-lives in `home/common/.zprofile`. An `environment.d` entry was tried first and is
-dead here: `import-environment` wins over environment generators.
+then imports that shell's environment into the user manager, and the only `PATH`
+export lived in `.zshrc`, which login shells never read. So `dms.service` could
+not find `airpods` (`Proc.runCommand` runs its array with no shell), and niri
+worked around it three times with `$HOME/.local/bin/…`. The export now lives in
+`home/common/.zprofile`. An `environment.d` entry was tried first and is dead
+here: `import-environment` wins over environment generators.
 
 For the current session the user manager's PATH was set by hand; a re-login
 makes it permanent. niri's three workarounds can drop the prefix after that,
@@ -64,7 +64,8 @@ included), the running shell's PATH starts with `.local/bin`:
 tr '\0' '\n' < /proc/$(pgrep -P "$(systemctl --user show -p MainPID --value dms.service)" -x qs)/environ | grep ^PATH
 ```
 
-The shell runs under `dms.service` — never start another DMS `qs`. Keep this running in a terminal to see load errors:
+The shell runs under `dms.service` — never start another DMS `qs`. Keep this
+running in a terminal to see load errors:
 
 ```bash
 journalctl --user -fu dms.service -o cat | grep PluginService
@@ -90,8 +91,8 @@ battery-shaped anywhere in `pw-dump`. Nothing registers a battery provider for
 these AirPods.
 
 The likely reason is structural rather than configuration. PipeWire implements
-Apple's **HFP** battery extension (`AT+XAPL` / `AT+IPHONEACCEV` — the strings are
-in `libspa-bluez5.so`), but AirPods report battery over the **AAP** L2CAP
+Apple's **HFP** battery extension (`AT+XAPL` / `AT+IPHONEACCEV` — the strings
+are in `libspa-bluez5.so`), but AirPods report battery over the **AAP** L2CAP
 channel, PSM 0x1001. That is the proprietary protocol LibrePods reverse
 engineered, and nothing in the bluez/PipeWire stack speaks it. Enabling
 interfaces cannot conjure a number the device never sends over that path.
@@ -107,10 +108,11 @@ Reopen only if PipeWire gains AAP support upstream. Do not reinstall LibrePods �
 ## A. A pill that appears
 
 `plugin.json` is written; rename its `requires` key to `dependencies` — the
-schema marks `requires` a deprecated alias. Registry metadata only: PluginService
-reads neither key, so no dependency check runs. Add `AirpodsWidget.qml` rooted at
-`PluginComponent` with a hardcoded `DankIcon { name: "earbuds" }` in both
-`horizontalBarPill` and `verticalBarPill`. No logic yet.
+schema marks `requires` a deprecated alias. Registry metadata only:
+PluginService reads neither key, so no dependency check runs. Add
+`AirpodsWidget.qml` rooted at `PluginComponent` with a hardcoded `DankIcon {
+name: "earbuds" }` in both `horizontalBarPill` and `verticalBarPill`. No logic
+yet.
 
 This is a new file, so it needs one `python3.13 install.py` run before the shell
 can see it. Everything after this item is live-on-save.
@@ -127,8 +129,8 @@ rewrites the file on any settings change:
   not seen before.
 
 Do not hand-edit `plugin_settings.json`: DMS reads it once at startup and
-rewrites it from memory on every plugin setting change, so the edit is undone
-by the next write. The dead `librepods` key there is G.
+rewrites it from memory on every plugin setting change, so the edit is undone by
+the next write. The dead `librepods` key there is G.
 
 Imports needed across the whole widget:
 
@@ -145,9 +147,9 @@ import qs.Modules.Plugins
 Size from the inherited readonly `iconSize`, never a literal.
 
 **Check:** `ls -l ~/.config/DankMaterialShell/plugins/airpods/AirpodsWidget.qml`
-points into `.dotfiles`. An earbuds glyph sits on the left bar,
-`grep -c librepods ~/.config/DankMaterialShell/settings.json` returns 0, and
-there is no `PluginService:` error in the journal.
+points into `.dotfiles`. An earbuds glyph sits on the left bar, `grep -c
+librepods ~/.config/DankMaterialShell/settings.json` returns 0, and there is no
+`PluginService:` error in the journal.
 
 ## B. Find the device, hide when it is gone
 
@@ -185,9 +187,9 @@ contents leaves a padding-only stub about 24 px wide, and `visibilityCommand`
 polls a shell command on a timer. `setVisibilityOverride` is not in the README
 and DMS's IPC widget show/hide shares it; both are acceptable here.
 
-**Check:** `bluetoothctl disconnect <airpods-mac>` → the pill disappears and
-the widgets beside it close up. Reconnect → it returns. Journal clean across
-both transitions.
+**Check:** `bluetoothctl disconnect <airpods-mac>` → the pill disappears and the
+widgets beside it close up. Reconnect → it returns. Journal clean across both
+transitions.
 
 ## C. Live profile, reflected in the icon
 
@@ -199,10 +201,10 @@ readonly property bool hfp: profile.startsWith("headset")
 
 Icon becomes `hfp ? "headset_mic" : "earbuds"`. While `connected && !node` the
 profile string is empty, so the icon falls to `earbuds`; colour it
-`Theme.surfaceVariantText` in that state so a card stuck at `off` is visible
-and a switch in progress reads as one. Both names are confirmed present
-(`earbuds` f003, `headset_mic` e311); verify any other name against the
-upstream codepoints file (DMS bundles the font, not this file):
+`Theme.surfaceVariantText` in that state so a card stuck at `off` is visible and
+a switch in progress reads as one. Both names are confirmed present (`earbuds`
+f003, `headset_mic` e311); verify any other name against the upstream codepoints
+file (DMS bundles the font, not this file):
 
 ```
 https://raw.githubusercontent.com/google/material-design-icons/master/variablefont/MaterialSymbolsRounded%5BFILL,GRAD,opsz,wght%5D.codepoints
@@ -217,8 +219,8 @@ with no interaction. `airpods music`; it flips back. Cross-check against:
 pactl list cards | grep -E 'Name: bluez_card|Active Profile'
 ```
 
-In music the node's `api.bluez5.profile` reads `a2dp-sink` and the codec `aac`
-— lowercase. In call it reads `headset-head-unit` and a `bluez_input.*` source
+In music the node's `api.bluez5.profile` reads `a2dp-sink` and the codec `aac` —
+lowercase. In call it reads `headset-head-unit` and a `bluez_input.*` source
 appears in `pactl list sources short`.
 
 ## D. The menu
@@ -230,8 +232,8 @@ header and close button, then a `Column` of three rows built from `StyledRect` +
 
 Rows: **Music** (`airpods music`), **Call** (`airpods call`), **Reconnect**
 (`airpods reconnect`). Show the live codec next to the active row, as
-`codec.toUpperCase()` since PipeWire reports `aac`, and mark it; derive
-"active" from `hfp`, not from what was last clicked.
+`codec.toUpperCase()` since PipeWire reports `aac`, and mark it; derive "active"
+from `hfp`, not from what was last clicked.
 
 ```qml
 property bool busy: false
@@ -244,21 +246,21 @@ function run(action) {
 }
 ```
 
-No toast. The script `notify-send`s every outcome, failures included via
-`die`, and DMS is the notification server — a `ToastService` call here would
-show the same failure twice, and the script is the side that knows why.
+No toast. The script `notify-send`s every outcome, failures included via `die`,
+and DMS is the notification server — a `ToastService` call here would show the
+same failure twice, and the script is the side that knows why.
 
-`Proc.noTimeout` is not optional. The default is 10 s, and on timeout Proc
-kills the process and reports code 124. `airpods music` from a live call can
+`Proc.noTimeout` is not optional. The default is 10 s, and on timeout Proc kills
+the process and reports code 124. `airpods music` from a live call can
 legitimately take ~30 s (profile off, `ConnectProfile`, up to 12 s wait, then a
 reconnect and another 12 s), and `reconnect` ~15 s. With the default the script
 dies mid-switch, the card is left at `off`, and no notification ever fires.
 Disable the rows while `busy` so two scripts never fight over `wpctl`.
 
-`busy` resets only in the callback, and that is enough: every wait in the
-script is a bounded loop, so it always returns. `Mod+Shift+A` runs the script
-outside the widget and bypasses `busy`; that collision is the same as two
-terminals and is out of this widget's scope.
+`busy` resets only in the callback, and that is enough: every wait in the script
+is a bounded loop, so it always returns. `Mod+Shift+A` runs the script outside
+the widget and bypasses `busy`; that collision is the same as two terminals and
+is out of this widget's scope.
 
 Call the injected `closePopout()` after acting. `PluginPopout` already handles
 Escape and click-outside. Do not set `popoutHeight` or copy Grimblast's
@@ -288,10 +290,10 @@ horizontal `Row` layout for a top bar; hover state on the menu rows;
 ## G. Clean up the LibrePods leftovers
 
 Not this directory — DMS's own state, which is untracked. The `settings.json`
-half is done in A. `plugin_settings.json` still holds `"librepods":
-{"enabled": true}`, dead since `083b800 Simpler airpod flow`, and DMS puts it
-back on every write because it only reads the file at startup. Remove the key
-and restart the shell in one go, at a quiet moment:
+half is done in A. `plugin_settings.json` still holds `"librepods": {"enabled":
+true}`, dead since `083b800 Simpler airpod flow`, and DMS puts it back on every
+write because it only reads the file at startup. Remove the key and restart the
+shell in one go, at a quiet moment:
 
 ```bash
 jq 'del(.librepods)' ~/.config/DankMaterialShell/plugin_settings.json > /tmp/ps.json \
@@ -300,8 +302,8 @@ jq 'del(.librepods)' ~/.config/DankMaterialShell/plugin_settings.json > /tmp/ps.
 ```
 
 **Check:** `grep -c librepods ~/.config/DankMaterialShell/*.json` returns 0 and
-stays 0 after `dms ipc call plugins disable airpods` then `enable`, which
-forces a DMS write.
+stays 0 after `dms ipc call plugins disable airpods` then `enable`, which forces
+a DMS write.
 
 ## Done when
 

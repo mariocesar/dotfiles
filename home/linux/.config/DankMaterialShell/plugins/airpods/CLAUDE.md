@@ -36,9 +36,10 @@ pactl list sources short                  # bluez_input.* exists only in HFP
 ## Where the real documentation is
 
 Since dms-shell 1.6 the UI is embedded in `/usr/bin/dms`; the package ships no
-QML. Each start extracts it read-only to `/run/user/$UID/danklinux-shell/<hash>/`
-— `ls -d` it, don't hardcode the hash. The same tree is `quickshell/` in
-AvengeMedia/DankMaterialShell at the tag in its `VERSION` file.
+QML. Each start extracts it read-only to
+`/run/user/$UID/danklinux-shell/<hash>/` — `ls -d` it, don't hardcode the hash.
+The same tree is `quickshell/` in AvengeMedia/DankMaterialShell at the tag in
+its `VERSION` file.
 
 - `PLUGINS/README.md` — the authoring guide. Read it before guessing.
 - `PLUGINS/plugin-schema.json` — the `plugin.json` schema.
@@ -54,13 +55,13 @@ AvengeMedia/DankMaterialShell at the tag in its `VERSION` file.
 **Switch profiles by calling the `airpods` script. Never `pactl
 set-card-profile` directly.** A bare switch back to `a2dp-sink` while an SCO
 voice link is up is refused by these AirPods — that is the whole reason
-`home/linux/.local/bin/airpods` exists. It tears the link down with
-`wpctl set-profile <id> 0`, issues `ConnectProfile` on the A2DP UUID, retries,
-falls back to a full reconnect, and sets the default source in call mode. DMS's
-own `BluetoothService.switchCodec()` is a thin `pactl set-card-profile` wrapper
-and hits exactly that failure. Use
-`Proc.runCommand("airpods.action", ["airpods", "call"], cb, 0, Proc.noTimeout)` —
-the default 10 s timeout kills the script mid-switch.
+`home/linux/.local/bin/airpods` exists. It tears the link down with `wpctl
+set-profile <id> 0`, issues `ConnectProfile` on the A2DP UUID, retries, falls
+back to a full reconnect, and sets the default source in call mode. DMS's own
+`BluetoothService.switchCodec()` is a thin `pactl set-card-profile` wrapper and
+hits exactly that failure. Use `Proc.runCommand("airpods.action", ["airpods",
+"call"], cb, 0, Proc.noTimeout)` — the default 10 s timeout kills the script
+mid-switch.
 
 Because the script lives in this same repo, a change to its output format and
 the widget that parses it belong in one commit. That is why this is not a
@@ -69,8 +70,8 @@ separate repo.
 **The session PATH comes from a zsh login shell, not `.zshrc`.** GDM spawns the
 session through a non-interactive login shell and `niri-session` imports its
 environment into the user manager, which is what `dms.service` and every niri
-spawn inherit. `PATH` is therefore exported in `home/common/.zprofile`; without it a
-bare `["airpods", …]` in `Proc.runCommand` fails with not found.
+spawn inherit. `PATH` is therefore exported in `home/common/.zprofile`; without
+it a bare `["airpods", …]` in `Proc.runCommand` fails with not found.
 `environment.d` cannot do this job: `import-environment` overrides generators.
 
 **Read the active profile from PipeWire node properties, not by polling.** The
@@ -95,9 +96,9 @@ Enabling bluez's experimental D-Bus interfaces (`bluetoothd -E`) really does
 expose `org.bluez.BatteryProviderManager1`, and restarting WirePlumber really
 does re-register against it, but no `org.bluez.Battery1` ever appears on the
 device in either profile and `pw-dump` stays empty. PipeWire implements Apple's
-**HFP** battery extension (`AT+XAPL` / `AT+IPHONEACCEV`); AirPods report over the
-**AAP** L2CAP channel, PSM 0x1001, which nothing in this stack speaks. `PLAN.md`
-step 0 has the full trace.
+**HFP** battery extension (`AT+XAPL` / `AT+IPHONEACCEV`); AirPods report over
+the **AAP** L2CAP channel, PSM 0x1001, which nothing in this stack speaks.
+`PLAN.md` step 0 has the full trace.
 
 **Do not reinstall LibrePods to get battery.** It exposes no D-Bus interface,
 socket, CLI state query or REST endpoint — there is nothing to talk to. It was

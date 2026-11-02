@@ -21,8 +21,8 @@ The pill hides completely when the AirPods are disconnected.
 
 ## Why
 
-AirPods have no A2DP microphone. Opening an input drops the whole device to
-8 kHz mono HFP, so `51-bluez-airpods.conf` turns
+AirPods have no A2DP microphone. Opening an input drops the whole device to 8
+kHz mono HFP, so `51-bluez-airpods.conf` turns
 `bluetooth.autoswitch-to-headset-profile` off and the profile is switched
 deliberately instead. That makes the profile a sticky, invisible mode — you
 discover which one you're in when a call has no microphone. This makes it
@@ -35,8 +35,8 @@ profile switching. `CLAUDE.md` explains why that matters.
 
 `install.py` symlinks this directory to
 `~/.config/DankMaterialShell/plugins/airpods` like any other config. Then:
-Settings → Plugins → Scan for Plugins → enable **AirPods**, and
-Settings → Widgets → drag it into a bar section.
+Settings → Plugins → Scan for Plugins → enable **AirPods**, and Settings →
+Widgets → drag it into a bar section.
 
 Edits here are live afterwards — the installed path is a symlink back to the
 repo, so only a shell reload is needed, not a re-install.

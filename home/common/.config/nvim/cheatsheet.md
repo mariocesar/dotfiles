@@ -4,160 +4,161 @@ Leader `,` · localleader `\` · visual-multi leader `\\` · reopen with `:Cheat
 
 ## Understand unknown code
 
-| | |
-|---|---|
-| `gd` `gD` | Definition / declaration |
+|                 |                                         |
+| --------------- | --------------------------------------- |
+| `gd` `gD`       | Definition / declaration                |
 | `<C-o>` `<C-i>` | Back / forward — works for *every* jump |
-| `K` | Signature and docs |
-| `grr` | References |
-| `gO` | Symbol outline for the file |
-| `gri` `grt` | Implementations / type definition |
-| `:jumps` | Pick a spot instead of stepping back |
+| `K`             | Signature and docs                      |
+| `grr`           | References                              |
+| `gO`            | Symbol outline for the file             |
+| `gri` `grt`     | Implementations / type definition       |
+| `:jumps`        | Pick a spot instead of stepping back    |
 
 ## Fix a diagnostic
 
-| | |
-|---|---|
-| `]d` `[d` | Next / previous problem |
-| `gra` | Code actions — Ruff autofixes live here |
-| `grn` | Rename symbol across files |
-| `,f` | Format buffer |
-| `<C-W>d` | Float listing every diagnostic on the line |
-| `,x` | Hide / show inline diagnostics; signs stay |
+|           |                                            |
+| --------- | ------------------------------------------ |
+| `]d` `[d` | Next / previous problem                    |
+| `gra`     | Code actions — Ruff autofixes live here    |
+| `grn`     | Rename symbol across files                 |
+| `,f`      | Format buffer                              |
+| `<C-W>d`  | Float listing every diagnostic on the line |
+| `,x`      | Hide / show inline diagnostics; signs stay |
 
 Full message expands under the cursor line automatically, with rule code and
 `help:` hint. So `]d` is all you need to read a truncated warning.
 
 ## Move in a file
 
-| | |
-|---|---|
-| `<C-j>` `<C-k>` | Half page, recentred |
-| `%` | Matching bracket / tag / keyword |
-| `{` `}` | Previous / next blank line |
-| ` `` ` | Position before the last jump |
-| `an` `in` | Grow / shrink selection by syntax node |
-| `]n` `[n` · `]N` `[N` | Next node · next sibling |
+|                       |                                        |
+| --------------------- | -------------------------------------- |
+| `<C-j>` `<C-k>`       | Half page, recentred                   |
+| `%`                   | Matching bracket / tag / keyword       |
+| `{` `}`               | Previous / next blank line             |
+| ` `` `                | Position before the last jump          |
+| `an` `in`             | Grow / shrink selection by syntax node |
+| `]n` `[n` · `]N` `[N` | Next node · next sibling               |
 
 ## Open and switch files
 
-| | |
-|---|---|
-| `,,` | Fuzzy-find an open buffer |
-| `,p` | Fuzzy-find in project |
-| `,d` | Fuzzy-find a dotfile |
-| `]b` `[b` | Buffers |
-| `]q` `[q` · `]l` `[l` | Quickfix · location list |
-| `,l` | Show / hide the quickfix list |
-| `:Changed` | Every changed hunk in the repo into the quickfix list |
-| `gx` | Open URL/path under cursor |
-| `:Cwd` | cwd to current file's dir |
+|                       |                                                       |
+| --------------------- | ----------------------------------------------------- |
+| `,,`                  | Fuzzy-find an open buffer                             |
+| `,p`                  | Fuzzy-find in project                                 |
+| `,d`                  | Fuzzy-find a dotfile                                  |
+| `]b` `[b`             | Buffers                                               |
+| `]q` `[q` · `]l` `[l` | Quickfix · location list                              |
+| `,l`                  | Show / hide the quickfix list                         |
+| `:Changed`            | Every changed hunk in the repo into the quickfix list |
+| `gx`                  | Open URL/path under cursor                            |
+| `:Cwd`                | cwd to current file's dir                             |
 
 ## File tree
 
-| | |
-|---|---|
-| `,e` | Toggle the tree on the left (Neovide opens it on a project start) |
-| `<CR>` · double-click | Open file beside the tree · expand / collapse folder |
-| `<C-v>` · `<C-x>` · `<C-t>` | Open in a vertical split · horizontal split · new tab |
-| `-` | Up a directory |
-| `B` | Show only files open in a buffer (open ones are highlighted anyway) |
-| `[c` `]c` | Previous / next file with git changes |
-| `U` | Show / hide the hidden entries (`.git`, `.venv`, caches, `__pycache__`) |
-| `a` | New file, or folder when the name ends in `/` |
-| `r` · `d` | Rename · delete |
-| `f` | Filter the tree as you type |
-| `g?` | All tree keys |
+|                             |                                                                         |
+| --------------------------- | ----------------------------------------------------------------------- |
+| `,e`                        | Toggle the tree on the left (Neovide opens it on a project start)       |
+| `<CR>` · double-click       | Open file beside the tree · expand / collapse folder                    |
+| `<C-v>` · `<C-x>` · `<C-t>` | Open in a vertical split · horizontal split · new tab                   |
+| `-`                         | Up a directory                                                          |
+| `B`                         | Show only files open in a buffer (open ones are highlighted anyway)     |
+| `[c` `]c`                   | Previous / next file with git changes                                   |
+| `U`                         | Show / hide the hidden entries (`.git`, `.venv`, caches, `__pycache__`) |
+| `a`                         | New file, or folder when the name ends in `/`                           |
+| `r` · `d`                   | Rename · delete                                                         |
+| `f`                         | Filter the tree as you type                                             |
+| `g?`                        | All tree keys                                                           |
 
 ## Wrap, change, comment
 
-| | |
-|---|---|
-| `cs"'` | Change surrounding `"` → `'` |
-| `ds"` | Delete surrounding `"` |
-| `ysiw"` | Surround inner word |
-| `yss)` | Surround whole line |
-| `S"` | Wrap selection (visual) |
-| `ysiw<em>` | Wrap in an HTML tag |
-| `gcc` · `gc` | Comment line · comment motion/selection |
-| `gqap` | Rewrap paragraph to `textwidth` (80 in `:WriterMode`, else 79) |
+|              |                                                                |
+| ------------ | -------------------------------------------------------------- |
+| `cs"'`       | Change surrounding `"` → `'`                                   |
+| `ds"`        | Delete surrounding `"`                                         |
+| `ysiw"`      | Surround inner word                                            |
+| `yss)`       | Surround whole line                                            |
+| `S"`         | Wrap selection (visual)                                        |
+| `ysiw<em>`   | Wrap in an HTML tag                                            |
+| `gcc` · `gc` | Comment line · comment motion/selection                        |
+| `gqap`       | Rewrap paragraph to `textwidth` (80 in `:WriterMode`, else 79) |
 
 `.` repeats any of these.
 
 ## Edit many places at once
 
-| | |
-|---|---|
-| `<C-n>` | Select word, repeat for next occurrence |
-| `\\A` | Select every occurrence |
-| `<C-Down>` `<C-Up>` | Add cursor down / up |
-| `\\\` | Add cursor here |
-| `\\/` | Select by regex |
-| `\\gS` | Restore last selection |
+|                     |                                         |
+| ------------------- | --------------------------------------- |
+| `<C-n>`             | Select word, repeat for next occurrence |
+| `\\A`               | Select every occurrence                 |
+| `<C-Down>` `<C-Up>` | Add cursor down / up                    |
+| `\\\`               | Add cursor here                         |
+| `\\/`               | Select by regex                         |
+| `\\gS`              | Restore last selection                  |
 
-Then `c` `i` `A` `~` apply everywhere; `<Esc>` exits.
-For symbols use `grn` instead — multi-cursor is for config, markup, columns.
+Then `c` `i` `A` `~` apply everywhere; `<Esc>` exits. For symbols use `grn`
+instead — multi-cursor is for config, markup, columns.
 
 ## Macros
 
-| | |
-|---|---|
-| `qa` … `q` | Record into register `a` |
-| `@a` · `@@` | Play · replay the last one |
-| `5@a` | Play 5 times |
-| `999@a` | Play until it errors — stops at end of file |
-| `:reg a` | See what you actually recorded |
+|                |                                                |
+| -------------- | ---------------------------------------------- |
+| `qa` … `q`     | Record into register `a`                       |
+| `@a` · `@@`    | Play · replay the last one                     |
+| `5@a`          | Play 5 times                                   |
+| `999@a`        | Play until it errors — stops at end of file    |
+| `:reg a`       | See what you actually recorded                 |
 | `"ap` … `"ay$` | Paste the macro to edit it, then store it back |
 
 ## Search and replace
 
-| | |
-|---|---|
-| `/pat` · `n` `N` | Search · next / previous |
-| `*` | Search word under cursor |
-| `<Esc><Esc>` | Clear highlight |
-| `:%s/old/new/g` | Replace in file |
-| `,S` | Replace the word under the cursor in the file |
-| `,g` | Live grep in project |
-| `,G` · `,g` (visual) | Grep word under cursor · selection |
-| `,b` | Search lines in this buffer — `'foo` exact, `^` `$` anchors, `!` negates |
+|                      |                                                                          |
+| -------------------- | ------------------------------------------------------------------------ |
+| `/pat` · `n` `N`     | Search · next / previous                                                 |
+| `*`                  | Search word under cursor                                                 |
+| `<Esc><Esc>`         | Clear highlight                                                          |
+| `:%s/old/new/g`      | Replace in file                                                          |
+| `,S`                 | Replace the word under the cursor in the file                            |
+| `,g`                 | Live grep in project                                                     |
+| `,G` · `,g` (visual) | Grep word under cursor · selection                                       |
+| `,b`                 | Search lines in this buffer — `'foo` exact, `^` `$` anchors, `!` negates |
 
 Case-insensitive until you type a capital. `:%s` previews live in a split.
 
 ## Windows, tabs, terminal
 
-| | |
-|---|---|
-| `,%` `,"` | Split vertical / horizontal |
-| `,c` `,n` | New tab / next tab |
-| `<C-w>` + `hjkl` | Move between splits |
-| `,s` `,q` | Save / quit (Neovide: close buffer) |
-| `,t` · `:below terminal` | Shell pane below |
+|                                            |                                      |
+| ------------------------------------------ | ------------------------------------ |
+| `,%` `,"`                                  | Split vertical / horizontal          |
+| `,c` `,n`                                  | New tab / next tab                   |
+| `<C-w>` + `hjkl`                           | Move between splits                  |
+| `,s` `,q`                                  | Save / quit (Neovide: close buffer)  |
+| `,t` · `:below terminal`                   | Shell pane below                     |
 | `:Run` · `:Config` `,ve` · `:Reload` `,vr` | Run file · edit init.lua · source it |
 
 ## Clipboard
 
-`y` and `p` use the system clipboard. `<C-c>` copies a selection, `<D-v>` pastes.
-`:%y` copies the whole buffer.
+`y` and `p` use the system clipboard. `<C-c>` copies a selection, `<D-v>`
+pastes. `:%y` copies the whole buffer.
 
-`:CopyRef` copies `path:54`; from a selection (`:'<,'>CopyRef`) it copies `path:54-80`.
+`:CopyRef` copies `path:54`; from a selection (`:'<,'>CopyRef`) it copies
+`path:54-80`.
 
 ## Git
 
-`]c` `[c` next / previous hunk · `:Gitsigns preview_hunk` · `blame_line` · `diffthis`
+`]c` `[c` next / previous hunk · `:Gitsigns preview_hunk` · `blame_line` ·
+`diffthis`
 
 ## Documents
 
-`:Beside` renders markdown (leaf), rst, asciidoc, org… (pandoc) in a right split.
-It follows the cursor and scrolls the source when you scroll it, re-renders as
-you type, moves along to the next document you open beside it, and closes when
-its source is gone. `q` in the preview closes it.
+`:Beside` renders markdown (leaf), rst, asciidoc, org… (pandoc) in a right
+split. It follows the cursor and scrolls the source when you scroll it,
+re-renders as you type, moves along to the next document you open beside it, and
+closes when its source is gone. `q` in the preview closes it.
 
 ## Troubleshoot
 
-| | |
-|---|---|
+|                        |                                         |
+| ---------------------- | --------------------------------------- |
 | `:checkhealth vim.lsp` | Attached servers, roots, why one didn't |
-| `:Mason` · `:MasonLog` | Server installs · failures |
-| `:Lazy` | Plugin status and load times |
-
+| `:Mason` · `:MasonLog` | Server installs · failures              |
+| `:Lazy`                | Plugin status and load times            |
