@@ -17,8 +17,9 @@ file=$(printf '%s' "$json" | jq -r .path)
 scale=$(printf '%s' "$json" | jq -r .scale)
 
 # DMS runs the first action on a body click too, so "default" catches both.
-action=$(notify-send --app-name=Screenshot --icon="$file" --action=default=Annotate \
-    "Screenshot saved" "${file##*/}")
+# DMS never closes an expired popup, so notify-send would wait forever.
+action=$(timeout 30 notify-send --app-name=Screenshot --icon="$file" --action=default=Annotate \
+    "Screenshot saved" "${file##*/}") || exit 0
 [ "$action" = default ] || exit 0
 
 exec satty --filename "$file" --output-filename "$file" --input-scale "$scale"
