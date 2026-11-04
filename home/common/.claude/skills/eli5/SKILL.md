@@ -1,6 +1,6 @@
 ---
 name: eli5
-description: Explain a topic, file, doc, or question in the simplest possible terms and publish the explanation as a picture-first HTML Artifact — diagrams and short labels carrying the meaning, almost no paragraphs. Invoked as `/eli5 <topic or question>`, but also trigger on plain-language asks like "explain like I'm five", "explain like I know nothing about this", "ELI5 this", "dumb this down for me", "explain this simply", or "make this easy to understand" — even when the user doesn't type the slash command. Works on anything: a file or doc in the current project, a concept, a technology, how something works, or a plan/status the user just discussed.
+description: Explain a topic, file, doc, or question in the simplest possible terms and publish the explanation as a picture-first HTML Artifact — diagrams and short labels carrying the meaning, almost no paragraphs. Invoked as `/eli5 <topic or question>`, but also trigger on plain-language asks like "explain like I'm five", "explain like I know nothing about this", "ELI5 this", "dumb this down for me", "explain this simply", or "make this easy to understand" — even when the user doesn't type the slash command. Works on anything: a file or doc in the current project, a concept, a technology, how something works, or a plan/status the user just discussed. Also trigger on follow-ups that go deeper into one part of an earlier eli5 page, like "go deeper into X" or "/eli5 deeper into X".
 ---
 
 # ELI5
@@ -24,6 +24,8 @@ worse than no diagram.
   know. Only stop to ask the user something if the topic is genuinely ambiguous
   (e.g. it could mean two unrelated things) — otherwise make the reasonable call
   and proceed.
+- Find out why it exists: the problem it solves, or what goes wrong without it.
+  The reader learns the how faster once they know the why.
 
 ## 2. Find the one metaphor
 
@@ -41,11 +43,15 @@ it's a network protocol, a postal system. The metaphor should make the mechanism
 Pick one metaphor and commit to it across every section. Switching metaphors
 between sections is more confusing than having none.
 
-## 3. Load `artifact-design` before writing HTML
+Then find where it breaks: the point where the real thing stops behaving like
+the metaphor. Readers carry an analogy past its limits and form wrong ideas
+there, so the page has to show that edge.
 
-The Artifact tool requires this, and it also sets the token system (color, type,
-layout) this skill's visual style builds on. Don't skip it or start writing
-markup first.
+## 3. Read the artifacts guide before writing HTML
+
+Call the claude-artifacts `guide` for the `pages`, `design` and `diagrams`
+topics: what a page may load, how it reads in both themes and at phone width,
+and how to draw diagrams as inline SVG. Don't start the markup before them.
 
 Given this skill's brief — "big pictures, few words" — treat the page as
 picture-first: light on flourish, heavy on diagrams that do the explaining. Most
@@ -57,9 +63,13 @@ template.
 
 ## 4. Structure as a small set of visual sections, not paragraphs
 
-Pick 3–5 sections from the patterns below — whichever actually fit this topic's
-shape. Don't force a pattern that doesn't apply (a static concept has no
-"roadmap"; a historical event has no "current state").
+Open with a **"Why it matters"** section on every page: the problem from step 1,
+drawn in the metaphor — the world without it next to the world with it, or the
+chain of what breaks when it's missing.
+
+Then pick 2–4 more sections from the patterns below — whichever actually fit
+this topic's shape. Don't force a pattern that doesn't apply (a static concept
+has no "roadmap"; a historical event has no "current state").
 
 | The topic is shaped like...               | Use this pattern                                    |
 | ----------------------------------------- | --------------------------------------------------- |
@@ -75,12 +85,25 @@ doing the actual explaining, and at most one caption sentence under it. If a
 caption is growing into two sentences, the diagram isn't carrying its weight yet
 — simplify the diagram, don't lengthen the caption.
 
-Reference point for the shape and density this produces: an earlier `/eli5` run
-on this project's refactor plan opened with a before/after diagram (tangled
-per-doorway wiring vs. one standard container), then a six-phase roadmap with a
-"you are here" marker, a current-status panel naming the exact next task, a
-four-step process flow, and a four-card rules grid — each section a diagram plus
-one line of caption, nothing longer.
+Mark where the metaphor breaks (step 2) with one line and a small marker on the
+diagram where it happens, e.g. "Unlike a real dock, a container can be in two
+ports at once."
+
+Close with a **"Check yourself"** section: 2–3 questions answered by the
+diagrams above, each answer hidden until clicked (`<details>`). Ask about the
+mechanism — what happens if, why does, which part — never trivia or labels to
+recall word for word.
+
+End it with one open question the reader answers in their own words: explain the
+idea without the metaphor, or apply it to a case the page didn't show. Hide
+under it what a good answer would mention, so they can check themselves.
+
+Reference point for the shape and density this produces: a good `/eli5` of a
+refactor plan opened with a before/after diagram (tangled per-doorway wiring vs.
+one standard container), then a six-phase roadmap with a "you are here" marker,
+a current-status panel naming the exact next task, a four-step process flow, and
+a four-card rules grid — each section a diagram plus one line of caption,
+nothing longer.
 
 ## 5. Keep the word count honest
 
@@ -94,13 +117,12 @@ one line of caption, nothing longer.
 
 ## 6. Publish
 
-Publish via the Artifact tool:
+Publish the way the `pages` guide says, with:
 
 - A specific, non-generic `title` (the subject's name, not "Explainer" or
-  "ELI5").
-- A one-sentence `description` for the gallery card.
-- A `favicon` emoji that fits the metaphor chosen in step 2, not a generic
-  book/lightbulb unless nothing else fits.
+  "ELI5"), also used as the page's `<title>`.
+- A one-word `icon` that fits the metaphor chosen in step 2 (`ship`, `mail`),
+  not a generic `book` unless nothing else fits.
 
 ## 7. Reply short
 
@@ -108,3 +130,17 @@ The artifact is the explanation — don't repeat it in the chat. Reply with the
 link and two or three sentences at most: what metaphor you used and the 2–3
 sections you built. Do not re-explain the topic in prose after already
 explaining it visually.
+
+## 8. Going deeper
+
+When the topic builds on an earlier eli5 page — one from this conversation, or a
+link the user pasted (read it with `read_artifact` first) — it's a zoom into one
+part of that page, not a new topic:
+
+- Reuse that page's metaphor and zoom into the part (the dock → one crane).
+- Skip what it already taught; "Why it matters" answers why this part matters to
+  the whole.
+- By default publish a new page that links back to the first one, then add a
+  link to the new page on the first one with `edit_version`.
+- When the user asks for it, or the deep dive fits in one section, add it to the
+  first page instead with `edit_version`, next to the part it develops.
