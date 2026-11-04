@@ -83,7 +83,7 @@ return {
     cond = not vim.g.vscode,
     lazy = false, -- upstream does not support lazy-loading
     build = ':TSUpdate',
-    config = function() require('treesitter') end
+    config = function() require('mariocesar.treesitter') end
   },
   {
     'neovim/nvim-lspconfig',
@@ -93,7 +93,7 @@ return {
       { 'mason-org/mason.nvim', build = ':MasonUpdate' },
       'mason-org/mason-lspconfig.nvim'
     },
-    config = function() require('lsp') end
+    config = function() require('mariocesar.lsp') end
   },
   {
     -- Ghostty ships ftdetect/ftplugin/syntax for its own config format next to

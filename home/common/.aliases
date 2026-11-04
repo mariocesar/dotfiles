@@ -22,7 +22,7 @@ function assert_inside_git() {
 # === Editor ===
 
 alias vim=nvim
-alias vimrc="vim ~/.config/nvim/init.lua --cmd 'cd ~/.config/nvim'"
+alias vimrc="vim ~/.config/nvim/lua/mariocesar/init.lua --cmd 'cd ~/.config/nvim'"
 alias niric="vim ~/.config/niri/config.kdl --cmd 'cd ~/.config/niri'"
 
 # === Files ===

@@ -30,7 +30,7 @@ local parsers = {
 require('nvim-treesitter').install(parsers)
 
 -- Start on any buffer whose language has a parser; pcall skips the rest.
-local ts = require('au')('treesitter')
+local ts = require('mariocesar.au')('treesitter')
 
 function ts.FileType(args)
   pcall(vim.treesitter.start, args.buf)

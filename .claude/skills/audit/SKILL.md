@@ -298,7 +298,7 @@ machine pins its own plugin commits.
 - State growth: `du -sh ~/.local/state/nvim/* ~/.local/share/nvim/* | sort -rh`.
   A log over 50M (`lsp.log` grows without bound) is a finding.
 - Mason: `ls ~/.local/share/nvim/mason/packages` should match the `servers` list
-  in `lua/lsp.lua` one to one (mason-lspconfig maps `ts_ls` →
+  in `lua/mariocesar/lsp.lua` one to one (mason-lspconfig maps `ts_ls` →
   `typescript-language-server` and so on). A package with no server is leftover
   disk, often ~95M each for the node-based ones.
 

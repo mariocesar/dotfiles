@@ -62,7 +62,7 @@ vim.keymap.set('n', '<leader>x', function()
 end, { desc = 'Toggle inline diagnostics' })
 
 -- Neovim already binds grn/gra/grr/gri/grt/grx/gO, K on attach, and ]d/[d.
-local lsp = require('au')('lsp')
+local lsp = require('mariocesar.au')('lsp')
 
 function lsp.LspAttach(args)
   local function map(lhs, rhs, desc)
