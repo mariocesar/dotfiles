@@ -20,7 +20,7 @@ if [ "$DRY" -eq 1 ]; then
 fi
 
 step "Upgrading repos and AUR"
-yay -Syu --answerdiff None --answerclean None
+yay -Syu --answerdiff None --answerclean None --answerupgrade None
 
 step "Removing orphans"
 orphans=$(pacman -Qtdq || [ $? -eq 1 ])
