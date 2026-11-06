@@ -107,7 +107,6 @@ brew "viu"
 brew "heroku/brew/heroku"
 
 cask "minecraft"
-cask "arc"
 cask "zen"  # zen browser
 cask "jordanbaird-ice"
 cask "slack"
